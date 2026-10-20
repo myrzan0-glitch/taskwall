@@ -183,10 +183,11 @@ struct WallpaperView: View {
 
 struct ThemeSwatches: View {
     let selected: WallpaperTheme
+    var columns = 3
     let onSelect: (WallpaperTheme) -> Void
 
     var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.fixed(44), spacing: 12), count: 3), alignment: .leading, spacing: 12) {
+        LazyVGrid(columns: Array(repeating: GridItem(.fixed(44), spacing: 12), count: columns), alignment: .leading, spacing: 12) {
             ForEach(WallpaperTheme.entries, id: \.self) { theme in
                 Button {
                     onSelect(theme)

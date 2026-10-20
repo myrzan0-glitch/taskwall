@@ -106,7 +106,7 @@ private struct WelcomeStep: View {
             .padding(.horizontal, 28)
             .padding(.top, 16)
         }
-        .safeAreaInset(edge: .bottom) {
+        .safeAreaBar(edge: .bottom) {
             PrimaryButton(title: "Get Started", action: next)
         }
     }
@@ -196,7 +196,7 @@ private struct FirstTasksStep: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) {
+        .safeAreaBar(edge: .bottom) {
             PrimaryButton(title: "Continue", action: next)
         }
     }
@@ -230,7 +230,8 @@ private struct PickLookStep: View {
                     .frame(maxWidth: .infinity)
 
                 HStack(spacing: 12) {
-                    ThemeSwatches(selected: style.source == BackgroundSource.color ? style.theme : WallpaperTheme.paper) {
+                    // One row: five colours, then the photo button.
+                    ThemeSwatches(selected: style.source == BackgroundSource.color ? style.theme : WallpaperTheme.paper, columns: 5) {
                         model.setStyle(style.withTheme(theme: $0))
                     }
                     PhotosPicker(selection: $pickedItem, matching: .images) {
@@ -254,7 +255,7 @@ private struct PickLookStep: View {
             .padding(.horizontal, 24)
             .padding(.top, 8)
         }
-        .safeAreaInset(edge: .bottom) {
+        .safeAreaBar(edge: .bottom) {
             PrimaryButton(title: "Continue", action: next)
         }
         .onChange(of: pickedItem) { _, item in

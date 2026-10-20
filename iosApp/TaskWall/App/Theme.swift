@@ -11,6 +11,45 @@ extension Color {
     static let onBrand = Color(.systemBackground)
 }
 
+/// The system switch draws a white knob, which vanishes on the white dark-mode
+/// accent. This one keeps the knob in the opposite colour of the track
+/// (white on black, black on white) and still reads as a switch to VoiceOver.
+struct BrandSwitchStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        BrandSwitch(configuration: configuration)
+    }
+}
+
+private struct BrandSwitch: View {
+    let configuration: ToggleStyleConfiguration
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        let isOn = configuration.isOn
+        HStack {
+            configuration.label
+            Spacer(minLength: 12)
+            Capsule()
+                .fill(isOn ? AnyShapeStyle(Color.brand) : AnyShapeStyle(.quaternary))
+                .frame(width: 63, height: 28)
+                .overlay(alignment: isOn ? .trailing : .leading) {
+                    Capsule()
+                        .fill(isOn ? Color.onBrand : Color.white)
+                        .frame(width: 37, height: 24)
+                        .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
+                        .padding(2)
+                }
+                .animation(.snappy(duration: 0.2), value: isOn)
+        }
+        .opacity(isEnabled ? 1 : 0.4)
+        .contentShape(Rectangle())
+        .onTapGesture { if isEnabled { configuration.isOn.toggle() } }
+        .accessibilityRepresentation {
+            Toggle(isOn: configuration.$isOn) { configuration.label }
+        }
+    }
+}
+
 extension View {
     /// The filled call to action: black glass with white text, inverted in dark mode.
     func prominentButton() -> some View {

@@ -226,12 +226,13 @@ struct AutomationSetupView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .safeAreaInset(edge: .bottom) {
-            Button(automation.isSetUp ? "Done" : "Set Up Later", action: onFinish)
-                .prominentButton()
-                .controlSize(.large)
-                .frame(maxWidth: .infinity)
-                .padding()
+        .safeAreaBar(edge: .bottom) {
+            Button(action: onFinish) {
+                Text(automation.isSetUp ? "Done" : "Set Up Later").frame(maxWidth: .infinity)
+            }
+            .prominentButton()
+            .controlSize(.large)
+            .padding()
         }
         .sheet(isPresented: $addingShortcut) {
             AddShortcutView {
