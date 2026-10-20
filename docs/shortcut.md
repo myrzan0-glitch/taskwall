@@ -21,12 +21,14 @@ Keep the name exactly **TaskWall**. The app runs it by name (`ShortcutLinks.shor
 
 ## Add the automations
 
-In iOS 27, automations live inside the shortcut: open the shortcut, choose **Edit › Automation**, and add:
+iOS doesn't let apps create automations, so setup step 2 ("Update when you close TaskWall") walks people through it. In Shortcuts' **Automation** tab:
 
-- **Time of Day:** 07:00, daily. This is the "Every morning" update.
-- **App › TaskWall › Is Closed.** This is the "When I close TaskWall" update.
+- **App › TaskWall › Is Closed** (deselect Is Opened), **Run Immediately**, then pick the TaskWall shortcut. This is the one that makes a finished task reach the Lock Screen as soon as the person leaves TaskWall.
+- **Time of Day** at the morning time, **Daily**, **Run Immediately**, then pick the TaskWall shortcut. Optional; it keeps the date and overdue tasks right on days TaskWall isn't opened.
 
-For each one, open **(i) › Privacy** and turn on **Allow Running When Locked** so it runs without asking. The first run may also ask to allow Set Wallpaper; choose Always Allow.
+The first run may ask whether TaskWall can set the wallpaper; choose Always Allow.
+
+TaskWall can't see automations, so it works out the close automation from what happens: it records when it goes to the background (`TaskWallStore.recordAppClosed`), and a shortcut run within two minutes of that marks **When I Close TaskWall** as **On** in Settings.
 
 ## Ship it in the app
 
@@ -46,16 +48,17 @@ shortcuts sign --mode anyone --input TaskWall-unsigned.shortcut --output iosApp/
 
 With the file in place, step 1's **Add** opens the share sheet; people choose **Shortcuts** and tap **Add Shortcut** there. The step is marked done only after they finish the share sheet or tap **I've Added It**, not on the first tap.
 
-Shared shortcuts arrive without their automations, so step 2 sends people to Shortcuts to add the daily one and allow running when locked.
+Shared shortcuts arrive without automations, so step 2 guides people through adding them.
 
 ## How the app knows it worked
 
-Each time the shortcut runs **Make TaskWall Wallpaper**, TaskWall records the time (`TaskWallStore.recordWallpaperUpdate`). The Tasks screen shows "Lock Screen is up to date", and onboarding step 3 ("Run a quick test") completes when the first run is recorded.
+Each time the shortcut runs **Make TaskWall Wallpaper**, TaskWall records the time and a fingerprint of what the wallpaper shows (`TaskWallStore.recordWallpaperUpdate`). Setup step 3 ("Run a quick test") completes when the first run is recorded. The Tasks screen compares the fingerprint with the current tasks: "Lock Screen is up to date", "Updates when you close TaskWall" (close automation working), or "Lock Screen is out of date" with an Update Now button.
 
 The test opens `shortcuts://x-callback-url/run-shortcut?name=TaskWall&x-success=taskwall://shortcut-ran`, so Shortcuts sends people back to TaskWall when it's done.
 
 ## Troubleshooting
 
 - **"TaskWall couldn't make the wallpaper":** open TaskWall once so it saves the screen size, then run the shortcut again.
-- **The automation asks before running:** turn on Allow Running When Locked for that automation.
+- **The automation asks before running:** edit it in Shortcuts and choose **Run Immediately**.
+- **Settings still says "Waiting for first run":** close TaskWall once (swipe up to the Home Screen); the close automation should run within a few seconds.
 - **The wallpaper didn't change:** check that Set Wallpaper targets the Lock Screen and Show Preview is off.

@@ -84,6 +84,7 @@ struct AutomationSection: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
     @State private var showSetup = false
+    @State private var showGuide = false
 
     var body: some View {
         let automation = model.automation
@@ -108,16 +109,29 @@ struct AutomationSection: View {
                 set: { model.setAutomation(model.automation.withMorningMinutes(minutes: Int32($0.minutesAfterMidnight))) }
             ), displayedComponents: .hourAndMinute)
 
-            Toggle("When I Close TaskWall", isOn: Binding(
-                get: { automation.updateWhenAppCloses },
-                set: { model.setAutomation(model.automation.withUpdateWhenAppCloses(on: $0)) }
-            ))
+            // Read from what actually happened, not a setting: TaskWall can't
+            // create the automation, only notice the shortcut running after it closes.
+            LabeledContent("When I Close TaskWall") {
+                if automation.updatesWhenClosed {
+                    Text("On")
+                } else if automation.automationAdded {
+                    Text("Waiting for first run")
+                } else {
+                    Button("Set Up") { showGuide = true }
+                        .accessibilityIdentifier("setUpCloseAutomation")
+                }
+            }
 
             Button(automation.isSetUp ? "Set Up Again" : "Set Up Automatic Updates") { showSetup = true }
         } header: {
             Text("Automatic Updates")
         } footer: {
-            Text("Runs through the TaskWall shortcut. iOS only lets the Shortcuts app change your wallpaper, so the time is set there too.")
+            Text("Runs through the TaskWall shortcut and automations in the Shortcuts app, the only app iOS lets change your wallpaper. Set the morning time there too.")
+        }
+        .sheet(isPresented: $showGuide) {
+            AutomationGuideView {
+                model.setAutomation(model.automation.withAutomationAdded(added: true))
+            }
         }
         .sheet(isPresented: $showSetup) {
             NavigationStack {
@@ -152,16 +166,17 @@ struct AutomationSetupView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
     @State private var addingShortcut = false
+    @State private var addingAutomation = false
     var showsHeader = true
     let onFinish: () -> Void
 
     private enum Step: Int, CaseIterable {
-        case add, allow, test
+        case add, automate, test
 
         var title: String {
             switch self {
             case .add: "Add the TaskWall shortcut"
-            case .allow: "Let it run on its own"
+            case .automate: "Update when you close TaskWall"
             case .test: "Run a quick test"
             }
         }
@@ -169,7 +184,7 @@ struct AutomationSetupView: View {
         var detail: String {
             switch self {
             case .add: "One tap. It makes your wallpaper and sets it."
-            case .allow: "In Shortcuts, open TaskWall › Automation and turn on Allow Running When Locked."
+            case .automate: "An automation in Shortcuts, so finished tasks reach your Lock Screen as soon as you leave."
             case .test: "Watch your Lock Screen update."
             }
         }
@@ -177,7 +192,7 @@ struct AutomationSetupView: View {
         var action: String {
             switch self {
             case .add: "Add"
-            case .allow: "Open"
+            case .automate: "Set Up"
             case .test: "Test"
             }
         }
@@ -210,15 +225,11 @@ struct AutomationSetupView: View {
                     get: { Date.at(minutesAfterMidnight: Int(automation.morningMinutes)) },
                     set: { model.setAutomation(model.automation.withMorningMinutes(minutes: Int32($0.minutesAfterMidnight))) }
                 ), displayedComponents: .hourAndMinute)
-                Toggle("When I Close TaskWall", isOn: Binding(
-                    get: { automation.updateWhenAppCloses },
-                    set: { model.setAutomation(model.automation.withUpdateWhenAppCloses(on: $0)) }
-                ))
             }
 
             if automation.isSetUp {
                 Section {
-                    Label("Automation is on. Next update at \(morningText).", image: "refresh")
+                    Label("Automation is on. Your Lock Screen updates when you close TaskWall and at \(morningText).", image: "refresh")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color(.systemBackground))
                         .listRowBackground(Color.primary)
@@ -239,6 +250,11 @@ struct AutomationSetupView: View {
                 model.setAutomation(model.automation.withShortcutAdded(added: true))
             }
         }
+        .sheet(isPresented: $addingAutomation) {
+            AutomationGuideView {
+                model.setAutomation(model.automation.withAutomationAdded(added: true))
+            }
+        }
     }
 
     private var morningText: String {
@@ -247,7 +263,7 @@ struct AutomationSetupView: View {
 
     private func currentStep(_ automation: AutomationSettings) -> Step? {
         if !automation.shortcutAdded { return .add }
-        if !automation.runsWithoutAsking { return .allow }
+        if !automation.automationAdded { return .automate }
         if automation.lastUpdateMillis == nil { return .test }
         return nil
     }
@@ -255,7 +271,7 @@ struct AutomationSetupView: View {
     private func isDone(_ step: Step, _ automation: AutomationSettings) -> Bool {
         switch step {
         case .add: automation.shortcutAdded
-        case .allow: automation.runsWithoutAsking
+        case .automate: automation.automationAdded
         case .test: automation.lastUpdateMillis != nil
         }
     }
@@ -295,14 +311,12 @@ struct AutomationSetupView: View {
     }
 
     private func run(_ step: Step) {
-        let automation = model.automation
         switch step {
         case .add:
             // Marked as added only once the person confirms, not on the tap.
             addingShortcut = true
-        case .allow:
-            openURL(ShortcutLinks.openShortcuts)
-            model.setAutomation(automation.withRunsWithoutAsking(on: true))
+        case .automate:
+            addingAutomation = true
         case .test:
             // The shortcut records its run, then sends us back via taskwall://.
             openURL(ShortcutLinks.runShortcut)

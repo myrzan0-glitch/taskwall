@@ -58,6 +58,12 @@ final class AppModel {
         return store.search(query: query, today: today)
     }
 
+    /// Whether the Lock Screen already shows what the wallpaper would show now.
+    var isWallpaperCurrent: Bool {
+        _ = state  // re-evaluate whenever the state changes
+        return store.isWallpaperCurrent(today: today)
+    }
+
     var lastUpdate: Date? {
         automation.lastUpdateMillis.map { Date(millis: $0.int64Value) }
     }
@@ -159,6 +165,11 @@ final class AppModel {
             heightPoints: screen.size.height,
             scale: screen.scale
         ))
+    }
+
+    /// Remembered so a shortcut run right after this is recognised as the close automation.
+    func appClosed() {
+        store.recordAppClosed(nowMillis: Date().millis)
     }
 
     func handle(_ url: URL) {
