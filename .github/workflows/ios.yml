@@ -17,8 +17,9 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      - name: Cache Kotlin/Native
-        uses: actions/cache@v4
+      - name: Restore Kotlin/Native toolchain
+        id: konan
+        uses: actions/cache/restore@v4
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
@@ -30,6 +31,12 @@ jobs:
           xcrun simctl list devices available | grep iPhone || true
       - name: Run unit tests and UI tests
         run: iosApp/scripts/test.sh
+      - name: Save Kotlin/Native toolchain
+        if: always() && steps.konan.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.konan
+          key: ${{ steps.konan.outputs.cache-primary-key }}
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v4
