@@ -8,11 +8,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-if ! command -v xcodegen >/dev/null; then
-  echo "error: XcodeGen is missing. Install it with 'brew install xcodegen'." >&2
-  exit 1
+# The project is committed. If XcodeGen is installed, regenerate it so a changed
+# project.yml is picked up; CI then checks the committed project matches.
+if command -v xcodegen >/dev/null; then
+  xcodegen generate --quiet
 fi
-xcodegen generate --quiet
 
 device="${SIMULATOR:-iPhone 17 Pro}"
 if ! xcrun simctl list devices available | grep -q "^ *$device ("; then

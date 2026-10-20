@@ -31,6 +31,14 @@ jobs:
           xcrun simctl list devices available | grep iPhone || true
       - name: Run unit tests and UI tests
         run: iosApp/scripts/test.sh
+      - name: Check the committed Xcode project matches project.yml
+        if: always()
+        run: |
+          if ! git diff --quiet -- iosApp/TaskWall.xcodeproj iosApp/TaskWall/Info.plist; then
+            git diff --stat -- iosApp/TaskWall.xcodeproj iosApp/TaskWall/Info.plist
+            echo "::error::iosApp/TaskWall.xcodeproj is out of date. Run 'cd iosApp && xcodegen' and commit the result."
+            exit 1
+          fi
       - name: Capture screenshots (dark and light)
         if: always()
         continue-on-error: true

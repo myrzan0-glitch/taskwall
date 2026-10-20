@@ -36,7 +36,7 @@ Shortcuts only imports signed files, and signing needs Apple's tools, so export 
 2. Tap **Options** and choose **Anyone**. (This signs the file so any iPhone can import it.)
 3. Choose **Save to Files** and AirDrop or copy the file to your Mac.
 4. Name it exactly `TaskWall.shortcut` and put it in `iosApp/TaskWall/Resources/`.
-5. Run `cd iosApp && xcodegen` and rebuild.
+5. Rebuild in Xcode (the synchronized Resources folder picks the file up).
 
 If you have an unsigned shortcut file instead, sign it on a Mac:
 
