@@ -284,10 +284,11 @@ struct AutomationSetupView: View {
                 Text(step.detail).font(.footnote).foregroundStyle(.secondary)
             }
             Spacer(minLength: 8)
-            if !done {
+            // Only the next step gets a button; disabled filled buttons for later
+            // steps were nearly invisible in light mode.
+            if isCurrent {
                 Button(step.action) { run(step) }
                     .prominentButton()
-                    .disabled(!isCurrent)
             }
         }
         .padding(.vertical, 6)
