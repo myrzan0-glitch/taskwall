@@ -47,7 +47,6 @@ targets:
       - name: Build Kotlin shared framework
         basedOnDependencyAnalysis: false
         script: |
-          cd "$SRCROOT/.."
-          ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+          "$SRCROOT/scripts/build-shared.sh"
     scheme:
       storeKitConfiguration: TaskWall/Resources/TaskWall.storekit

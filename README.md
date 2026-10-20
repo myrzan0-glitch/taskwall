@@ -99,7 +99,13 @@ xcodegen          # creates TaskWall.xcodeproj
 open TaskWall.xcodeproj
 ```
 
-Building the app runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode` first, which compiles the Kotlin code into the `Shared` framework. The scheme uses `Resources/TaskWall.storekit`, so tips work in the simulator without App Store Connect.
+Building the app runs `iosApp/scripts/build-shared.sh` first, which compiles the Kotlin code into the `Shared` framework with Gradle. The first build downloads the Kotlin/Native toolchain (about 1 GB). The scheme uses `Resources/TaskWall.storekit`, so tips work in the simulator without App Store Connect.
+
+If Xcode reports **"Command PhaseScriptExecution failed with a nonzero exit code"**, the Kotlin build failed. Open the Report navigator (⌘9), select the build and expand **Build Kotlin shared framework** to see why. The usual causes:
+
+- **No Java:** run `brew install --cask temurin` and restart Xcode.
+- **Wrong developer directory:** run `sudo xcode-select -s /Applications/Xcode.app`.
+- **Project out of date** after pulling changes: run `xcodegen` again in `iosApp/`.
 
 ### Before shipping, replace the placeholders
 
