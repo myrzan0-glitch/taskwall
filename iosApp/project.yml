@@ -10,6 +10,9 @@ options:
   createIntermediateGroups: true
 settings:
   base:
+    # Signing team, so Xcode doesn't reset it to None after every pull.
+    DEVELOPMENT_TEAM: 9KHCK2Z846
+    CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
