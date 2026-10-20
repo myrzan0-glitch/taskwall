@@ -55,5 +55,13 @@ final class BridgeTests: XCTestCase {
         let items = URLComponents(url: run, resolvingAgainstBaseURL: false)?.queryItems ?? []
         XCTAssertEqual(items.first { $0.name == "name" }?.value, "TaskWall")
         XCTAssertEqual(items.first { $0.name == "x-success" }?.value, "taskwall://shortcut-ran")
+        XCTAssertEqual(ShortcutLinks.createShortcut.absoluteString, "shortcuts://create-shortcut")
+    }
+
+    func testBundledShortcutIsNamedForRunShortcut() {
+        // The file is optional; when present, its name is what run-shortcut calls.
+        guard let file = ShortcutLinks.bundledFile else { return }
+        XCTAssertEqual(file.deletingPathExtension().lastPathComponent, ShortcutLinks.shortcutName)
+        XCTAssertGreaterThan((try? Data(contentsOf: file))?.count ?? 0, 0)
     }
 }

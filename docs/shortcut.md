@@ -1,6 +1,8 @@
 # The TaskWall shortcut
 
-iOS only lets the Shortcuts app change the wallpaper. TaskWall provides the image; a small shortcut sets it. You publish this shortcut once, and everyone adds it with one tap during onboarding.
+iOS only lets the Shortcuts app change the wallpaper. TaskWall provides the image; a small shortcut sets it. The shortcut ships inside the app as a signed file, and people add it from setup step 1 ("Add the TaskWall shortcut").
+
+Until `iosApp/TaskWall/Resources/TaskWall.shortcut` exists, step 1 shows a short guide for building the shortcut by hand instead, so setup always works.
 
 ## Build it
 
@@ -24,15 +26,25 @@ In iOS 27, automations live inside the shortcut: open the shortcut, choose **Edi
 
 For each one, open **(i) › Privacy** and turn on **Allow Running When Locked** so it runs without asking. The first run may also ask to allow Set Wallpaper; choose Always Allow.
 
-## Publish it
+## Ship it in the app
 
-Share the shortcut, choose **Copy iCloud Link**, and put the link in `iosApp/TaskWall/App/AppGroup.swift`:
+Shortcuts only imports signed files, and signing needs Apple's tools, so export the file from the iPhone where you built it:
 
-```swift
-static let getShortcut = URL(string: "https://www.icloud.com/shortcuts/<id>")!
+1. In Shortcuts, long-press **TaskWall › Share**.
+2. Tap **Options** and choose **Anyone**. (This signs the file so any iPhone can import it.)
+3. Choose **Save to Files** and AirDrop or copy the file to your Mac.
+4. Name it exactly `TaskWall.shortcut` and put it in `iosApp/TaskWall/Resources/`.
+5. Run `cd iosApp && xcodegen` and rebuild.
+
+If you have an unsigned shortcut file instead, sign it on a Mac:
+
+```bash
+shortcuts sign --mode anyone --input TaskWall-unsigned.shortcut --output iosApp/TaskWall/Resources/TaskWall.shortcut
 ```
 
-Shared shortcuts may arrive with their automations turned off, so onboarding step 2 asks people to allow running when locked.
+With the file in place, step 1's **Add** opens the share sheet; people choose **Shortcuts** and tap **Add Shortcut** there. The step is marked done only after they finish the share sheet or tap **I've Added It**, not on the first tap.
+
+Shared shortcuts arrive without their automations, so step 2 sends people to Shortcuts to add the daily one and allow running when locked.
 
 ## How the app knows it worked
 

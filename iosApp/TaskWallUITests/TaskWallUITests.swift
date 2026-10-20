@@ -218,6 +218,22 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Make it automatic"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.buttons["Add"].isEnabled)
         XCTAssertFalse(app.buttons["Open"].isEnabled, "steps go in order")
+
+        // Add opens the install sheet; nothing is marked done until the person confirms.
+        app.buttons["Add"].tap()
+        let added = app.buttons["shortcutAdded"]
+        XCTAssertTrue(added.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["openShortcutsEditor"].exists || app.buttons["shareShortcut"].exists)
+        app.buttons["closeAddShortcut"].tap()
+        XCTAssertTrue(app.buttons["Add"].waitForExistence(timeout: 3), "closing without adding keeps step 1 open")
+
+        app.buttons["Add"].tap()
+        XCTAssertTrue(added.waitForExistence(timeout: 3))
+        added.tap()
+        XCTAssertTrue(app.buttons["Open"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Open"].isEnabled, "step 2 is next")
+        XCTAssertFalse(app.buttons["Add"].exists)
+
         app.buttons["Set Up Later"].tap()
         XCTAssertFalse(app.staticTexts["Make it automatic"].waitForExistence(timeout: 2))
     }

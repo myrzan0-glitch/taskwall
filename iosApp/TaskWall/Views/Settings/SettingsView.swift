@@ -153,6 +153,7 @@ struct AutomationSettingsView: View {
 struct AutomationSetupView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
+    @State private var addingShortcut = false
     var showsHeader = true
     let onFinish: () -> Void
 
@@ -235,6 +236,11 @@ struct AutomationSetupView: View {
                 .frame(maxWidth: .infinity)
                 .padding()
         }
+        .sheet(isPresented: $addingShortcut) {
+            AddShortcutView {
+                model.setAutomation(model.automation.withShortcutAdded(added: true))
+            }
+        }
     }
 
     private var morningText: String {
@@ -293,8 +299,8 @@ struct AutomationSetupView: View {
         let automation = model.automation
         switch step {
         case .add:
-            openURL(ShortcutLinks.getShortcut)
-            model.setAutomation(automation.withShortcutAdded(added: true))
+            // Marked as added only once the person confirms, not on the tap.
+            addingShortcut = true
         case .allow:
             openURL(ShortcutLinks.openShortcuts)
             model.setAutomation(automation.withRunsWithoutAsking(on: true))
