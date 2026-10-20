@@ -23,6 +23,14 @@ struct TasksView: View {
         NavigationStack {
             List {
                 Section {
+                    Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
+                }
+
+                Section {
                     LockScreenStatusCard()
                 }
 
@@ -76,7 +84,6 @@ struct TasksView: View {
                 }
             }
             .navigationTitle("Today")
-            .navigationSubtitle(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
             // Large title on the same row as the toolbar buttons, as in Wallet.
             .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
