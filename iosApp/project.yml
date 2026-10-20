@@ -47,7 +47,33 @@ targets:
       - name: Build Kotlin shared framework
         basedOnDependencyAnalysis: false
         script: |
-          cd "$SRCROOT/.."
-          ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+          "$SRCROOT/scripts/build-shared.sh"
     scheme:
       storeKitConfiguration: TaskWall/Resources/TaskWall.storekit
+      testTargets:
+        - TaskWallTests
+        - TaskWallUITests
+
+  # Unit tests run inside the app, so they share its copy of the Shared framework.
+  TaskWallTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: TaskWallTests
+    dependencies:
+      - target: TaskWall
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        FRAMEWORK_SEARCH_PATHS: $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+
+  TaskWallUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: TaskWallUITests
+    dependencies:
+      - target: TaskWall
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES

@@ -53,14 +53,14 @@ object WallpaperAppearance {
         val tone = when (style.textTone) {
             ToneSetting.LIGHT -> TextTone.LIGHT
             ToneSetting.DARK -> TextTone.DARK
-            ToneSetting.AUTO -> auto?.tone ?: TextTone.LIGHT
+            ToneSetting.AUTOMATIC -> auto?.tone ?: TextTone.LIGHT
         }
         val backdrop = when (style.backdrop) {
             BackdropSetting.CLEAR -> Backdrop.CLEAR
             BackdropSetting.SHADE -> Backdrop.SHADE
             BackdropSetting.GLASS -> Backdrop.GLASS
             // Until the photo is measured, glass is the safe choice.
-            BackdropSetting.AUTO -> auto?.backdrop ?: Backdrop.GLASS
+            BackdropSetting.AUTOMATIC -> auto?.backdrop ?: Backdrop.GLASS
         }
         val palette = if (tone == TextTone.LIGHT) lightTextOnPhoto else darkTextOnPhoto
         return ResolvedAppearance(isPhoto = true, tone = tone, backdrop = backdrop, palette = palette)

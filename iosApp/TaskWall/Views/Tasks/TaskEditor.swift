@@ -19,7 +19,7 @@ struct TaskEditor: View {
 
     private var hasChanges: Bool {
         draft.title != original.title || draft.notes != original.notes || draft.priority != original.priority
-            || draft.hasDueDate != original.hasDueDate || draft.hasTime != original.hasTime
+            || draft.dueDay != original.dueDay || draft.dueMinutes != original.dueMinutes
             || draft.showOnWallpaper != original.showOnWallpaper
     }
 
@@ -31,8 +31,10 @@ struct TaskEditor: View {
                         .font(.body.weight(.semibold))
                         .focused($titleFocused)
                         .submitLabel(.done)
+                        .accessibilityIdentifier("taskTitle")
                     TextField("Notes", text: $draft.notes, axis: .vertical)
                         .lineLimit(2...5)
+                        .accessibilityIdentifier("taskNotes")
                 }
 
                 Section("Priority") {
@@ -79,10 +81,13 @@ struct TaskEditor: View {
                     Button(role: .close) {
                         if hasChanges { confirmDiscard = true } else { dismiss() }
                     }
+                    .accessibilityIdentifier("closeEditor")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm) { save() }
                         .disabled(!draft.isValid)
+                        .accessibilityLabel("Save")
+                        .accessibilityIdentifier("saveTask")
                 }
             }
             .confirmationDialog("Discard this task?", isPresented: $confirmDiscard, titleVisibility: .visible) {

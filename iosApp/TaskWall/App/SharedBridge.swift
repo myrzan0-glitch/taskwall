@@ -79,14 +79,14 @@ extension Priority {
 extension LegibilityResult {
     /// The sentence shown under Adjust Photo, e.g. "Auto picks black text with no backdrop…".
     var explanation: String {
-        let text = tone == .light ? "white" : "black"
+        let text = tone == TextTone.light ? "white" : "black"
         let ratio = { (value: Double) in String(format: "%.1f:1", value) }
         switch backdrop {
         case .clear:
-            let best = tone == .light ? whiteContrast : blackContrast
+            let best = tone == TextTone.light ? whiteContrast : blackContrast
             return "Auto picks \(text) text with no backdrop. \(text.capitalized) already reaches \(ratio(best)) here."
         case .shade:
-            let best = tone == .light ? whiteContrast : blackContrast
+            let best = tone == TextTone.light ? whiteContrast : blackContrast
             return "Auto picks \(text) text with a soft shade. \(text.capitalized) alone only reaches \(ratio(best))."
         default:
             return "Auto picks \(text) text on frosted glass. Neither colour is readable on this photo alone (\(ratio(max(whiteContrast, blackContrast))) at best)."

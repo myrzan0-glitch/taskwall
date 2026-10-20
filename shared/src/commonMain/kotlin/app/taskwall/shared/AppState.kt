@@ -62,8 +62,8 @@ data class WallpaperStyle(
     val photoOffsetY: Double = 0.0,
     val layout: WallpaperLayout = WallpaperLayout.LIST,
     val showProgress: Boolean = true,
-    val textTone: ToneSetting = ToneSetting.AUTO,
-    val backdrop: BackdropSetting = BackdropSetting.AUTO,
+    val textTone: ToneSetting = ToneSetting.AUTOMATIC,
+    val backdrop: BackdropSetting = BackdropSetting.AUTOMATIC,
     val position: TaskPosition = TaskPosition.BELOW_CLOCK,
     /** Result of measuring the current photo; null until a photo is analysed. */
     val photoAnalysis: LegibilityResult? = null,
@@ -109,9 +109,10 @@ enum class WallpaperLayout { LIST, TABLE }
 
 enum class TaskPosition { BELOW_CLOCK, BOTTOM }
 
-enum class ToneSetting { AUTO, LIGHT, DARK }
+// Not AUTO: "auto" is a C keyword, so Swift would see it as `auto_`.
+enum class ToneSetting { AUTOMATIC, LIGHT, DARK }
 
-enum class BackdropSetting { AUTO, CLEAR, SHADE, GLASS }
+enum class BackdropSetting { AUTOMATIC, CLEAR, SHADE, GLASS }
 
 /** Text colour on a photo: LIGHT = white text, DARK = black text. */
 enum class TextTone { LIGHT, DARK }

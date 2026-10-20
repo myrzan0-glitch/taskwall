@@ -25,7 +25,7 @@ struct WallpaperView: View {
                             .pickerStyle(.segmented)
                             .labelsHidden()
 
-                            if style.source == .photo {
+                            if style.source == BackgroundSource.photo {
                                 Text("Your photo").font(.footnote).foregroundStyle(.secondary)
                                 Button {
                                     showPhotoPicker = true
@@ -50,7 +50,7 @@ struct WallpaperView: View {
                     .padding(.vertical, 4)
                 }
 
-                if style.source == .photo {
+                if style.source == BackgroundSource.photo {
                     Section {
                         Button {
                             showAdjust = true
@@ -121,7 +121,7 @@ struct WallpaperView: View {
         Binding {
             model.style.source
         } set: { source in
-            if source == .photo && !model.style.hasPhoto {
+            if source == BackgroundSource.photo && !model.style.hasPhoto {
                 showPhotoPicker = true
             } else {
                 model.setStyle(model.style.withSource(source: source))
@@ -138,7 +138,7 @@ struct WallpaperView: View {
     }
 
     private func readabilitySummary(_ style: WallpaperStyle) -> String {
-        if style.textTone == .auto && style.backdrop == .auto { return "Auto" }
+        if style.textTone == ToneSetting.automatic && style.backdrop == BackdropSetting.automatic { return "Auto" }
         return "Custom"
     }
 

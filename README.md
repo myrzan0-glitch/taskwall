@@ -65,9 +65,12 @@ shared/src/commonMain/kotlin/app/taskwall/shared/
   WallpaperAppearance.kt             themes and resolved colours
   WallpaperGeometry.kt               Lock Screen safe areas
   TipJar.kt, SampleData.kt, Formatting.kt
-shared/src/commonTest/               unit tests (31)
+shared/src/commonTest/               unit tests (53): dates, sorting, store, every user flow
 iosApp/
-  project.yml                        XcodeGen project
+  project.yml                        XcodeGen project (app, unit tests, UI tests)
+  scripts/test.sh                    runs the iOS tests on a simulator
+  TaskWallTests/                     unit tests: AppModel flows, rendering, photo analysis, bridge
+  TaskWallUITests/                   XCUITests: onboarding, tasks, search, wallpaper, settings
   TaskWall/App/                      app entry, AppModel, Kotlin bridge, App Group storage
   TaskWall/Views/                    Tasks, Wallpaper, Settings, Tips, Onboarding, Search
   TaskWall/Rendering/                WallpaperCanvas, renderer, photo storage and analysis
@@ -99,7 +102,24 @@ xcodegen          # creates TaskWall.xcodeproj
 open TaskWall.xcodeproj
 ```
 
-Building the app runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode` first, which compiles the Kotlin code into the `Shared` framework. The scheme uses `Resources/TaskWall.storekit`, so tips work in the simulator without App Store Connect.
+Building the app runs `iosApp/scripts/build-shared.sh` first, which compiles the Kotlin code into the `Shared` framework with Gradle. The first build downloads the Kotlin/Native toolchain (about 1 GB). The scheme uses `Resources/TaskWall.storekit`, so tips work in the simulator without App Store Connect.
+
+If Xcode reports **"Command PhaseScriptExecution failed with a nonzero exit code"**, the Kotlin build failed. Open the Report navigator (⌘9), select the build and expand **Build Kotlin shared framework** to see why. The usual causes:
+
+- **No Java:** run `brew install --cask temurin` and restart Xcode.
+- **Wrong developer directory:** run `sudo xcode-select -s /Applications/Xcode.app`.
+- **Project out of date** after pulling changes: run `xcodegen` again in `iosApp/`.
+
+### Running the tests
+
+```bash
+./gradlew :shared:jvmTest        # shared rules, any OS
+iosApp/scripts/test.sh unit      # iOS unit tests (about a minute after the first build)
+iosApp/scripts/test.sh ui        # XCUITests, walks through every screen
+iosApp/scripts/test.sh           # both
+```
+
+The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SIMULATOR="iPhone 16" iosApp/scripts/test.sh` to choose). In Xcode, ⌘U runs the same tests. The UI tests launch the app with `-uiTesting`, so they never touch your real tasks. CI runs all of this on every push: `.github/workflows/shared.yml` (Linux) and `.github/workflows/ios.yml` (macOS).
 
 ### Before shipping, replace the placeholders
 

@@ -230,7 +230,7 @@ private struct PickLookStep: View {
                     .frame(maxWidth: .infinity)
 
                 HStack(spacing: 12) {
-                    ThemeSwatches(selected: style.source == .color ? style.theme : WallpaperTheme.paper) {
+                    ThemeSwatches(selected: style.source == BackgroundSource.color ? style.theme : WallpaperTheme.paper) {
                         model.setStyle(style.withTheme(theme: $0))
                     }
                     PhotosPicker(selection: $pickedItem, matching: .images) {
