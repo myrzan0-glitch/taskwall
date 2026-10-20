@@ -351,6 +351,8 @@ struct LockScreenPreview: View {
             photo: model.photo,
             showsSystemUI: true
         )
+        // The preview is one element; its tiny task titles shouldn't be read or found on their own.
+        .accessibilityHidden(true)
         .frame(width: screen.width, height: screen.height)
         .scaleEffect(scale, anchor: .topLeading)
         .frame(width: width, height: screen.height * scale, alignment: .topLeading)

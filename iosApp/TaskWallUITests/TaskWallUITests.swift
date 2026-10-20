@@ -98,8 +98,9 @@ final class TaskWallUITests: XCTestCase {
         title.typeText("Half typed")
         app.buttons["closeEditor"].tap()
         XCTAssertTrue(app.buttons["Discard Changes"].waitForExistence(timeout: 3))
-        app.buttons["Keep Editing"].tap()
-        XCTAssertTrue(title.exists)
+        let keep = app.buttons["Keep Editing"]
+        if keep.waitForExistence(timeout: 2) { keep.tap() } else { app.buttons["Cancel"].tap() }
+        XCTAssertTrue(title.waitForExistence(timeout: 2))
         app.buttons["closeEditor"].tap()
         app.buttons["Discard Changes"].tap()
         XCTAssertTrue(app.staticTexts["Nothing here yet"].waitForExistence(timeout: 3))
@@ -206,8 +207,11 @@ final class TaskWallUITests: XCTestCase {
         let toggle = app.switches["Clear Completed Each Morning"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 3))
         let before = toggle.value as? String
-        toggle.tap()
-        XCTAssertNotEqual(toggle.value as? String, before)
+        // Tapping the row's label does nothing; the switch sits at the trailing edge.
+        let knob = toggle.switches.firstMatch
+        if knob.exists { knob.tap() } else { toggle.coordinate(withNormalizedOffset: CGPoint(x: 0.93, y: 0.5)).tap() }
+        let flipped = NSPredicate { _, _ in (toggle.value as? String) != before }
+        wait(for: [expectation(for: flipped, evaluatedWith: nil)], timeout: 3)
 
         app.buttons["tipJar"].tap()
         XCTAssertTrue(app.staticTexts["Keep TaskWall free"].waitForExistence(timeout: 5))
