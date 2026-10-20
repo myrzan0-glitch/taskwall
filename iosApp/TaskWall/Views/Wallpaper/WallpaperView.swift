@@ -138,7 +138,7 @@ struct WallpaperView: View {
     }
 
     private func readabilitySummary(_ style: WallpaperStyle) -> String {
-        if style.textTone == ToneSetting.auto && style.backdrop == BackdropSetting.auto { return "Auto" }
+        if style.textTone == ToneSetting.automatic && style.backdrop == BackdropSetting.automatic { return "Auto" }
         return "Custom"
     }
 

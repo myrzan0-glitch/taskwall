@@ -40,12 +40,12 @@ struct PhotoAdjustView: View {
             preview(style)
             VStack(spacing: 10) {
                 row("Text", selection: binding(\.textTone) { $0.withTextTone(tone: $1) }) {
-                    Text("Auto").tag(ToneSetting.auto)
+                    Text("Auto").tag(ToneSetting.automatic)
                     Text("White").tag(ToneSetting.light)
                     Text("Black").tag(ToneSetting.dark)
                 }
                 row("Backdrop", selection: binding(\.backdrop) { $0.withBackdrop(backdrop: $1) }) {
-                    Text("Auto").tag(BackdropSetting.auto)
+                    Text("Auto").tag(BackdropSetting.automatic)
                     Text("None").tag(BackdropSetting.clear)
                     Text("Shade").tag(BackdropSetting.shade)
                     Text("Glass").tag(BackdropSetting.glass)
