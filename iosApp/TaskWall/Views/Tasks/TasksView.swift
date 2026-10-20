@@ -67,7 +67,7 @@ struct TasksView: View {
                         Text("Add a task and it shows up on your Lock Screen.")
                     } actions: {
                         Button("New Task") { editor = .new }
-                            .buttonStyle(.glassProminent)
+                            .prominentButton()
                     }
                 }
             }
@@ -89,7 +89,7 @@ struct TasksView: View {
                     Button { editor = .new } label: {
                         Image("add-01")
                     }
-                    .buttonStyle(.glassProminent)
+                    .prominentButton()
                     .accessibilityLabel("New Task")
                     .accessibilityIdentifier("newTask")
                 }

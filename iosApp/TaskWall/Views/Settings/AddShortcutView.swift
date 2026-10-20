@@ -68,7 +68,7 @@ struct AddShortcutView: View {
                 Button { sharing = true } label: {
                     Text("Add").frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.glassProminent)
+                .prominentButton()
                 .accessibilityIdentifier("shareShortcut")
                 Button("I've Added It", action: finish)
                     .accessibilityIdentifier("shortcutAdded")
@@ -120,7 +120,7 @@ struct AddShortcutView: View {
                 Button { openURL(ShortcutLinks.createShortcut) } label: {
                     Text("Open Shortcuts").frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.glassProminent)
+                .prominentButton()
                 .accessibilityIdentifier("openShortcutsEditor")
                 Button("I've Added It", action: finish)
                     .accessibilityIdentifier("shortcutAdded")

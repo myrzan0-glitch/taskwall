@@ -11,6 +11,7 @@ struct TaskWallApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .tint(.brand)
                 .environment(model)
                 .environment(tips)
                 .onOpenURL { model.handle($0) }
