@@ -31,6 +31,11 @@ final class AppGroupFileStore: NSObject, TextFileStore {
     func write(text: String) {
         try? text.write(to: url, atomically: true, encoding: .utf8)
     }
+
+    /// Deletes the file. Used by the UI tests to start from nothing.
+    func reset() {
+        try? FileManager.default.removeItem(at: url)
+    }
 }
 
 /// Links into the Shortcuts app. iOS only lets Shortcuts set the wallpaper.

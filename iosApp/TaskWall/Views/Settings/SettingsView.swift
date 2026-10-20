@@ -20,12 +20,15 @@ struct SettingsView: View {
                     } label: {
                         settingsRow("Buy Me a Coffee", icon: "coffee-02", filled: true)
                     }
+                    .accessibilityIdentifier("tipJar")
                     Link(destination: reviewURL) {
                         settingsRow("Rate on the App Store", icon: "star")
                     }
+                    .accessibilityIdentifier("rateApp")
                     Link(destination: feedbackURL) {
                         settingsRow("Send Feedback", icon: "message-01")
                     }
+                    .accessibilityIdentifier("sendFeedback")
                 } header: {
                     Text("Support TaskWall")
                 } footer: {
@@ -71,6 +74,9 @@ struct SettingsView: View {
                 .frame(width: 16, height: 16)
                 .foregroundStyle(.tertiary)
         }
+        // The icons are decoration; VoiceOver should read the title only.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
     }
 }
 

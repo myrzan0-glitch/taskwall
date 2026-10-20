@@ -91,6 +91,7 @@ struct TasksView: View {
                     }
                     .buttonStyle(.glassProminent)
                     .accessibilityLabel("New Task")
+                    .accessibilityIdentifier("newTask")
                 }
             }
             .sheet(item: $editor) { target in
@@ -133,8 +134,9 @@ struct TaskRow: View {
             PriorityBadge(priority: task.priority)
         }
         .padding(.leading, -12)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(task.isDone ? .isSelected : [])
+        // Keep the check button its own element so it can be tapped on its own.
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("taskRow")
     }
 }
 
@@ -207,6 +209,7 @@ struct LockScreenStatusCard: View {
                     Button("Set Up Automatic Updates") { showSetup = true }
                         .buttonStyle(.glass)
                         .controlSize(.small)
+                        .accessibilityIdentifier("setUpAutomation")
                 }
             }
         }
