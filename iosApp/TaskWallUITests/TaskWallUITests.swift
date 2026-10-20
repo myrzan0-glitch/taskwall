@@ -101,7 +101,7 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Nothing here yet"].waitForExistence(timeout: 10))
 
         let title = app.textFields["taskTitle"]
-        XCTAssertTrue(tap(app.buttons["newTask"], until: title))
+        XCTAssertTrue(tap(app.buttons["New Task"].firstMatch, until: title))
         XCTAssertFalse(app.buttons["saveTask"].isEnabled, "no title, nothing to save")
         title.tap()
         title.typeText("Buy milk")
@@ -127,9 +127,9 @@ final class TaskWallUITests: XCTestCase {
 
     func testClosingAnEditedTaskAsksFirst() {
         let app = launch("-skipOnboarding")
-        XCTAssertTrue(app.buttons["newTask"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["New Task"].firstMatch.waitForExistence(timeout: 10))
         let title = app.textFields["taskTitle"]
-        XCTAssertTrue(tap(app.buttons["newTask"], until: title))
+        XCTAssertTrue(tap(app.buttons["New Task"].firstMatch, until: title))
         title.tap()
         title.typeText("Half typed")
         app.buttons["closeEditor"].tap()
@@ -194,7 +194,7 @@ final class TaskWallUITests: XCTestCase {
     func testSearchFindsTasksByTitle() {
         let app = launch("-skipOnboarding", "-seed")
         XCTAssertTrue(task(app, "Buy milk").waitForExistence(timeout: 10))
-        tab(app, "Search").tap()
+        app.buttons["Search"].firstMatch.tap()
         let field = app.searchFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 3))
         field.tap()
@@ -209,7 +209,7 @@ final class TaskWallUITests: XCTestCase {
 
     func testWallpaperLayoutAndThemes() {
         let app = launch("-skipOnboarding", "-seed")
-        XCTAssertTrue(app.buttons["newTask"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["New Task"].firstMatch.waitForExistence(timeout: 10))
         tab(app, "Wallpaper").tap()
         XCTAssertTrue(app.navigationBars["Wallpaper"].waitForExistence(timeout: 3))
 
@@ -264,7 +264,7 @@ final class TaskWallUITests: XCTestCase {
 
     func testSettingsToggleAndTipJar() {
         let app = launch("-skipOnboarding")
-        XCTAssertTrue(app.buttons["newTask"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["New Task"].firstMatch.waitForExistence(timeout: 10))
         tab(app, "Settings").tap()
 
         let toggle = app.switches["Clear Completed Each Morning"]

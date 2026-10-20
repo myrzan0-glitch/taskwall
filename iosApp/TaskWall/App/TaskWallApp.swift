@@ -30,16 +30,25 @@ struct TaskWallApp: App {
 }
 
 enum AppTab: Hashable {
-    case tasks, wallpaper, settings, search
+    case tasks, wallpaper, settings
+    /// Not a screen: the floating button at the end of the tab bar adds a task.
+    case newTask
 }
 
 struct RootView: View {
     @Environment(AppModel.self) private var model
     @State private var tab: AppTab = .tasks
+    @State private var addingTask = false
 
     var body: some View {
         if model.settings.onboardingComplete {
-            TabView(selection: $tab) {
+            TabView(selection: Binding(
+                get: { tab },
+                set: { picked in
+                    // The add button opens the editor and leaves you where you were.
+                    if picked == .newTask { addingTask = true } else { tab = picked }
+                }
+            )) {
                 Tab("Tasks", image: "task-done-01", value: AppTab.tasks) {
                     TasksView()
                 }
@@ -49,11 +58,16 @@ struct RootView: View {
                 Tab("Settings", image: "settings-02", value: AppTab.settings) {
                     SettingsView()
                 }
-                Tab(value: AppTab.search, role: .search) {
-                    SearchView()
+                // The separate circle at the trailing end of the tab bar, where iOS puts
+                // the search tab, is the easiest spot to reach; adding is the main action.
+                Tab("New Task", image: "add-01", value: AppTab.newTask, role: .search) {
+                    Color.clear
                 }
             }
             .tabBarMinimizeBehavior(.onScrollDown)
+            .sheet(isPresented: $addingTask) {
+                TaskEditor(target: .new)
+            }
         } else {
             OnboardingView()
         }

@@ -90,12 +90,12 @@ struct TasksView: View {
                 }
                 ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { editor = .new } label: {
-                        Image("add-01")
+                    NavigationLink {
+                        SearchView()
+                    } label: {
+                        Image("search-01")
                     }
-                    .prominentButton()
-                    .accessibilityLabel("New Task")
-                    .accessibilityIdentifier("newTask")
+                    .accessibilityLabel("Search")
                 }
             }
             .sheet(item: $editor) { target in
