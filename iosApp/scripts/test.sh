@@ -3,6 +3,7 @@
 #   iosApp/scripts/test.sh          unit tests and UI tests
 #   iosApp/scripts/test.sh unit     unit tests only (fast)
 #   iosApp/scripts/test.sh ui       UI tests only
+#   iosApp/scripts/test.sh screenshots   every screen, dark and light, into iosApp/build/screenshots
 # Set SIMULATOR to use another device, e.g. SIMULATOR="iPhone 16" iosApp/scripts/test.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -23,15 +24,24 @@ if [ -z "$device" ]; then
 fi
 echo "Testing on $device"
 
+mode="${1:-all}"
 only=()
-case "${1:-all}" in
+results="build/TestResults.xcresult"
+log="build/xcodebuild.log"
+case "$mode" in
   unit) only=(-only-testing:TaskWallTests) ;;
   ui) only=(-only-testing:TaskWallUITests) ;;
+  screenshots)
+    only=(-only-testing:TaskWallUITests/ScreenshotTests)
+    results="build/Screenshots.xcresult"
+    log="build/screenshots.log"
+    # xcodebuild hands TEST_RUNNER_* variables to the tests without the prefix.
+    export TEST_RUNNER_SCREENSHOTS=1
+    ;;
   all) ;;
-  *) echo "usage: $0 [unit|ui|all]" >&2; exit 2 ;;
+  *) echo "usage: $0 [unit|ui|all|screenshots]" >&2; exit 2 ;;
 esac
 
-results="build/TestResults.xcresult"
 rm -rf "$results"
 mkdir -p build
 
@@ -46,9 +56,30 @@ run() {
 }
 
 # The full output goes to a file too; xcbeautify hides test print() output.
+status=0
 if command -v xcbeautify >/dev/null; then
-  run 2>&1 | tee build/xcodebuild.log | xcbeautify
+  run 2>&1 | tee "$log" | xcbeautify || status=$?
 else
-  run 2>&1 | tee build/xcodebuild.log
+  run 2>&1 | tee "$log" || status=$?
 fi
-echo "Results: iosApp/$results (open it in Xcode to see screenshots of any failure); full log in iosApp/build/xcodebuild.log"
+
+if [ "$mode" = screenshots ]; then
+  out="build/screenshots"
+  rm -rf "$out" "$out.raw"
+  xcrun xcresulttool export attachments --path "$results" --output-path "$out.raw"
+  # Name each image after its attachment, e.g. dark-20-wallpaper.png.
+  python3 - "$out.raw" "$out" <<'PY'
+import json, os, shutil, sys
+raw, out = sys.argv[1], sys.argv[2]
+os.makedirs(out, exist_ok=True)
+for test in json.load(open(os.path.join(raw, "manifest.json"))):
+    for a in test.get("attachments", []):
+        name = a.get("suggestedHumanReadableName") or a["exportedFileName"]
+        name = name.split("_")[0]
+        shutil.copy(os.path.join(raw, a["exportedFileName"]), os.path.join(out, name + ".png"))
+PY
+  echo "Screenshots: iosApp/$out ($(ls "$out" | wc -l | tr -d ' ') images)"
+fi
+
+echo "Results: iosApp/$results (open it in Xcode to see screenshots of any failure); full log in iosApp/$log"
+exit $status
