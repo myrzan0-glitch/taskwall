@@ -77,6 +77,8 @@ struct TasksView: View {
             }
             .navigationTitle("Today")
             .navigationSubtitle(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+            // Inline: a large title sits under the toolbar row and left an empty band above it.
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
