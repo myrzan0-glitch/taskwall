@@ -329,7 +329,8 @@ private struct SystemControls: View {
             .frame(width: 24 * s, height: 24 * s)
             .foregroundStyle(color)
             .frame(width: 50 * s, height: 50 * s)
-            .glassEffect(.regular, in: .circle)
+            // A plain translucent circle: live glass rendered as solid discs at preview size.
+            .background(Circle().fill(color.opacity(0.15)))
     }
 }
 
@@ -359,7 +360,7 @@ struct LockScreenPreview: View {
         .clipShape(RoundedRectangle(cornerRadius: 55 * scale, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 55 * scale, style: .continuous)
-                .strokeBorder(.primary.opacity(0.12), lineWidth: 0.5)
+                .strokeBorder(.primary.opacity(0.15), lineWidth: 1)
         )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Lock Screen preview")

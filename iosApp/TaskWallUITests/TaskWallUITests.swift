@@ -234,7 +234,7 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.buttons["setUpAutomation"].waitForExistence(timeout: 10))
         XCTAssertTrue(tap(app.buttons["setUpAutomation"], until: app.staticTexts["Make it automatic"]))
         XCTAssertTrue(app.buttons["Add"].isEnabled)
-        XCTAssertFalse(app.buttons["Open"].isEnabled, "steps go in order")
+        XCTAssertFalse(app.buttons["Open"].exists, "steps go in order")
 
         // Add opens the install sheet; nothing is marked done until the person confirms.
         app.buttons["Add"].tap()
