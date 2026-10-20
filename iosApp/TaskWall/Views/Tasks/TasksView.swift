@@ -45,6 +45,15 @@ struct TasksView: View {
                     .listRowInsets(EdgeInsets())
                 }
 
+                // In the list, under the filter: an overlay centred on the whole
+                // screen ran into the filter whenever the card above was tall.
+                if sections.isEmpty {
+                    Section {
+                        emptyState
+                            .listRowBackground(Color.clear)
+                    }
+                }
+
                 ForEach(sections, id: \.kind) { section in
                     Section {
                         ForEach(section.tasks, id: \.id) { task in
@@ -71,18 +80,6 @@ struct TasksView: View {
                 }
             }
             .listSectionSpacing(.compact)
-            .overlay {
-                if sections.isEmpty {
-                    ContentUnavailableView {
-                        Label("Nothing here yet", image: "task-done-01")
-                    } description: {
-                        Text("Add a task and it shows up on your Lock Screen.")
-                    } actions: {
-                        Button("New Task") { editor = .new }
-                            .prominentButton()
-                    }
-                }
-            }
             .navigationTitle("Today")
             // Large title on the same row as the toolbar buttons, as in Wallet.
             .toolbarTitleDisplayMode(.inlineLarge)
@@ -107,6 +104,34 @@ struct TasksView: View {
             }
             .sheet(item: $editor) { target in
                 TaskEditor(target: target)
+            }
+        }
+    }
+}
+
+private extension TasksView {
+    /// Says why the list is empty: no tasks at all, or none for this filter.
+    @ViewBuilder var emptyState: some View {
+        if model.state.tasks.isEmpty {
+            ContentUnavailableView {
+                Label("Nothing here yet", image: "task-done-01")
+            } description: {
+                Text("Add a task and it shows up on your Lock Screen.")
+            } actions: {
+                Button("New Task") { editor = .new }
+                    .prominentButton()
+            }
+        } else if filter == TaskFilter.upcoming {
+            ContentUnavailableView {
+                Label("Nothing upcoming", image: "calendar-03")
+            } description: {
+                Text("Tasks due after today show up here.")
+            }
+        } else {
+            ContentUnavailableView {
+                Label("Nothing for today", image: "task-done-01")
+            } description: {
+                Text("Your other tasks are under Upcoming.")
             }
         }
     }
