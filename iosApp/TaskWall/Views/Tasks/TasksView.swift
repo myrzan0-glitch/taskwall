@@ -43,10 +43,13 @@ struct TasksView: View {
                             TaskRow(task: task, today: model.today) { model.toggle(task) }
                                 .contentShape(Rectangle())
                                 .onTapGesture { editor = .edit(task) }
+                                .listRowInsets(TaskRow.insets)
                                 .swipeActions {
                                     Button(role: .destructive) { model.delete(task) } label: {
                                         Label("Delete", systemImage: "trash")
                                     }
+                                    // The app-wide tint is white in dark mode, which hid the icon.
+                                    .tint(.red)
                                 }
                         }
                     } header: {
@@ -59,6 +62,7 @@ struct TasksView: View {
                     }
                 }
             }
+            .listSectionSpacing(.compact)
             .overlay {
                 if sections.isEmpty {
                     ContentUnavailableView {
@@ -102,6 +106,9 @@ struct TasksView: View {
 }
 
 struct TaskRow: View {
+    /// The check button's 44 pt hit area brings the circle back to the usual 16 pt margin.
+    static let insets = EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 16)
+
     let task: TaskItem
     let today: CalendarDay
     let onToggle: () -> Void
@@ -133,7 +140,6 @@ struct TaskRow: View {
             Spacer(minLength: 8)
             PriorityBadge(priority: task.priority)
         }
-        .padding(.leading, -12)
         // Keep the check button its own element so it can be tapped on its own.
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("taskRow")

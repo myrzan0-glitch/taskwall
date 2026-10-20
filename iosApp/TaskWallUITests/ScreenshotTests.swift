@@ -86,6 +86,14 @@ final class ScreenshotTests: XCTestCase {
                 app.buttons["closeEditor"].tap()
             }
 
+            // Swipe actions and the overdue section.
+            let overdue = app.descendants(matching: .any).matching(identifier: "taskRow").staticTexts["Renew passport"].firstMatch
+            if overdue.waitForExistence(timeout: 5) {
+                overdue.swipeLeft()
+                snap(app, look, "15-swipe-delete")
+                app.navigationBars.firstMatch.tap()
+            }
+
             tab(app, "Search")
             let field = app.searchFields.firstMatch
             if field.waitForExistence(timeout: 5) {

@@ -97,6 +97,7 @@ enum LaunchOptions {
         _ = store.addTask(title: "Buy milk", notes: "Oat, not dairy", priority: .high, dueDay: today, dueMinutes: kotlinInt(17 * 60), showOnWallpaper: true, nowMillis: now)
         _ = store.addTask(title: "Call mum", notes: "", priority: .noPriority, dueDay: nil, dueMinutes: nil, showOnWallpaper: true, nowMillis: now)
         _ = store.addTask(title: "Dentist", notes: "", priority: .medium, dueDay: today.plusDays(days: 1), dueMinutes: kotlinInt(9 * 60), showOnWallpaper: true, nowMillis: now)
+        _ = store.addTask(title: "Renew passport", notes: "", priority: .high, dueDay: today.plusDays(days: -1), dueMinutes: nil, showOnWallpaper: true, nowMillis: now)
         let done = store.addTask(title: "Pay rent", notes: "", priority: .noPriority, dueDay: today, dueMinutes: nil, showOnWallpaper: true, nowMillis: now)
         store.setDone(id: done.id, done: true, today: today, nowMillis: now)
     }
