@@ -15,11 +15,11 @@ struct WallpaperCanvas: View {
     var showsSystemUI = false
 
     private var palette: WallpaperPalette { appearance.palette }
-    private var isGlass: Bool { appearance.isPhoto && appearance.backdrop == .glass && photo != nil }
-    private var isShade: Bool { appearance.isPhoto && appearance.backdrop == .shade }
+    private var isGlass: Bool { appearance.isPhoto && appearance.backdrop == Backdrop.glass && photo != nil }
+    private var isShade: Bool { appearance.isPhoto && appearance.backdrop == Backdrop.shade }
     private var textShadow: Color {
         guard appearance.isPhoto, !isGlass else { return .clear }
-        return appearance.tone == .light ? .black.opacity(0.45) : .white.opacity(0.35)
+        return appearance.tone == TextTone.light ? .black.opacity(0.45) : .white.opacity(0.35)
     }
 
     var body: some View {
@@ -54,7 +54,7 @@ struct WallpaperCanvas: View {
     // MARK: Layers
 
     private func shadeBand(size: CGSize) -> some View {
-        let belowClock = style.position == .belowClock
+        let belowClock = style.position == TaskPosition.belowClock
         let top = size.height * (belowClock ? 226 : 400) / 844
         let height = size.height * (belowClock ? 440 : 444) / 844
         let shade = Color(argb: palette.shade)
@@ -73,7 +73,7 @@ struct WallpaperCanvas: View {
     }
 
     private func taskBlock(size: CGSize, s: CGFloat) -> some View {
-        let belowClock = style.position == .belowClock
+        let belowClock = style.position == TaskPosition.belowClock
         return VStack(spacing: 0) {
             if !belowClock { Spacer(minLength: 0) }
             panel(size: size, s: s)
@@ -88,7 +88,7 @@ struct WallpaperCanvas: View {
     private func panel(size: CGSize, s: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 14 * s) {
             header(s: s)
-            if style.layout == .table {
+            if style.layout == WallpaperLayout.table {
                 table(s: s)
             } else {
                 list(s: s)

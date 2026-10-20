@@ -15,7 +15,7 @@ enum WallpaperRenderer {
             content: store.wallpaperContent(today: today),
             style: style,
             appearance: store.resolvedAppearance(),
-            photo: style.source == .photo ? photo : nil
+            photo: style.source == BackgroundSource.photo ? photo : nil
         )
         .frame(width: size.width, height: size.height)
 

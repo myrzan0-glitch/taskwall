@@ -52,7 +52,7 @@ struct TasksView: View {
                     } header: {
                         HStack {
                             Text(section.kind.title)
-                                .foregroundStyle(section.kind == .overdue ? Color.red : Color.primary)
+                                .foregroundStyle(section.kind == SectionKind.overdue ? Color.red : Color.primary)
                             Spacer()
                             Text("\(section.tasks.count)")
                         }
@@ -106,7 +106,7 @@ struct TaskRow: View {
     let onToggle: () -> Void
 
     private var isOverdue: Bool {
-        TaskQueries.shared.kindOf(task: task, today: today) == .overdue
+        TaskQueries.shared.kindOf(task: task, today: today) == SectionKind.overdue
     }
 
     var body: some View {

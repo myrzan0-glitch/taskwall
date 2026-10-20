@@ -15,7 +15,7 @@ struct ThemesView: View {
                     card(
                         title: theme.displayName,
                         style: style.withTheme(theme: theme),
-                        selected: style.source == .color && style.theme == theme
+                        selected: style.source == BackgroundSource.color && style.theme == theme
                     ) {
                         model.setStyle(style.withTheme(theme: theme))
                     }
@@ -24,7 +24,7 @@ struct ThemesView: View {
                     card(
                         title: "Your Photo",
                         style: style.withSource(source: .photo),
-                        selected: style.source == .photo
+                        selected: style.source == BackgroundSource.photo
                     ) {
                         model.setStyle(style.withSource(source: .photo))
                     }
