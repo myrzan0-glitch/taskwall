@@ -225,7 +225,7 @@ private struct PickLookStep: View {
                         .foregroundStyle(.secondary)
                 }
 
-                LockScreenPreview(width: 176)
+                LockScreenPreview(width: 148)
                     .shadow(color: .black.opacity(0.2), radius: 18, y: 12)
                     .frame(maxWidth: .infinity)
 
