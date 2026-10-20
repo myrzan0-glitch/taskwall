@@ -45,9 +45,10 @@ run() {
     ${only[@]+"${only[@]}"}
 }
 
+# The full output goes to a file too; xcbeautify hides test print() output.
 if command -v xcbeautify >/dev/null; then
-  run | xcbeautify
+  run 2>&1 | tee build/xcodebuild.log | xcbeautify
 else
-  run
+  run 2>&1 | tee build/xcodebuild.log
 fi
-echo "Results: iosApp/$results (open it in Xcode to see screenshots of any failure)"
+echo "Results: iosApp/$results (open it in Xcode to see screenshots of any failure); full log in iosApp/build/xcodebuild.log"

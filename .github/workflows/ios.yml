@@ -42,4 +42,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: TestResults
-          path: iosApp/build/TestResults.xcresult
+          path: |
+            iosApp/build/TestResults.xcresult
+            iosApp/build/xcodebuild.log

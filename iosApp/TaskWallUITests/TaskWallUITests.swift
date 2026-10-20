@@ -120,10 +120,10 @@ final class TaskWallUITests: XCTestCase {
         if keep.waitForExistence(timeout: 2) {
             keep.tap()
         } else {
-            // iOS may fold the cancel button into the sheet differently; list what it offers.
-            print("DIALOG BUTTONS: " + app.buttons.allElementsBoundByIndex.map(\.label).joined(separator: " | "))
-            app.buttons["Cancel"].firstMatch.tap()
+            // Anchored to the close button, the dialog has no cancel button: tapping outside keeps editing.
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).tap()
         }
+        XCTAssertFalse(app.buttons["Discard Changes"].waitForExistence(timeout: 2))
         XCTAssertTrue(title.waitForExistence(timeout: 2))
         app.buttons["closeEditor"].tap()
         app.buttons["Discard Changes"].tap()
