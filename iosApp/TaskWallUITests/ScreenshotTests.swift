@@ -75,7 +75,7 @@ final class ScreenshotTests: XCTestCase {
             XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 15))
             snap(app, look, "11-tasks")
 
-            if tap(app.buttons["newTask"], until: app.textFields["taskTitle"]) {
+            if tap(app.buttons["New Task"].firstMatch, until: app.textFields["taskTitle"]) {
                 snap(app, look, "12-new-task")
                 app.buttons["closeEditor"].tap()
             }
@@ -94,7 +94,7 @@ final class ScreenshotTests: XCTestCase {
                 app.navigationBars.firstMatch.tap()
             }
 
-            tab(app, "Search")
+            app.buttons["Search"].firstMatch.tap()
             let field = app.searchFields.firstMatch
             if field.waitForExistence(timeout: 5) {
                 field.tap()
