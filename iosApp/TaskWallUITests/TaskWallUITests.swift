@@ -265,9 +265,9 @@ final class TaskWallUITests: XCTestCase {
         let toggle = app.switches["Clear Completed Each Morning"]
         XCTAssertTrue(toggle.waitForExistence(timeout: 3))
         let before = toggle.value as? String
-        // Tapping the row's label does nothing; the switch sits at the trailing edge.
-        let knob = toggle.switches.firstMatch
-        if knob.exists { knob.tap() } else { toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap() }
+        // The whole row toggles. Tapping the element (not a coordinate) scrolls it
+        // out from under the tab bar first.
+        toggle.tap()
         let flipped = NSPredicate { _, _ in (toggle.value as? String) != before }
         wait(for: [expectation(for: flipped, evaluatedWith: nil)], timeout: 3)
 
