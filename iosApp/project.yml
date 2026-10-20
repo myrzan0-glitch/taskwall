@@ -23,6 +23,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
+        NSAccentColorName: AccentColor
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
         NSPhotoLibraryAddUsageDescription: TaskWall saves your wallpaper image to Photos when you tap Save Image.

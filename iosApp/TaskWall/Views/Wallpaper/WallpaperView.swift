@@ -62,8 +62,11 @@ struct WallpaperView: View {
                 }
 
                 Section {
+                    Picker("Task List", selection: positionBinding) {
+                        Text("Below Clock").tag(TaskPosition.belowClock)
+                        Text("Bottom").tag(TaskPosition.bottom)
+                    }
                     Toggle("Show Progress", isOn: progressBinding)
-                        .tint(.accentColor)
                     NavigationLink {
                         AutomationSettingsView()
                     } label: {
@@ -85,7 +88,7 @@ struct WallpaperView: View {
                         } label: {
                             Label("Update Now", image: "refresh").frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.glassProminent)
+                        .prominentButton()
                     }
                     .controlSize(.large)
                     .listRowBackground(Color.clear)
@@ -131,6 +134,14 @@ struct WallpaperView: View {
 
     private var layoutBinding: Binding<WallpaperLayout> {
         Binding { model.style.layout } set: { model.setStyle(model.style.withLayout(layout: $0)) }
+    }
+
+    /// Where the list sits. It used to be set only in Adjust Photo, yet it moved the list on colours too.
+    private var positionBinding: Binding<TaskPosition> {
+        Binding { model.style.position } set: {
+            // On a photo, moving the list changes what's behind it, so measure again.
+            model.setStyle(model.analyzed(model.style.withPosition(position: $0)))
+        }
     }
 
     private var progressBinding: Binding<Bool> {

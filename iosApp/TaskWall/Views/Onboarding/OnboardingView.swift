@@ -64,7 +64,7 @@ private struct PrimaryButton: View {
         Button(action: action) {
             Text(title).frame(maxWidth: .infinity)
         }
-        .buttonStyle(.glassProminent)
+        .prominentButton()
         .controlSize(.large)
         .padding(.horizontal, 24)
         .padding(.bottom, 8)
@@ -156,7 +156,7 @@ private struct FirstTasksStep: View {
                     Button(action: add) {
                         Image("add-01").renderingMode(.template)
                     }
-                    .buttonStyle(.glassProminent)
+                    .prominentButton()
                     .buttonBorderShape(.circle)
                     .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
                     .accessibilityLabel("Add task")

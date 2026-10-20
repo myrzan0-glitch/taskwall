@@ -73,7 +73,6 @@ struct TaskEditor: View {
                     }
                 }
             }
-            .tint(.accentColor)
             .navigationTitle(isNew ? "New Task" : "Edit Task")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

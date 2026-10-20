@@ -40,7 +40,6 @@ struct SettingsView: View {
                         get: { model.settings.clearCompletedEachMorning },
                         set: { model.setClearCompletedEachMorning($0) }
                     ))
-                    .tint(.accentColor)
                 }
 
                 Section {
@@ -113,7 +112,6 @@ struct AutomationSection: View {
                 get: { automation.updateWhenAppCloses },
                 set: { model.setAutomation(model.automation.withUpdateWhenAppCloses(on: $0)) }
             ))
-            .tint(.accentColor)
 
             Button(automation.isSetUp ? "Set Up Again" : "Set Up Automatic Updates") { showSetup = true }
         } header: {
@@ -216,7 +214,6 @@ struct AutomationSetupView: View {
                     get: { automation.updateWhenAppCloses },
                     set: { model.setAutomation(model.automation.withUpdateWhenAppCloses(on: $0)) }
                 ))
-                .tint(.accentColor)
             }
 
             if automation.isSetUp {
@@ -231,7 +228,7 @@ struct AutomationSetupView: View {
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             Button(automation.isSetUp ? "Done" : "Set Up Later", action: onFinish)
-                .buttonStyle(.glassProminent)
+                .prominentButton()
                 .controlSize(.large)
                 .frame(maxWidth: .infinity)
                 .padding()
@@ -288,7 +285,7 @@ struct AutomationSetupView: View {
             Spacer(minLength: 8)
             if !done {
                 Button(step.action) { run(step) }
-                    .buttonStyle(.glassProminent)
+                    .prominentButton()
                     .disabled(!isCurrent)
             }
         }
