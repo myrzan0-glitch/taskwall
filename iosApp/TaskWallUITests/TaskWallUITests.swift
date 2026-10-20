@@ -8,6 +8,24 @@ final class TaskWallUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    /// On a failure, print the accessibility tree so the CI log shows what the test saw.
+    override func tearDown() {
+        if let run = testRun, run.failureCount > 0 {
+            let lines = XCUIApplication().debugDescription.components(separatedBy: "\n")
+            print("HIERARCHY (\(lines.count) lines)\n" + lines.prefix(600).joined(separator: "\n"))
+        }
+        super.tearDown()
+    }
+
+    /// The rows of the task list, as opposed to the same titles drawn in the Lock Screen preview.
+    private func rows(_ app: XCUIApplication) -> XCUIElementQuery {
+        app.descendants(matching: .any).matching(identifier: "taskRow")
+    }
+
+    private func task(_ app: XCUIApplication, _ title: String) -> XCUIElement {
+        rows(app).staticTexts[title].firstMatch
+    }
+
     private func launch(_ flags: String...) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-uiTesting", "-reset"] + flags
@@ -69,20 +87,20 @@ final class TaskWallUITests: XCTestCase {
         title.tap()
         title.typeText("Buy milk")
         app.buttons["saveTask"].tap()
-        XCTAssertTrue(app.staticTexts["Buy milk"].waitForExistence(timeout: 3))
+        XCTAssertTrue(task(app, "Buy milk").waitForExistence(timeout: 3))
         XCTAssertFalse(app.staticTexts["Nothing here yet"].exists)
 
         app.buttons["Mark done"].firstMatch.tap()
         XCTAssertTrue(app.buttons["Mark not done"].waitForExistence(timeout: 3))
 
-        app.staticTexts["Buy milk"].tap()
+        task(app, "Buy milk").tap()
         XCTAssertTrue(title.waitForExistence(timeout: 3))
         title.tap()
         title.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "milk".count) + "oat milk")
         app.buttons["saveTask"].tap()
-        XCTAssertTrue(app.staticTexts["Buy oat milk"].waitForExistence(timeout: 3))
+        XCTAssertTrue(task(app, "Buy oat milk").waitForExistence(timeout: 3))
 
-        app.staticTexts["Buy oat milk"].swipeLeft()
+        task(app, "Buy oat milk").swipeLeft()
         XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout: 3))
         app.buttons["Delete"].tap()
         XCTAssertTrue(app.staticTexts["Nothing here yet"].waitForExistence(timeout: 3))
@@ -99,7 +117,13 @@ final class TaskWallUITests: XCTestCase {
         app.buttons["closeEditor"].tap()
         XCTAssertTrue(app.buttons["Discard Changes"].waitForExistence(timeout: 3))
         let keep = app.buttons["Keep Editing"]
-        if keep.waitForExistence(timeout: 2) { keep.tap() } else { app.buttons["Cancel"].tap() }
+        if keep.waitForExistence(timeout: 2) {
+            keep.tap()
+        } else {
+            // iOS may fold the cancel button into the sheet differently; list what it offers.
+            print("DIALOG BUTTONS: " + app.buttons.allElementsBoundByIndex.map(\.label).joined(separator: " | "))
+            app.buttons["Cancel"].firstMatch.tap()
+        }
         XCTAssertTrue(title.waitForExistence(timeout: 2))
         app.buttons["closeEditor"].tap()
         app.buttons["Discard Changes"].tap()
@@ -108,35 +132,36 @@ final class TaskWallUITests: XCTestCase {
 
     func testDeleteFromTheEditor() {
         let app = launch("-skipOnboarding", "-seed")
-        XCTAssertTrue(app.staticTexts["Call mum"].waitForExistence(timeout: 10))
-        app.staticTexts["Call mum"].tap()
+        XCTAssertTrue(task(app, "Call mum").waitForExistence(timeout: 10))
+        task(app, "Call mum").tap()
         XCTAssertTrue(app.buttons["Delete Task"].waitForExistence(timeout: 3))
         app.buttons["Delete Task"].tap()
-        XCTAssertTrue(app.staticTexts["Buy milk"].waitForExistence(timeout: 3))
-        XCTAssertFalse(app.staticTexts["Call mum"].exists)
+        XCTAssertTrue(task(app, "Buy milk").waitForExistence(timeout: 3))
+        XCTAssertFalse(task(app, "Call mum").exists)
     }
 
     func testFilterAndClearCompleted() {
         let app = launch("-skipOnboarding", "-seed")
-        XCTAssertTrue(app.staticTexts["Dentist"].waitForExistence(timeout: 10))
+        XCTAssertTrue(task(app, "Dentist").waitForExistence(timeout: 10))
 
         app.buttons["Today"].tap()
-        XCTAssertFalse(app.staticTexts["Dentist"].exists, "tomorrow's task is not in Today")
+        XCTAssertTrue(task(app, "Buy milk").waitForExistence(timeout: 3))
+        XCTAssertFalse(task(app, "Dentist").exists, "tomorrow's task is not in Today")
         app.buttons["Upcoming"].tap()
-        XCTAssertTrue(app.staticTexts["Dentist"].waitForExistence(timeout: 3))
-        XCTAssertFalse(app.staticTexts["Buy milk"].exists)
+        XCTAssertTrue(task(app, "Dentist").waitForExistence(timeout: 3))
+        XCTAssertEqual(rows(app).count, 1, "only tomorrow's task is upcoming")
         app.buttons["All"].tap()
 
-        XCTAssertTrue(app.staticTexts["Pay rent"].waitForExistence(timeout: 3))
+        XCTAssertTrue(task(app, "Pay rent").waitForExistence(timeout: 3))
         app.buttons["More"].tap()
         app.buttons["Clear Completed"].tap()
-        XCTAssertFalse(app.staticTexts["Pay rent"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.staticTexts["Buy milk"].exists)
+        XCTAssertFalse(task(app, "Pay rent").waitForExistence(timeout: 2))
+        XCTAssertTrue(task(app, "Buy milk").exists)
     }
 
     func testDataSurvivesARelaunch() {
         let app = launch("-skipOnboarding", "-seed")
-        XCTAssertTrue(app.staticTexts["Buy milk"].waitForExistence(timeout: 10))
+        XCTAssertTrue(task(app, "Buy milk").waitForExistence(timeout: 10))
         app.terminate()
 
         let again = XCUIApplication()
@@ -150,14 +175,14 @@ final class TaskWallUITests: XCTestCase {
 
     func testSearchFindsTasksByTitle() {
         let app = launch("-skipOnboarding", "-seed")
-        XCTAssertTrue(app.staticTexts["Buy milk"].waitForExistence(timeout: 10))
+        XCTAssertTrue(task(app, "Buy milk").waitForExistence(timeout: 10))
         tab(app, "Search").tap()
         let field = app.searchFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 3))
         field.tap()
         field.typeText("mum")
-        XCTAssertTrue(app.staticTexts["Call mum"].waitForExistence(timeout: 3))
-        XCTAssertFalse(app.staticTexts["Buy milk"].exists)
+        XCTAssertTrue(task(app, "Call mum").waitForExistence(timeout: 3))
+        XCTAssertEqual(rows(app).count, 1)
         field.typeText("zzz")
         XCTAssertTrue(app.staticTexts["No Results for “mumzzz”"].waitForExistence(timeout: 3))
     }
