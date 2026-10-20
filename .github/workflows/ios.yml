@@ -31,6 +31,17 @@ jobs:
           xcrun simctl list devices available | grep iPhone || true
       - name: Run unit tests and UI tests
         run: iosApp/scripts/test.sh
+      - name: Capture screenshots (dark and light)
+        if: always()
+        continue-on-error: true
+        run: iosApp/scripts/test.sh screenshots
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Screenshots
+          path: iosApp/build/screenshots
+          if-no-files-found: warn
       - name: Save Kotlin/Native toolchain
         if: always() && steps.konan.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4

@@ -12,6 +12,7 @@ struct TaskWallApp: App {
         WindowGroup {
             RootView()
                 .tint(.brand)
+                .preferredColorScheme(LaunchOptions.colorScheme)
                 .environment(model)
                 .environment(tips)
                 .onOpenURL { model.handle($0) }
@@ -60,10 +61,17 @@ struct RootView: View {
 /// - `-reset`: start with no tasks and no settings.
 /// - `-skipOnboarding`: open straight on the Tasks tab.
 /// - `-seed`: start with a few example tasks.
+/// - `-appearance dark|light`: force dark or light mode (screenshots).
 enum LaunchOptions {
     private static let arguments = Set(CommandLine.arguments)
 
     static var isUITesting: Bool { arguments.contains("-uiTesting") }
+
+    static var colorScheme: ColorScheme? {
+        let args = CommandLine.arguments
+        guard isUITesting, let i = args.firstIndex(of: "-appearance"), i + 1 < args.count else { return nil }
+        return args[i + 1] == "dark" ? .dark : .light
+    }
 
     @MainActor
     static func makeModel() -> AppModel {
