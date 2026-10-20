@@ -2,7 +2,9 @@
 
 iOS only lets the Shortcuts app change the wallpaper. TaskWall provides the image; a small shortcut sets it. The shortcut ships inside the app as a signed file, and people add it from setup step 1 ("Add the TaskWall shortcut").
 
-Until `iosApp/TaskWall/Resources/TaskWall.shortcut` exists, step 1 shows a short guide for building the shortcut by hand instead, so setup always works.
+The signed file is at `iosApp/TaskWall/Resources/TaskWall.shortcut`. If it's ever missing, step 1 falls back to a short guide for building the shortcut by hand, so setup always works.
+
+The file names TaskWall's development team in its App Intent action. If the app is ever signed by a different team, export the shortcut again from a phone running that build.
 
 ## Build it
 
