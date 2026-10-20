@@ -237,9 +237,9 @@ class StoreFlowsTest {
         val store = newStore()
         assertFalse(store.settings.automation.isSetUp)
         store.setAutomation(store.settings.automation.withShortcutAdded(true))
-        store.setAutomation(store.settings.automation.withRunsWithoutAsking(true))
+        store.setAutomation(store.settings.automation.withAutomationAdded(true))
         assertFalse(store.settings.automation.isSetUp, "needs one successful run")
-        store.recordWallpaperUpdate(nowMillis = 1234)
+        store.recordWallpaperUpdate(nowMillis = 1234, today = TODAY)
         assertTrue(store.settings.automation.isSetUp)
         assertEquals(1234L, store.settings.automation.lastUpdateMillis)
     }
@@ -251,9 +251,8 @@ class StoreFlowsTest {
         assertEquals(24 * 60 - 1, store.settings.automation.morningMinutes)
         store.setAutomation(store.settings.automation.withMorningMinutes(-5))
         assertEquals(0, store.settings.automation.morningMinutes)
-        store.setAutomation(store.settings.automation.withMorningMinutes(6 * 60 + 30).withUpdateWhenAppCloses(false))
+        store.setAutomation(store.settings.automation.withMorningMinutes(6 * 60 + 30))
         assertEquals(6 * 60 + 30, store.settings.automation.morningMinutes)
-        assertFalse(store.settings.automation.updateWhenAppCloses)
     }
 
     @Test
@@ -269,6 +268,82 @@ class StoreFlowsTest {
         assertEquals(metrics, newStore(file).settings.screen)
     }
 
+    // Keeping the Lock Screen current
+
+    @Test
+    fun completingATaskMakesTheWallpaperOutOfDate() {
+        val store = newStore()
+        val task = store.addQuickTask("Buy milk", 1)
+        assertFalse(store.isWallpaperCurrent(TODAY), "never rendered")
+
+        store.recordWallpaperUpdate(nowMillis = 10, today = TODAY)
+        assertTrue(store.isWallpaperCurrent(TODAY))
+
+        store.toggleDone(task.id, TODAY, 20)
+        assertFalse(store.isWallpaperCurrent(TODAY), "the Lock Screen still shows it as open")
+        store.recordWallpaperUpdate(nowMillis = 30, today = TODAY)
+        assertTrue(store.isWallpaperCurrent(TODAY))
+    }
+
+    @Test
+    fun styleChangesAndANewDayAlsoNeedAnUpdate() {
+        val store = newStore()
+        store.addTask("Dentist", "", Priority.NO_PRIORITY, TODAY.plusDays(1), null, true, 1)
+        store.addQuickTask("Call mum", 2)
+        store.recordWallpaperUpdate(nowMillis = 10, today = TODAY)
+
+        store.setWallpaperStyle(store.settings.wallpaper.withTheme(WallpaperTheme.PAPER))
+        assertFalse(store.isWallpaperCurrent(TODAY))
+        store.recordWallpaperUpdate(nowMillis = 20, today = TODAY)
+
+        // Tomorrow the dentist appointment joins the list.
+        assertFalse(store.isWallpaperCurrent(TODAY.plusDays(1)))
+    }
+
+    @Test
+    fun hiddenTasksDontMakeTheWallpaperStale() {
+        val store = newStore()
+        store.recordWallpaperUpdate(nowMillis = 10, today = TODAY)
+        store.addTask("Private", "", Priority.NO_PRIORITY, TODAY, null, false, 11)
+        store.addTask("Next week", "", Priority.NO_PRIORITY, TODAY.plusDays(7), null, true, 12)
+        assertTrue(store.isWallpaperCurrent(TODAY))
+    }
+
+    @Test
+    fun signatureIsTheSameInEveryProcess() {
+        val file = InMemoryTextFileStore()
+        val app = newStore(file)
+        app.addQuickTask("Shared", 1)
+        // A second store on the same file stands in for the shortcut's process.
+        assertEquals(app.wallpaperSignature(TODAY), newStore(file).wallpaperSignature(TODAY))
+        newStore(file).recordWallpaperUpdate(nowMillis = 5, today = TODAY)
+        app.reload()
+        assertTrue(app.isWallpaperCurrent(TODAY))
+    }
+
+    @Test
+    fun recognisesTheCloseAutomationFromItsTiming() {
+        val store = newStore()
+        store.recordAppClosed(nowMillis = 1_000)
+        store.recordWallpaperUpdate(nowMillis = 1_000 + TaskWallStore.CLOSE_RUN_WINDOW_MILLIS + 1, today = TODAY)
+        assertFalse(store.settings.automation.updatesWhenClosed, "too long after closing: a morning run")
+
+        store.recordAppClosed(nowMillis = 500_000)
+        store.recordWallpaperUpdate(nowMillis = 503_000, today = TODAY)
+        assertTrue(store.settings.automation.updatesWhenClosed)
+
+        // Later runs at other times don't undo it.
+        store.recordWallpaperUpdate(nowMillis = 9_000_000, today = TODAY)
+        assertTrue(store.settings.automation.updatesWhenClosed)
+    }
+
+    @Test
+    fun aRunBeforeTheAppEverClosedIsNotTheCloseAutomation() {
+        val store = newStore()
+        store.recordWallpaperUpdate(nowMillis = 100, today = TODAY)
+        assertFalse(store.settings.automation.updatesWhenClosed)
+    }
+
     // The shortcut and the app share one file
 
     @Test
@@ -279,7 +354,7 @@ class StoreFlowsTest {
 
         val shortcut = newStore(file)
         assertEquals(listOf(task), shortcut.tasks)
-        shortcut.recordWallpaperUpdate(nowMillis = 7)
+        shortcut.recordWallpaperUpdate(nowMillis = 7, today = TODAY)
         val content = shortcut.wallpaperContent(TODAY)
         assertEquals("Shared", content.lines.single().title)
 

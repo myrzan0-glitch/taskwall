@@ -163,11 +163,31 @@ final class AppModelTests: XCTestCase {
         XCTAssertTrue(model.settings.onboardingComplete)
     }
 
+    func testFinishingATaskMakesTheLockScreenOutOfDateUntilTheShortcutRuns() throws {
+        let file = InMemoryTextFileStore(text: nil)
+        let model = AppModel(store: TaskWallStore(file: file))
+        model.addQuickTask("Buy milk")
+        let shortcut = TaskWallStore(file: file)
+        shortcut.recordWallpaperUpdate(nowMillis: Date().millis, today: CalendarDay.today)
+        model.becameActive()
+        XCTAssertTrue(model.isWallpaperCurrent)
+
+        model.toggle(try XCTUnwrap(model.state.tasks.first))
+        XCTAssertFalse(model.isWallpaperCurrent)
+
+        // Leaving the app, then the close automation running the shortcut.
+        model.appClosed()
+        TaskWallStore(file: file).recordWallpaperUpdate(nowMillis: Date().millis, today: CalendarDay.today)
+        model.becameActive()
+        XCTAssertTrue(model.isWallpaperCurrent)
+        XCTAssertTrue(model.automation.updatesWhenClosed)
+    }
+
     func testShortcutUrlReloadsTheStore() throws {
         let file = InMemoryTextFileStore(text: nil)
         let model = AppModel(store: TaskWallStore(file: file))
         let shortcut = TaskWallStore(file: file)
-        shortcut.recordWallpaperUpdate(nowMillis: 1_700_000_000_000)
+        shortcut.recordWallpaperUpdate(nowMillis: 1_700_000_000_000, today: CalendarDay.today)
         XCTAssertNil(model.lastUpdate)
         model.handle(try XCTUnwrap(URL(string: "taskwall://shortcut-ran")))
         XCTAssertEqual(model.lastUpdate, Date(millis: 1_700_000_000_000))

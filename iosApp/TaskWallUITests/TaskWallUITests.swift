@@ -234,7 +234,7 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.buttons["setUpAutomation"].waitForExistence(timeout: 10))
         XCTAssertTrue(tap(app.buttons["setUpAutomation"], until: app.staticTexts["Make it automatic"]))
         XCTAssertTrue(app.buttons["Add"].isEnabled)
-        XCTAssertFalse(app.buttons["Open"].exists, "steps go in order")
+        XCTAssertFalse(app.buttons["Set Up"].exists, "steps go in order")
 
         // Add opens the install sheet; nothing is marked done until the person confirms.
         app.buttons["Add"].tap()
@@ -247,9 +247,14 @@ final class TaskWallUITests: XCTestCase {
         app.buttons["Add"].tap()
         XCTAssertTrue(added.waitForExistence(timeout: 3))
         added.tap()
-        XCTAssertTrue(app.buttons["Open"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.buttons["Open"].isEnabled, "step 2 is next")
+        XCTAssertTrue(app.buttons["Set Up"].waitForExistence(timeout: 3), "step 2 is next")
         XCTAssertFalse(app.buttons["Add"].exists)
+
+        // Step 2 walks through the automations and is done once confirmed.
+        XCTAssertTrue(tap(app.buttons["Set Up"], until: app.buttons["automationAdded"]))
+        XCTAssertTrue(app.staticTexts["When you close TaskWall"].exists)
+        app.buttons["automationAdded"].tap()
+        XCTAssertTrue(app.buttons["Test"].waitForExistence(timeout: 3), "step 3 is next")
 
         app.buttons["Set Up Later"].tap()
         XCTAssertFalse(app.staticTexts["Make it automatic"].waitForExistence(timeout: 2))

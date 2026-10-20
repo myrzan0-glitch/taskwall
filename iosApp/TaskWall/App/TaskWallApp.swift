@@ -20,7 +20,11 @@ struct TaskWallApp: App {
                 .task { await tips.load() }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { model.becameActive() }
+            switch phase {
+            case .active: model.becameActive()
+            case .background: model.appClosed()
+            default: break
+            }
         }
     }
 }

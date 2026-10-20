@@ -17,6 +17,11 @@ class ListenerHandle internal constructor(private val onClose: () -> Unit) {
  */
 class TaskWallStore(private val file: TextFileStore) {
 
+    companion object {
+        /** A shortcut run this soon after TaskWall closed counts as the close automation. */
+        const val CLOSE_RUN_WINDOW_MILLIS = 2 * 60 * 1000L
+    }
+
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
@@ -150,9 +155,32 @@ class TaskWallStore(private val file: TextFileStore) {
         if (state.settings.screen != metrics) updateSettings { it.copy(screen = metrics) }
     }
 
-    /** Called by the shortcut each time it makes a wallpaper. */
-    fun recordWallpaperUpdate(nowMillis: Long) =
-        updateSettings { it.copy(automation = it.automation.copy(lastUpdateMillis = nowMillis)) }
+    /** Called when TaskWall goes to the background, to recognise the close automation. */
+    fun recordAppClosed(nowMillis: Long) =
+        updateSettings { it.copy(automation = it.automation.copy(lastAppClosedMillis = nowMillis)) }
+
+    /**
+     * Called by the shortcut each time it makes a wallpaper. Remembers what the
+     * wallpaper shows, and notices when the run came right after TaskWall closed.
+     */
+    fun recordWallpaperUpdate(nowMillis: Long, today: CalendarDay) {
+        val signature = wallpaperSignature(today)
+        updateSettings { s ->
+            val closed = s.automation.lastAppClosedMillis
+            val afterClose = closed != null && nowMillis - closed in 0..CLOSE_RUN_WINDOW_MILLIS
+            s.copy(
+                automation = s.automation.copy(
+                    lastUpdateMillis = nowMillis,
+                    lastWallpaperSignature = signature,
+                    updatesWhenClosed = s.automation.updatesWhenClosed || afterClose,
+                ),
+            )
+        }
+    }
+
+    /** Whether the Lock Screen already shows today's tasks in the current style. */
+    fun isWallpaperCurrent(today: CalendarDay): Boolean =
+        state.settings.automation.lastWallpaperSignature == wallpaperSignature(today)
 
     // Derived data for the screens
 
@@ -164,6 +192,19 @@ class TaskWallStore(private val file: TextFileStore) {
     fun wallpaperContent(today: CalendarDay): WallpaperContent {
         val style = state.settings.wallpaper
         return WallpaperComposer.compose(state.tasks, today, WallpaperGeometry.maxLines(style.layout, style.showProgress))
+    }
+
+    /**
+     * A stable fingerprint of what the wallpaper would show now. Built from text,
+     * not hashCode(), so the app and the shortcut (separate processes) agree.
+     */
+    fun wallpaperSignature(today: CalendarDay): String {
+        val text = wallpaperContent(today).toString() + "|" + state.settings.wallpaper.toString()
+        var hash = 0xcbf29ce484222325uL
+        for (byte in text.encodeToByteArray()) {
+            hash = (hash xor byte.toUByte().toULong()) * 0x100000001b3uL
+        }
+        return hash.toString(16)
     }
 
     fun resolvedAppearance(): ResolvedAppearance = WallpaperAppearance.resolve(state.settings.wallpaper)
