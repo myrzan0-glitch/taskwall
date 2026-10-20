@@ -30,7 +30,27 @@ final class TaskWallUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-uiTesting", "-reset"] + flags
         app.launch()
+        if flags.contains("-skipOnboarding") {
+            // Start every test on the Tasks tab, whatever the system restored.
+            let today = app.navigationBars["Today"]
+            if !today.waitForExistence(timeout: 10) {
+                tab(app, "Tasks").tap()
+                XCTAssertTrue(today.waitForExistence(timeout: 5), "couldn't get to the Tasks tab")
+            }
+        }
         return app
+    }
+
+    /// Taps `element` until `result` shows up. The first tap after launch can be
+    /// swallowed while the Liquid Glass toolbar settles on slower simulators.
+    @discardableResult
+    private func tap(_ element: XCUIElement, until result: XCUIElement, attempts: Int = 3) -> Bool {
+        for _ in 0..<attempts {
+            XCTAssertTrue(element.waitForExistence(timeout: 10), "\(element) never appeared")
+            element.tap()
+            if result.waitForExistence(timeout: 4) { return true }
+        }
+        return false
     }
 
     private func tab(_ app: XCUIApplication, _ name: String) -> XCUIElement {
@@ -80,9 +100,8 @@ final class TaskWallUITests: XCTestCase {
         let app = launch("-skipOnboarding")
         XCTAssertTrue(app.staticTexts["Nothing here yet"].waitForExistence(timeout: 10))
 
-        app.buttons["newTask"].tap()
         let title = app.textFields["taskTitle"]
-        XCTAssertTrue(title.waitForExistence(timeout: 3))
+        XCTAssertTrue(tap(app.buttons["newTask"], until: title))
         XCTAssertFalse(app.buttons["saveTask"].isEnabled, "no title, nothing to save")
         title.tap()
         title.typeText("Buy milk")
@@ -109,9 +128,8 @@ final class TaskWallUITests: XCTestCase {
     func testClosingAnEditedTaskAsksFirst() {
         let app = launch("-skipOnboarding")
         XCTAssertTrue(app.buttons["newTask"].waitForExistence(timeout: 10))
-        app.buttons["newTask"].tap()
         let title = app.textFields["taskTitle"]
-        XCTAssertTrue(title.waitForExistence(timeout: 3))
+        XCTAssertTrue(tap(app.buttons["newTask"], until: title))
         title.tap()
         title.typeText("Half typed")
         app.buttons["closeEditor"].tap()
@@ -214,8 +232,7 @@ final class TaskWallUITests: XCTestCase {
     func testAutomationSetupOpensFromTheTasksList() {
         let app = launch("-skipOnboarding")
         XCTAssertTrue(app.buttons["setUpAutomation"].waitForExistence(timeout: 10))
-        app.buttons["setUpAutomation"].tap()
-        XCTAssertTrue(app.staticTexts["Make it automatic"].waitForExistence(timeout: 3))
+        XCTAssertTrue(tap(app.buttons["setUpAutomation"], until: app.staticTexts["Make it automatic"]))
         XCTAssertTrue(app.buttons["Add"].isEnabled)
         XCTAssertFalse(app.buttons["Open"].isEnabled, "steps go in order")
 
