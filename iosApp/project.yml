@@ -2,6 +2,9 @@
 name: TaskWall
 options:
   bundleIdPrefix: app.taskwall
+  # Synchronized folders: Xcode picks up added and removed files by itself, so the
+  # committed project only needs regenerating when this file changes.
+  projectFormat: xcode16_0
   deploymentTarget:
     iOS: "26.0"
   createIntermediateGroups: true
@@ -16,6 +19,7 @@ targets:
     platform: iOS
     sources:
       - path: TaskWall
+        type: syncedFolder
     info:
       path: TaskWall/Info.plist
       properties:
@@ -61,6 +65,7 @@ targets:
     platform: iOS
     sources:
       - path: TaskWallTests
+        type: syncedFolder
     dependencies:
       - target: TaskWall
     settings:
@@ -73,6 +78,7 @@ targets:
     platform: iOS
     sources:
       - path: TaskWallUITests
+        type: syncedFolder
     dependencies:
       - target: TaskWall
     settings:
