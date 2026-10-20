@@ -96,7 +96,7 @@ struct WallpaperView: View {
                 }
             }
             .navigationTitle("Wallpaper")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
