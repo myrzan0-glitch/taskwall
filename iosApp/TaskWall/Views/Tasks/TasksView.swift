@@ -77,10 +77,17 @@ struct TasksView: View {
             }
             .navigationTitle("Today")
             .navigationSubtitle(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-            // Inline: a large title sits under the toolbar row and left an empty band above it.
-            .navigationBarTitleDisplayMode(.inline)
+            // Large title on the same row as the toolbar buttons, as in Wallet.
+            .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                // Adjacent items share one glass capsule.
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    NavigationLink {
+                        SearchView()
+                    } label: {
+                        Image("search-01")
+                    }
+                    .accessibilityLabel("Search")
                     Menu {
                         Button("Clear Completed", systemImage: "checkmark.circle.badge.xmark") {
                             model.clearCompleted()
@@ -89,15 +96,6 @@ struct TasksView: View {
                         Image("more-horizontal")
                     }
                     .accessibilityLabel("More")
-                }
-                ToolbarSpacer(.fixed, placement: .topBarTrailing)
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink {
-                        SearchView()
-                    } label: {
-                        Image("search-01")
-                    }
-                    .accessibilityLabel("Search")
                 }
             }
             .sheet(item: $editor) { target in

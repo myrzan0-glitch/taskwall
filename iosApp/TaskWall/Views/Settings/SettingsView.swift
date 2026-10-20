@@ -47,7 +47,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarTitleDisplayMode(.inlineLarge)
             .fullScreenCover(isPresented: $showTips) {
                 TipJarView()
             }
