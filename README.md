@@ -67,7 +67,8 @@ shared/src/commonMain/kotlin/app/taskwall/shared/
   TipJar.kt, SampleData.kt, Formatting.kt
 shared/src/commonTest/               unit tests (53): dates, sorting, store, every user flow
 iosApp/
-  project.yml                        XcodeGen project (app, unit tests, UI tests)
+  TaskWall.xcodeproj                 the Xcode project (generated from project.yml, committed)
+  project.yml                        XcodeGen spec: app, unit tests, UI tests
   scripts/test.sh                    runs the iOS tests on a simulator
   TaskWallTests/                     unit tests: AppModel flows, rendering, photo analysis, bridge
   TaskWallUITests/                   XCUITests: onboarding, tasks, search, wallpaper, settings
@@ -93,14 +94,15 @@ Requires JDK 17 or newer.
 
 ### iOS app (macOS)
 
-Requires Xcode 26 or newer (iOS 26 SDK; the app targets iOS 26 and is designed for iOS 27) and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+Requires Xcode 26 or newer (iOS 26 SDK; the app targets iOS 26 and is designed for iOS 27). Open `iosApp/TaskWall.xcodeproj` and press ⌘R.
 
-```bash
-brew install xcodegen
-cd iosApp
-xcodegen          # creates TaskWall.xcodeproj
-open TaskWall.xcodeproj
-```
+Everything day to day happens in Xcode, with no Terminal needed:
+
+- **Get the latest changes:** Integrate › Pull (⌥⌘X).
+- **Try a branch:** Source Control navigator (⌘2) › Branches, then right-click a branch › Checkout.
+- **Run the tests:** Product › Test (⌘U).
+
+The project uses Xcode 16+ synchronized folders, so added or removed files appear without any extra step. It's generated from `iosApp/project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen); only after editing that file, run `cd iosApp && xcodegen` and commit the result. CI fails if the committed project and `project.yml` disagree.
 
 Building the app runs `iosApp/scripts/build-shared.sh` first, which compiles the Kotlin code into the `Shared` framework with Gradle. The first build downloads the Kotlin/Native toolchain (about 1 GB). The scheme uses `Resources/TaskWall.storekit`, so tips work in the simulator without App Store Connect.
 
@@ -108,7 +110,7 @@ If Xcode reports **"Command PhaseScriptExecution failed with a nonzero exit code
 
 - **No Java:** run `brew install --cask temurin` and restart Xcode.
 - **Wrong developer directory:** run `sudo xcode-select -s /Applications/Xcode.app`.
-- **Project out of date** after pulling changes: run `xcodegen` again in `iosApp/`.
+- **Files missing after a pull:** close and reopen the project (File › Close Project, then open it again).
 
 ### Running the tests
 

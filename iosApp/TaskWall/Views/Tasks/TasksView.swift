@@ -187,16 +187,30 @@ struct PriorityBadge: View {
 /// Top of the Tasks list: what's on the Lock Screen and whether it updates itself.
 struct LockScreenStatusCard: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openURL) private var openURL
     @State private var showSetup = false
+    @State private var showGuide = false
+
+    private enum Status {
+        case notSetUp, upToDate, updatesOnClose, outOfDate
+    }
+
+    private var status: Status {
+        let automation = model.automation
+        if !automation.isSetUp { return .notSetUp }
+        if model.isWallpaperCurrent { return .upToDate }
+        return automation.updatesWhenClosed ? .updatesOnClose : .outOfDate
+    }
 
     var body: some View {
         let progress = model.progress
+        let status = status
         HStack(spacing: 14) {
             LockScreenPreview(width: 46)
             VStack(alignment: .leading, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.headline)
-                    Text(subtitle).font(.footnote).foregroundStyle(.secondary)
+                    Text(title(status)).font(.headline)
+                    Text(subtitle(status)).font(.footnote).foregroundStyle(.secondary)
                 }
                 HStack(spacing: 10) {
                     ProgressView(value: progress.fraction)
@@ -205,11 +219,25 @@ struct LockScreenStatusCard: View {
                         .font(.footnote.weight(.semibold))
                         .monospacedDigit()
                 }
-                if !model.automation.isSetUp {
+                switch status {
+                case .notSetUp:
                     Button("Set Up Automatic Updates") { showSetup = true }
                         .buttonStyle(.glass)
                         .controlSize(.small)
                         .accessibilityIdentifier("setUpAutomation")
+                case .outOfDate:
+                    HStack(spacing: 8) {
+                        Button("Update Now") { openURL(ShortcutLinks.runShortcut) }
+                            .prominentButton()
+                            .accessibilityIdentifier("updateLockScreen")
+                        if !model.automation.automationAdded {
+                            Button("Update When I Close") { showGuide = true }
+                                .buttonStyle(.glass)
+                        }
+                    }
+                    .controlSize(.small)
+                case .upToDate, .updatesOnClose:
+                    EmptyView()
                 }
             }
         }
@@ -224,19 +252,33 @@ struct LockScreenStatusCard: View {
                     }
             }
         }
+        .sheet(isPresented: $showGuide) {
+            AutomationGuideView {
+                model.setAutomation(model.automation.withAutomationAdded(added: true))
+            }
+        }
     }
 
-    private var title: String {
-        model.automation.isSetUp ? "Lock Screen is up to date" : "Automatic updates are off"
+    private func title(_ status: Status) -> String {
+        switch status {
+        case .notSetUp: "Automatic updates are off"
+        case .upToDate: "Lock Screen is up to date"
+        case .updatesOnClose: "Updates when you close TaskWall"
+        case .outOfDate: "Lock Screen is out of date"
+        }
     }
 
-    private var subtitle: String {
+    private func subtitle(_ status: Status) -> String {
         let time = Date.at(minutesAfterMidnight: Int(model.automation.morningMinutes))
             .formatted(date: .omitted, time: .shortened)
-        if model.automation.isSetUp {
-            let closing = model.automation.updateWhenAppCloses ? " and when you close TaskWall" : ""
-            return "Updates itself at \(time)\(closing)"
+        switch status {
+        case .notSetUp: return "Set it up once and your wallpaper keeps itself current."
+        case .upToDate:
+            return model.automation.updatesWhenClosed
+                ? "Updates when you close TaskWall and at \(time)."
+                : "Updates itself at \(time)."
+        case .updatesOnClose: return "Your latest changes show up as soon as you leave."
+        case .outOfDate: return "Your latest changes aren't on it yet."
         }
-        return "Set it up once and your wallpaper keeps itself current."
     }
 }

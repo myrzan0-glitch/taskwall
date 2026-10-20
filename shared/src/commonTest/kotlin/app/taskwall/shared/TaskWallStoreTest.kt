@@ -85,7 +85,7 @@ class TaskWallStoreTest {
         val file = InMemoryTextFileStore()
         val app = TaskWallStore(file)
         val shortcut = TaskWallStore(file)
-        shortcut.recordWallpaperUpdate(nowMillis = 99)
+        shortcut.recordWallpaperUpdate(nowMillis = 99, today = TODAY)
         app.reload()
         assertEquals(99L, app.settings.automation.lastUpdateMillis)
     }

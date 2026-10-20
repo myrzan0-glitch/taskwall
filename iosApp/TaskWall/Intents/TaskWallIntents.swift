@@ -20,7 +20,7 @@ struct MakeWallpaperIntent: AppIntent {
         guard let data = WallpaperRenderer.pngData(store: store, today: today) else {
             throw TaskWallIntentError.renderFailed
         }
-        store.recordWallpaperUpdate(nowMillis: Date().millis)
+        store.recordWallpaperUpdate(nowMillis: Date().millis, today: today)
         return .result(value: IntentFile(data: data, filename: "TaskWall.png", type: .png))
     }
 }
