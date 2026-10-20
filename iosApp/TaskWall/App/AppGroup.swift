@@ -42,11 +42,17 @@ final class AppGroupFileStore: NSObject, TextFileStore {
 enum ShortcutLinks {
     static let shortcutName = "TaskWall"
 
-    /// The published TaskWall shortcut: [Make TaskWall Wallpaper] → [Set Wallpaper].
-    /// Replace with the real iCloud link once the shortcut is shared (see docs/shortcut.md).
-    static let getShortcut = URL(string: "https://www.icloud.com/shortcuts/REPLACE_WITH_SHORTCUT_ID")!
+    /// The signed TaskWall shortcut ([Make TaskWall Wallpaper] → [Set Wallpaper]) shipped
+    /// inside the app. Nil until `Resources/TaskWall.shortcut` is added (see docs/shortcut.md);
+    /// without it, setup shows how to build the shortcut instead.
+    static var bundledFile: URL? {
+        Bundle.main.url(forResource: shortcutName, withExtension: "shortcut")
+    }
 
     static let openShortcuts = URL(string: "shortcuts://")!
+
+    /// Opens Shortcuts on a new, empty shortcut.
+    static let createShortcut = URL(string: "shortcuts://create-shortcut")!
 
     /// Runs the shortcut, then comes back to TaskWall.
     static var runShortcut: URL {

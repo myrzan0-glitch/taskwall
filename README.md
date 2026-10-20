@@ -126,7 +126,7 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 | Placeholder | Where |
 |---|---|
 | Bundle ID `app.taskwall` and App Group `group.app.taskwall` | `iosApp/project.yml`, `TaskWall.entitlements`, `App/AppGroup.swift` |
-| Shortcut iCloud link `REPLACE_WITH_SHORTCUT_ID` | `App/AppGroup.swift` (`ShortcutLinks.getShortcut`) |
+| Signed shortcut file (optional; without it, setup shows how to build the shortcut) | `TaskWall/Resources/TaskWall.shortcut`, see [docs/shortcut.md](docs/shortcut.md) |
 | App Store ID `REPLACE_WITH_APP_ID` and feedback email | `Views/Settings/SettingsView.swift` |
 | Tip product IDs and prices | App Store Connect, matching `shared/.../TipJar.kt` |
 | App icon | `Resources/Assets.xcassets/AppIcon.appiconset` (placeholder) |
