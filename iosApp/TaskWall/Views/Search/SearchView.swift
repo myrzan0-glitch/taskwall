@@ -13,6 +13,7 @@ struct SearchView: View {
                 TaskRow(task: task, today: model.today) { model.toggle(task) }
                     .contentShape(Rectangle())
                     .onTapGesture { editor = .edit(task) }
+                    .listRowInsets(TaskRow.insets)
             }
             .overlay {
                 if query.trimmingCharacters(in: .whitespaces).isEmpty {
