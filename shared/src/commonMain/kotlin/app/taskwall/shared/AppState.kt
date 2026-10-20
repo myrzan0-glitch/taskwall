@@ -1,0 +1,119 @@
+package app.taskwall.shared
+
+import kotlinx.serialization.Serializable
+
+/** Everything TaskWall saves. One JSON file in the shared app container. */
+@Serializable
+data class AppState(
+    val version: Int = CURRENT_VERSION,
+    val tasks: List<TaskItem> = emptyList(),
+    val settings: AppSettings = AppSettings(),
+) {
+    companion object {
+        const val CURRENT_VERSION = 1
+    }
+}
+
+@Serializable
+data class AppSettings(
+    val onboardingComplete: Boolean = false,
+    val wallpaper: WallpaperStyle = WallpaperStyle(),
+    val automation: AutomationSettings = AutomationSettings(),
+    val clearCompletedEachMorning: Boolean = true,
+    val lastClearedDay: CalendarDay? = null,
+    /** Saved by the app so background shortcuts render at the right size. */
+    val screen: ScreenMetrics? = null,
+) {
+    fun withClearCompletedEachMorning(on: Boolean) = copy(clearCompletedEachMorning = on)
+}
+
+@Serializable
+data class AutomationSettings(
+    /** Daily update time, minutes after midnight. Default 07:00. */
+    val morningMinutes: Int = 7 * 60,
+    val updateWhenAppCloses: Boolean = true,
+    val shortcutAdded: Boolean = false,
+    val runsWithoutAsking: Boolean = false,
+    /** Set each time the shortcut asks TaskWall for a wallpaper. */
+    val lastUpdateMillis: Long? = null,
+) {
+    val isSetUp: Boolean get() = shortcutAdded && runsWithoutAsking && lastUpdateMillis != null
+
+    // Swift sees Kotlin's copy() with every argument required; these read better there.
+    fun withMorningMinutes(minutes: Int) = copy(morningMinutes = minutes.coerceIn(0, 24 * 60 - 1))
+    fun withUpdateWhenAppCloses(on: Boolean) = copy(updateWhenAppCloses = on)
+    fun withShortcutAdded(added: Boolean) = copy(shortcutAdded = added)
+    fun withRunsWithoutAsking(on: Boolean) = copy(runsWithoutAsking = on)
+}
+
+@Serializable
+data class ScreenMetrics(val widthPoints: Double, val heightPoints: Double, val scale: Double)
+
+@Serializable
+data class WallpaperStyle(
+    val source: BackgroundSource = BackgroundSource.COLOR,
+    val theme: WallpaperTheme = WallpaperTheme.INK,
+    /** File name of the chosen photo inside the shared app container. */
+    val photoFileName: String? = null,
+    /** How the person framed the photo in Adjust Photo. 1.0 = fill the screen. */
+    val photoZoom: Double = 1.0,
+    /** Offsets as a fraction of the screen size. */
+    val photoOffsetX: Double = 0.0,
+    val photoOffsetY: Double = 0.0,
+    val layout: WallpaperLayout = WallpaperLayout.LIST,
+    val showProgress: Boolean = true,
+    val textTone: ToneSetting = ToneSetting.AUTO,
+    val backdrop: BackdropSetting = BackdropSetting.AUTO,
+    val position: TaskPosition = TaskPosition.BELOW_CLOCK,
+    /** Result of measuring the current photo; null until a photo is analysed. */
+    val photoAnalysis: LegibilityResult? = null,
+) {
+    val hasPhoto: Boolean get() = photoFileName != null
+
+    fun withTheme(theme: WallpaperTheme) = copy(theme = theme, source = BackgroundSource.COLOR)
+
+    /** Switches between colour and photo; photo only sticks once a photo exists. */
+    fun withSource(source: BackgroundSource) =
+        copy(source = if (source == BackgroundSource.PHOTO && photoFileName == null) BackgroundSource.COLOR else source)
+
+    /** A new photo starts unframed and unmeasured. */
+    fun withPhoto(fileName: String) = copy(
+        source = BackgroundSource.PHOTO,
+        photoFileName = fileName,
+        photoZoom = 1.0,
+        photoOffsetX = 0.0,
+        photoOffsetY = 0.0,
+        photoAnalysis = null,
+    )
+
+    fun withFraming(zoom: Double, offsetX: Double, offsetY: Double) =
+        copy(photoZoom = zoom.coerceIn(1.0, 4.0), photoOffsetX = offsetX, photoOffsetY = offsetY)
+
+    fun withAnalysis(analysis: LegibilityResult?) = copy(photoAnalysis = analysis)
+    fun withLayout(layout: WallpaperLayout) = copy(layout = layout)
+    fun withShowProgress(show: Boolean) = copy(showProgress = show)
+    fun withTextTone(tone: ToneSetting) = copy(textTone = tone)
+    fun withBackdrop(backdrop: BackdropSetting) = copy(backdrop = backdrop)
+    fun withPosition(position: TaskPosition) = copy(position = position)
+
+    companion object {
+        /** Swift can't call the all-defaults constructor directly. */
+        val defaultStyle = WallpaperStyle()
+    }
+}
+
+enum class BackgroundSource { COLOR, PHOTO }
+
+/** Named so it doesn't clash with SwiftUI's `Layout` protocol. */
+enum class WallpaperLayout { LIST, TABLE }
+
+enum class TaskPosition { BELOW_CLOCK, BOTTOM }
+
+enum class ToneSetting { AUTO, LIGHT, DARK }
+
+enum class BackdropSetting { AUTO, CLEAR, SHADE, GLASS }
+
+/** Text colour on a photo: LIGHT = white text, DARK = black text. */
+enum class TextTone { LIGHT, DARK }
+
+enum class Backdrop { CLEAR, SHADE, GLASS }

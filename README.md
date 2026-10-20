@@ -1,111 +1,129 @@
 # TaskWall
 
-**See your to-dos on your lock screen.**
+**Your to-dos, on your Lock Screen.**
 
-TaskWall is an iPhone task tracker that turns your to-do list into a wallpaper. Every time you pick up your phone, you see what needs doing, with no app to open and no widget to set up.
+TaskWall turns today's tasks into a Lock Screen wallpaper and keeps it up to date by itself. Write your tasks, pick a colour or any photo, and every time you pick up your phone you see what's left.
 
-> Inspired by [WallDone – To-Do on Wallpaper](https://apps.apple.com/no/app/walldone-to-do-on-wallpaper/id6738863967).
+It is free: no ads, no account, no tracking. People who want to can leave a tip.
+
+> Design: [TaskWall App Design canvas](https://claude.ai/artifact/QFPVzTH5F5R1ddi22NJiXs)
 
 ---
-
-## Why
-
-To-do apps fail quietly: you write the list, close the app, and forget it exists. TaskWall keeps the list where your eyes already are. You glance at your phone dozens of times a day, and each glance doubles as a reminder. The wallpaper should also look good enough that you want to keep it there.
 
 ## Features
 
-### Wallpaper generation
-- **Tasks to wallpaper**: render your current tasks onto an image at your iPhone's exact screen resolution.
-- **Lock screen first**: the layout stays clear of the clock, lock screen widgets and notifications.
-- **Refresh on change**: check off tasks and regenerate, so the wallpaper always shows what's left.
-
-### Task management
-- **Priorities**: high-priority tasks are highlighted and rendered first.
-- **Categories**: group tasks (e.g. *Work*, *Study*, *Personal*) and choose which ones appear on the wallpaper.
-- **Due dates**: show what's due today, flag what's overdue.
-- **Quick capture**: add, edit, reorder and complete tasks in a tap.
-
-### Design and customization
-- **Pre-made themes**: a gallery of ready-to-use styles.
-- **Custom themes**: build your own with background, font, text color and accents.
-- **Photo backgrounds**: use any image from your photo library.
-- **Multiple layouts**: a **vertical list** or a **table view**.
-- **Dark and light modes**: both the app and the generated wallpapers follow system appearance.
-
-### Automation
-- **Shortcuts integration**: a "Generate TaskWall Wallpaper" action, so an iOS Shortcuts automation can create and set the wallpaper automatically (e.g. every morning, or when you open the app).
-
----
+- **Tasks:** title, notes, priority (Low / Med / High), due date and time. Grouped into Overdue, Today, Anytime and Upcoming.
+- **Wallpaper:** list or table layout with an optional progress bar, in five colour themes or on any photo from your library.
+- **Readable on any photo:** Auto measures the photo behind the task list and picks black or white text plus the lightest backdrop that keeps it readable (none, soft shade or frosted glass). People can reframe the photo and override Auto.
+- **Automatic updates:** a Shortcuts automation refreshes the wallpaper every morning and when you close TaskWall. Onboarding walks through the three taps iOS requires.
+- **Siri and Shortcuts:** "Make TaskWall Wallpaper" and "Add Task" work with no setup.
+- **Tip jar:** three one-time tips through the App Store that unlock nothing.
+- **Native iOS 27 design:** Liquid Glass tab bar, toolbars and sheets, SF Pro, Dynamic Type and Dark Mode, with [Hugeicons](https://hugeicons.com) (free stroke-rounded set, MIT) for icons.
 
 ## How it works
 
-1. **Add tasks** with optional priority, category and due date.
-2. **Pick a theme** (or design one) and choose a layout.
-3. **Generate** the wallpaper.
-4. **Apply** it by saving to Photos and setting it as your wallpaper, or let a Shortcuts automation do it.
-5. **Complete tasks** and regenerate. The wallpaper always reflects your current list.
+iOS doesn't let apps change the wallpaper, so TaskWall works with the Shortcuts app:
 
 ```
-┌───────────────┐      ┌───────────────┐      ┌───────────────┐
-│  Tasks        │ ───▶ │  Renderer     │ ───▶ │  Wallpaper    │
-│  (priority,   │      │  (theme +     │      │  image        │
-│   category,   │      │   layout:     │      │  → Photos /   │
-│   due date)   │      │   list/table) │      │    Shortcuts  │
-└───────────────┘      └───────────────┘      └───────────────┘
+TaskWall app ──saves──▶ App Group container ◀──reads── "Make TaskWall Wallpaper" (App Intent, runs in background)
+                         (tasks + photo)                        │ returns PNG
+                                                                ▼
+                                       Shortcuts: "Set Wallpaper" (Lock Screen, no preview)
+                                       triggered every morning and when TaskWall closes
 ```
 
-> **Platform note:** iOS does not let third-party apps change the wallpaper directly. TaskWall produces the image, and the user (or a Shortcuts automation using the built-in *Set Wallpaper* action) applies it.
+The person adds the published TaskWall shortcut once, allows it to run when locked, and runs a test. See [docs/shortcut.md](docs/shortcut.md).
 
 ---
 
-## Reference: WallDone
+## Architecture
 
-The product benchmark this project is modelled on, as listed on the App Store (Norway) in October 2026:
+TaskWall is a Kotlin Multiplatform project, so an Android app can reuse everything that isn't UI.
 
-| | |
-|---|---|
-| **Name** | WallDone: To-Do on Wallpaper (subtitle: *See Your To Do on Lock Screen*) |
-| **Category** | Productivity, Lifestyle |
-| **Platform** | iPhone only, iOS 26.0 or later |
-| **Version** | 1.1.0 (March 2026), first released October 2025 |
-| **Languages** | English, French, Spanish, Turkish |
-| **Pricing** | Free with in-app purchases for premium features: monthly (19 kr), annual (129 kr) or one-time lifetime purchase (249 kr) |
-| **Privacy label** | Data not linked to you: usage data (product interaction) and diagnostics (crash data) for analytics |
+| Part | What's in it | Language |
+|---|---|---|
+| `shared/` | Tasks and storage, the Overdue / Today / Upcoming rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes and geometry, tip product IDs | Kotlin (common) |
+| `iosApp/` | SwiftUI screens with native Liquid Glass components, wallpaper drawing and rendering, photo picking, App Intents for Shortcuts and Siri, StoreKit tips | Swift |
+| `androidApp/` (later) | Jetpack Compose screens reusing `shared/` | Kotlin |
 
-Its listed features are wallpaper generation, smart task management (priorities, categories, due dates), custom and pre-made themes, photo backgrounds, list and table layouts, dark and light modes, and Shortcuts integration. TaskWall's [Features](#features) cover the same set.
+Design choices:
+
+- **Native UI on each platform.** Liquid Glass, the system tab bar, sheets and App Intents only exist in SwiftUI/UIKit, so screens are written per platform. Compose Multiplatform could be added later for shared screens.
+- **The shared code never reads the clock.** "Today" and the current time are passed in, which keeps the rules deterministic and easy to test.
+- **One JSON file.** `TaskWallStore` keeps everything in a single file. On iOS it lives in an App Group so the app and its background shortcut share it. The platform supplies the file through the `TextFileStore` interface.
+- **Swift-friendly API.** Kotlin types avoid names that clash with Swift (`TaskItem`, not `Task`; `WallpaperLayout`, not `Layout`), and data classes offer `with…` helpers because Kotlin's `copy()` reaches Swift with every argument required.
+
+## Project layout
+
+```
+shared/src/commonMain/kotlin/app/taskwall/shared/
+  TaskItem.kt, CalendarDay.kt        task model and dates without time zones
+  TaskQueries.kt                     sections, sorting, today's progress
+  TaskWallStore.kt, AppState.kt      saved state, settings, actions
+  WallpaperComposer.kt               which tasks the wallpaper shows
+  LegibilityAnalyzer.kt, Contrast.kt readability rule for photos
+  WallpaperAppearance.kt             themes and resolved colours
+  WallpaperGeometry.kt               Lock Screen safe areas
+  TipJar.kt, SampleData.kt, Formatting.kt
+shared/src/commonTest/               unit tests (31)
+iosApp/
+  project.yml                        XcodeGen project
+  TaskWall/App/                      app entry, AppModel, Kotlin bridge, App Group storage
+  TaskWall/Views/                    Tasks, Wallpaper, Settings, Tips, Onboarding, Search
+  TaskWall/Rendering/                WallpaperCanvas, renderer, photo storage and analysis
+  TaskWall/Intents/                  App Intents and App Shortcuts
+  TaskWall/Resources/                asset catalog (Hugeicons, colours), StoreKit test file
+docs/shortcut.md                     how to build and publish the TaskWall shortcut
+```
 
 ---
 
-## Roadmap
+## Building
 
-- [ ] Task list: add, edit, delete, complete, reorder
-- [ ] Priorities, categories and due dates
-- [ ] Wallpaper renderer with device-accurate sizing and lock screen safe areas
-- [ ] Vertical list and table layouts
-- [ ] Pre-made theme gallery
-- [ ] Custom theme editor (background, font, colors)
-- [ ] Photo backgrounds from the photo library
-- [ ] Dark and light modes
-- [ ] Save to Photos
-- [ ] Shortcuts / App Intents action for automatic wallpaper refresh
-- [ ] Localization (English, French, Spanish, Turkish to start)
-- [ ] Free vs. premium feature split
+### Shared module (any OS)
 
----
-
-## Getting started
-
-> The project is in its early stages. Build and run instructions will be added once the app is scaffolded.
+Requires JDK 17 or newer.
 
 ```bash
-git clone https://github.com/myrzan0-glitch/taskwall.git
-cd taskwall
+./gradlew :shared:jvmTest
 ```
 
-## Contributing
+### iOS app (macOS)
 
-Issues and pull requests are welcome. Please open an issue to discuss larger changes before starting work.
+Requires Xcode 26 or newer (iOS 26 SDK; the app targets iOS 26 and is designed for iOS 27) and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
-## License
+```bash
+brew install xcodegen
+cd iosApp
+xcodegen          # creates TaskWall.xcodeproj
+open TaskWall.xcodeproj
+```
 
-License to be decided.
+Building the app runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode` first, which compiles the Kotlin code into the `Shared` framework. The scheme uses `Resources/TaskWall.storekit`, so tips work in the simulator without App Store Connect.
+
+### Before shipping, replace the placeholders
+
+| Placeholder | Where |
+|---|---|
+| Bundle ID `app.taskwall` and App Group `group.app.taskwall` | `iosApp/project.yml`, `TaskWall.entitlements`, `App/AppGroup.swift` |
+| Shortcut iCloud link `REPLACE_WITH_SHORTCUT_ID` | `App/AppGroup.swift` (`ShortcutLinks.getShortcut`) |
+| App Store ID `REPLACE_WITH_APP_ID` and feedback email | `Views/Settings/SettingsView.swift` |
+| Tip product IDs and prices | App Store Connect, matching `shared/.../TipJar.kt` |
+| App icon | `Resources/Assets.xcassets/AppIcon.appiconset` (placeholder) |
+
+### Before you submit
+
+- **The name "TaskWall" is taken on the App Store.** Pick a different name before submitting.
+- **Wallpaper apps are a crowded category.** App Review guideline 4.3(b) may reject apps that look like others, so the listing should lead with what's different: a real task manager whose Lock Screen updates itself, for free.
+
+## Android (planned)
+
+1. Add the Android Gradle plugin and an `androidTarget()` to `shared/build.gradle.kts`.
+2. Create `androidApp/` with Jetpack Compose and implement `TextFileStore` with app-private storage.
+3. Draw the wallpaper with Compose and set it directly with `WallpaperManager.setBitmap(…, FLAG_LOCK)`. Android allows that, so no Shortcuts step is needed there; schedule daily updates with WorkManager.
+4. Reuse the shared rules unchanged: `TaskWallStore`, `WallpaperComposer`, `LegibilityAnalyzer` and `WallpaperGeometry`.
+
+## Credits
+
+- Icons: [Hugeicons](https://hugeicons.com) free stroke-rounded set, MIT licence.
+- Tip jar photo: [Unsplash](https://unsplash.com) (Unsplash licence).
