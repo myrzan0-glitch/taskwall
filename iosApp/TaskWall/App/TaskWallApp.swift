@@ -12,6 +12,7 @@ struct TaskWallApp: App {
         WindowGroup {
             RootView()
                 .tint(.brand)
+                .toggleStyle(BrandSwitchStyle())
                 .preferredColorScheme(LaunchOptions.colorScheme)
                 .environment(model)
                 .environment(tips)

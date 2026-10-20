@@ -63,7 +63,7 @@ struct AddShortcutView: View {
                 Text("If Shortcuts isn't in the list, scroll the row of apps or tap More.")
             }
         }
-        .safeAreaInset(edge: .bottom) {
+        .safeAreaBar(edge: .bottom) {
             VStack(spacing: 8) {
                 Button { sharing = true } label: {
                     Text("Add").frame(maxWidth: .infinity)
@@ -97,10 +97,13 @@ struct AddShortcutView: View {
     private var guide: some View {
         List {
             Section {
-                Text("It takes about a minute. The name has to be exactly TaskWall, because TaskWall runs it by name.")
-                    .foregroundStyle(.secondary)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Build the shortcut").font(.title3.bold())
+                    Text("It takes about a minute. The name has to be exactly TaskWall, because TaskWall runs it by name.")
+                        .foregroundStyle(.secondary)
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
             }
             Section {
                 ForEach(steps) { step in
@@ -115,7 +118,7 @@ struct AddShortcutView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) {
+        .safeAreaBar(edge: .bottom) {
             VStack(spacing: 8) {
                 Button { openURL(ShortcutLinks.createShortcut) } label: {
                     Text("Open Shortcuts").frame(maxWidth: .infinity)
