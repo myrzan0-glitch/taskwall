@@ -353,6 +353,98 @@ class StoreFlowsTest {
         assertEquals(2, notified, "an unchanged file doesn't notify")
     }
 
+    // Tester report: the shortcut worked when run in Shortcuts, but not from the close automation.
+
+    @Test
+    fun closeAutomationThatFinishesBeforeTheAppHearsItClosedIsKept() {
+        val file = InMemoryTextFileStore()
+        val app = newStore(file)
+        app.addQuickTask("Buy milk", 1)
+
+        // The shortcut runs while the app is still open in the background...
+        newStore(file).recordWallpaperUpdate(nowMillis = 10_000, today = TODAY)
+        // ...then the app records that it closed, from its own copy of the data.
+        app.recordAppClosed(nowMillis = 10_500)
+
+        val saved = newStore(file)
+        assertEquals(10_000L, saved.settings.automation.lastUpdateMillis, "the run isn't overwritten")
+        assertTrue(saved.isWallpaperCurrent(TODAY))
+        assertTrue(saved.settings.automation.updatesWhenClosed)
+        assertEquals(saved.state, app.state)
+    }
+
+    @Test
+    fun closeAutomationRunningJustAfterTheAppClosedIsRecognised() {
+        val file = InMemoryTextFileStore()
+        val app = newStore(file)
+        app.addQuickTask("Buy milk", 1)
+        app.recordAppClosed(nowMillis = 10_000)
+        newStore(file).recordWallpaperUpdate(nowMillis = 12_000, today = TODAY)
+
+        app.reload()
+        assertTrue(app.isWallpaperCurrent(TODAY))
+        assertTrue(app.settings.automation.updatesWhenClosed)
+    }
+
+    @Test
+    fun aRunLongBeforeClosingIsNotTheCloseAutomation() {
+        val file = InMemoryTextFileStore()
+        val app = newStore(file)
+        newStore(file).recordWallpaperUpdate(nowMillis = 1_000, today = TODAY)
+        app.recordAppClosed(nowMillis = 1_000 + TaskWallStore.CLOSE_RUN_WINDOW_MILLIS + 1)
+        assertFalse(app.settings.automation.updatesWhenClosed)
+        assertEquals(1_000L, app.settings.automation.lastUpdateMillis)
+    }
+
+    @Test
+    fun aTaskAddedBySiriWhileTheAppIsOpenIsKept() {
+        val file = InMemoryTextFileStore()
+        val app = newStore(file)
+        app.addQuickTask("From the app", 1)
+        newStore(file).addQuickTask("From Siri", 2)
+
+        app.addQuickTask("Also from the app", 3)
+        assertEquals(listOf("From the app", "From Siri", "Also from the app"), newStore(file).tasks.map { it.title })
+        assertEquals(listOf(0, 1, 2), app.tasks.map { it.sortOrder })
+    }
+
+    @Test
+    fun everyKindOfChangeBuildsOnWhatTheShortcutSaved() {
+        val file = InMemoryTextFileStore()
+        val app = newStore(file)
+        val task = app.addQuickTask("Buy milk", 1)
+        val shortcut = newStore(file)
+        shortcut.recordWallpaperUpdate(nowMillis = 5, today = TODAY)
+
+        app.toggleDone(task.id, TODAY, 6)
+        app.setWallpaperStyle(app.settings.wallpaper.withLayout(WallpaperLayout.TABLE))
+        app.setScreen(ScreenMetrics(393.0, 852.0, 3.0))
+        app.clearCompleted()
+        assertEquals(5L, newStore(file).settings.automation.lastUpdateMillis)
+    }
+
+    @Test
+    fun theAppSeesWhatTheShortcutSavedWhenItChangesSomething() {
+        val file = InMemoryTextFileStore()
+        val app = newStore(file)
+        var latest: AppState? = null
+        app.addListener { latest = it }
+        newStore(file).addQuickTask("From Siri", 1)
+
+        app.recordAppClosed(nowMillis = 2)
+        assertEquals("From Siri", latest?.tasks?.single()?.title)
+    }
+
+    @Test
+    fun anUnreadableFileDoesNotWipeTheAppsCopy() {
+        val file = InMemoryTextFileStore()
+        val app = newStore(file)
+        app.addQuickTask("Buy milk", 1)
+        file.write("not json")
+        app.addQuickTask("Bread", 2)
+        assertEquals(listOf("Buy milk", "Bread"), newStore(file).tasks.map { it.title })
+    }
+
     @Test
     fun oldFilesWithUnknownFieldsStillOpen() {
         val json = """{"version":1,"tasks":[{"id":"a","title":"Old","futureField":true}],"settings":{"newThing":1}}"""
