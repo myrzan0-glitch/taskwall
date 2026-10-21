@@ -48,6 +48,26 @@ final class TaskWallUITests: XCTestCase {
         return false
     }
 
+    /// Sheets have no close button: pull one down from its header, as a person would.
+    private func pullDownSheet(_ app: XCUIApplication) {
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98))
+        start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .fast, thenHoldForDuration: 0)
+    }
+
+    /// The composer floats over the dimmed list. Tapping above it closes it without saving;
+    /// pulling it down by its header does the same.
+    private func closeComposer(_ app: XCUIApplication) {
+        let title = app.textFields["taskTitle"]
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)).tap()
+        if !title.waitForNonExistence(timeout: 3) {
+            let header = app.staticTexts["New task"].exists ? app.staticTexts["New task"] : app.staticTexts["Edit task"]
+            header.press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
+                         withVelocity: .fast, thenHoldForDuration: 0)
+            XCTAssertTrue(title.waitForNonExistence(timeout: 3), "the composer closes")
+        }
+    }
+
     private func label(_ date: Date) -> String {
         date.formatted(.dateTime.weekday(.wide).day().month(.wide))
     }
@@ -120,30 +140,15 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Nothing here yet"].waitForExistence(timeout: 3))
     }
 
-    func testClosingAnEditedTaskAsksFirst() {
+    func testClosingTheComposerSavesNothing() {
         let app = launch("-skipOnboarding")
         let title = app.textFields["taskTitle"]
         XCTAssertTrue(tap(app.buttons["New Task"], until: title))
         title.tap()
         title.typeText("Half typed")
-        app.buttons["closeEditor"].tap()
-        let keep = app.buttons["Keep Editing"]
-        let discard = app.buttons["Discard Changes"]
-        XCTAssertTrue(discard.waitForExistence(timeout: 3))
-        if keep.waitForExistence(timeout: 2) {
-            keep.tap()
-        } else {
-            // Anchored to the close button, the dialog has no cancel button: tapping outside keeps editing.
-            for _ in 0..<3 where discard.exists {
-                app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)).tap()
-                _ = discard.waitForNonExistence(timeout: 2)
-            }
-        }
-        XCTAssertFalse(discard.exists, "the dialog closes and editing goes on")
-        XCTAssertTrue(title.waitForExistence(timeout: 2))
-        app.buttons["closeEditor"].tap()
-        app.buttons["Discard Changes"].tap()
+        closeComposer(app)
         XCTAssertTrue(app.staticTexts["Nothing here yet"].waitForExistence(timeout: 3))
+        XCTAssertFalse(task(app, "Half typed").exists, "only Add saves a task")
     }
 
     func testPriorityIsOneRedFlag() {
@@ -221,7 +226,7 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.buttons.matching(table).firstMatch.waitForExistence(timeout: 3))
 
         XCTAssertTrue(app.buttons["usePhoto"].exists)
-        app.navigationBars["Wallpaper"].buttons["Close"].tap()
+        pullDownSheet(app)
         XCTAssertTrue(app.buttons["New Task"].waitForExistence(timeout: 3))
     }
 
@@ -238,7 +243,7 @@ final class TaskWallUITests: XCTestCase {
         let added = app.buttons["shortcutAdded"]
         XCTAssertTrue(added.waitForExistence(timeout: 3))
         XCTAssertTrue(app.buttons["openShortcutsEditor"].exists || app.buttons["shareShortcut"].exists)
-        app.buttons["closeAddShortcut"].tap()
+        pullDownSheet(app)
         XCTAssertTrue(app.buttons["Add"].waitForExistence(timeout: 3), "closing without adding keeps step 1 open")
 
         app.buttons["Add"].tap()
@@ -271,7 +276,7 @@ final class TaskWallUITests: XCTestCase {
         size.tap()
         XCTAssertTrue(size.label.hasPrefix("Coffee & Cake"), "tapping the card shows the next size")
         XCTAssertTrue(app.buttons["tipButton"].exists)
-        app.buttons["closeTipJar"].tap()
+        pullDownSheet(app)
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
 
         XCTAssertTrue(tap(app.buttons["automaticUpdates"], until: app.buttons["Add"]))

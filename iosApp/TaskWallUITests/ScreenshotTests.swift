@@ -37,6 +37,26 @@ final class ScreenshotTests: XCTestCase {
         return false
     }
 
+    /// Sheets have no close button: pull one down from its header, as a person would.
+    private func pullDownSheet(_ app: XCUIApplication) {
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98))
+        start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .fast, thenHoldForDuration: 0)
+    }
+
+    /// The composer floats over the dimmed list. Tapping above it closes it without saving;
+    /// pulling it down by its header does the same.
+    private func closeComposer(_ app: XCUIApplication) {
+        let title = app.textFields["taskTitle"]
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)).tap()
+        if !title.waitForNonExistence(timeout: 3) {
+            let header = app.staticTexts["New task"].exists ? app.staticTexts["New task"] : app.staticTexts["Edit task"]
+            header.press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
+                         withVelocity: .fast, thenHoldForDuration: 0)
+            _ = title.waitForNonExistence(timeout: 3)
+        }
+    }
+
     private func row(_ app: XCUIApplication, _ title: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: "taskRow").staticTexts[title].firstMatch
     }
@@ -70,7 +90,7 @@ final class ScreenshotTests: XCTestCase {
 
         if tap(app.buttons["New Task"], until: app.textFields["taskTitle"]) {
             snap(app, "12-new-task")
-            app.buttons["closeEditor"].tap()
+            closeComposer(app)
         }
 
         if tap(row(app, "Buy milk"), until: app.textFields["taskTitle"]) {
@@ -83,7 +103,7 @@ final class ScreenshotTests: XCTestCase {
                 snap(app, "15-time")
                 app.swipeDown()
             }
-            app.buttons["closeEditor"].tap()
+            closeComposer(app)
         }
 
         let overdue = row(app, "Renew passport")
@@ -108,7 +128,7 @@ final class ScreenshotTests: XCTestCase {
 
         if tap(app.buttons["tipJar"], until: app.buttons["tipButton"]) {
             snap(app, "31-tip-jar")
-            app.buttons["closeTipJar"].tap()
+            pullDownSheet(app)
         }
 
         if tap(app.buttons["automaticUpdates"], until: app.buttons["finishSetup"]) {

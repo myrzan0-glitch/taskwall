@@ -36,12 +36,6 @@ struct AutomationGuideView: View {
             }
             .navigationTitle("Automation")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .close) { dismiss() }
-                        .accessibilityIdentifier("closeAutomationGuide")
-                }
-            }
             .safeAreaBar(edge: .bottom) {
                 VStack(spacing: 8) {
                     Button { openURL(ShortcutLinks.openShortcuts) } label: {

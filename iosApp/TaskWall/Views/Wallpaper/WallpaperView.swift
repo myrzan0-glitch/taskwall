@@ -5,7 +5,6 @@ import Shared
 /// The Wallpaper sheet, from the left button on Today: the look of the Lock Screen.
 struct WallpaperView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @State private var pickedItem: PhotosPickerItem?
     @State private var showPhotoPicker = false
@@ -81,9 +80,6 @@ struct WallpaperView: View {
             .navigationTitle("Wallpaper")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .close) { dismiss() }
-                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Task { await saveImage() }
@@ -102,7 +98,7 @@ struct WallpaperView: View {
         }
         // Styles set at the app root don't reach sheets.
         .toggleStyle(BrandSwitchStyle())
-        .tint(.peach)
+        .tint(.ink)
         .presentationBackground(Color.sheet)
         .photosPicker(isPresented: $showPhotoPicker, selection: $pickedItem, matching: .images)
         .onChange(of: pickedItem) { _, item in

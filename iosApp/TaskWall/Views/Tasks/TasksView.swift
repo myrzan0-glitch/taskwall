@@ -113,11 +113,6 @@ struct TasksView: View {
             case .setup:
                 NavigationStack {
                     AutomationSetupView(finishTitle: "Done", onFinish: { sheet = nil })
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button(role: .close) { sheet = nil }
-                            }
-                        }
                 }
                 .presentationBackground(Color.sheet)
             }

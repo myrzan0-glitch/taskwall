@@ -9,8 +9,6 @@ struct TaskEditor: View {
 
     let target: TaskEditorTarget
     @State private var draft = TaskDraft()
-    @State private var original = TaskDraft()
-    @State private var confirmDiscard = false
     @State private var pickingDate = false
     @State private var pickingTime = false
     @FocusState private var titleFocused: Bool
@@ -20,42 +18,16 @@ struct TaskEditor: View {
         return false
     }
 
-    private var hasChanges: Bool {
-        draft.title != original.title || draft.notes != original.notes || draft.priority != original.priority
-            || draft.dueDay != original.dueDay || draft.dueMinutes != original.dueMinutes
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ZStack {
-                Text(isNew ? "New task" : "Edit task")
-                    .font(.footnote.weight(.semibold))
-                    .padding(.horizontal, 14)
-                    .frame(height: 32)
-                    .background(Capsule().fill(Color.control))
-                    .accessibilityAddTraits(.isHeader)
-                HStack {
-                    Button {
-                        if hasChanges { confirmDiscard = true } else { dismiss() }
-                    } label: {
-                        Image("cancel-01")
-                            .renderingMode(.template)
-                            .resizable()
-                            .frame(width: 16, height: 16)
-                            .frame(width: 36, height: 36)
-                            .contentShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .glassControl(in: Circle())
-                    .accessibilityLabel("Close")
-                    .accessibilityIdentifier("closeEditor")
-                    .confirmationDialog("Discard this task?", isPresented: $confirmDiscard, titleVisibility: .visible) {
-                        Button("Discard Changes", role: .destructive) { dismiss() }
-                        Button("Keep Editing", role: .cancel) {}
-                    }
-                    Spacer()
-                }
-            }
+            // No close button, as in the design: swipe down or tap outside to close without saving.
+            Text(isNew ? "New task" : "Edit task")
+                .font(.footnote.weight(.semibold))
+                .padding(.horizontal, 14)
+                .frame(height: 32)
+                .background(Capsule().fill(Color.control))
+                .frame(maxWidth: .infinity)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(alignment: .leading, spacing: 6) {
                 TextField("Task title", text: $draft.title)
@@ -108,7 +80,6 @@ struct TaskEditor: View {
         .padding(.bottom, 12)
         .animation(.snappy, value: draft.isValid)
         .fittedSheet()
-        .interactiveDismissDisabled(hasChanges)
         .sheet(isPresented: $pickingDate) { DueDateSheet(draft: $draft) }
         .sheet(isPresented: $pickingTime) { DueTimeSheet(draft: $draft) }
         .onAppear {
@@ -118,7 +89,6 @@ struct TaskEditor: View {
             case .edit(let task):
                 draft = TaskDraft(task: task)
             }
-            original = draft
             titleFocused = isNew
         }
     }

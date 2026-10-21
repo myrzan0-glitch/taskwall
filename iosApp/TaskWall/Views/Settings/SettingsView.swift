@@ -4,7 +4,6 @@ import Shared
 /// The Settings sheet, from the right button on Today.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @State private var showTips = false
     @State private var showGuide = false
@@ -99,17 +98,12 @@ struct SettingsView: View {
             .foregroundStyle(Color.ink)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .close) { dismiss() }
-                }
-            }
             .navigationDestination(for: Route.self) { _ in
                 AutomationSetupView(finishTitle: "Done", onFinish: { path.removeAll() })
             }
         }
         .toggleStyle(BrandSwitchStyle())
-        .tint(.peach)
+        .tint(.ink)
         .presentationBackground(Color.sheet)
         .sheet(isPresented: $showTips) {
             TipJarView()

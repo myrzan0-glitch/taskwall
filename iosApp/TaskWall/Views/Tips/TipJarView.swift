@@ -22,15 +22,11 @@ struct TipJarView: View {
             .foregroundStyle(Color.ink)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.sheet.ignoresSafeArea())
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .close) { close() }
-                        .accessibilityIdentifier("closeTipJar")
-                }
-            }
         }
         .tint(.ink)
         .presentationBackground(Color.sheet)
+        // Closed by swiping down, so the thanks don't show again next time.
+        .onDisappear { if tips.phase != .purchasing { tips.phase = .idle } }
     }
 
     private var picker: some View {
