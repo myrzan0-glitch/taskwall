@@ -115,6 +115,7 @@ struct TasksView: View {
                     AutomationSetupView(finishTitle: "Done", onFinish: { sheet = nil })
                 }
                 .presentationBackground(Color.sheet)
+                .presentationDragIndicator(.visible)
             }
         }
     }

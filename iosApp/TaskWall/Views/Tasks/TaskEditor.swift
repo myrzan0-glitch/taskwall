@@ -79,7 +79,8 @@ struct TaskEditor: View {
         .padding(.top, 14)
         .padding(.bottom, 12)
         .animation(.snappy, value: draft.isValid)
-        .fittedSheet()
+        // The composer is a floating card with no grab bar, as in the design.
+        .fittedSheet(grabber: false)
         .sheet(isPresented: $pickingDate) { DueDateSheet(draft: $draft) }
         .sheet(isPresented: $pickingTime) { DueTimeSheet(draft: $draft) }
         .onAppear {

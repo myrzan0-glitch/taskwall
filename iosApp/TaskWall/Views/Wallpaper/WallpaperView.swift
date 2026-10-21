@@ -100,6 +100,7 @@ struct WallpaperView: View {
         .toggleStyle(BrandSwitchStyle())
         .tint(.ink)
         .presentationBackground(Color.sheet)
+        .presentationDragIndicator(.visible)
         .photosPicker(isPresented: $showPhotoPicker, selection: $pickedItem, matching: .images)
         .onChange(of: pickedItem) { _, item in
             guard let item else { return }

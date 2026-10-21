@@ -105,6 +105,7 @@ struct SettingsView: View {
         .toggleStyle(BrandSwitchStyle())
         .tint(.ink)
         .presentationBackground(Color.sheet)
+        .presentationDragIndicator(.visible)
         .sheet(isPresented: $showTips) {
             TipJarView()
         }

@@ -93,6 +93,7 @@ extension View {
 
 /// Sizes a sheet to its content, so it floats as a short glass card.
 private struct FittedSheet: ViewModifier {
+    let grabber: Bool
     @State private var height: CGFloat = 320
 
     func body(content: Content) -> some View {
@@ -100,12 +101,14 @@ private struct FittedSheet: ViewModifier {
             .fixedSize(horizontal: false, vertical: true)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
             .presentationDetents([.height(height)])
+            .presentationDragIndicator(grabber ? .visible : .hidden)
     }
 }
 
 extension View {
-    func fittedSheet() -> some View {
-        modifier(FittedSheet())
+    /// Sheets have no close button, so the grab bar shows they can be swiped away.
+    func fittedSheet(grabber: Bool = true) -> some View {
+        modifier(FittedSheet(grabber: grabber))
     }
 }
 

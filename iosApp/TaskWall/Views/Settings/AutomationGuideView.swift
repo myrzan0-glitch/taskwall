@@ -52,6 +52,7 @@ struct AutomationGuideView: View {
                 .padding()
             }
         }
+        .presentationDragIndicator(.visible)
     }
 
     private func step(_ number: Int, _ text: LocalizedStringKey) -> some View {

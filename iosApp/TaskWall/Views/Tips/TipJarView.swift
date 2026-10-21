@@ -25,6 +25,7 @@ struct TipJarView: View {
         }
         .tint(.ink)
         .presentationBackground(Color.sheet)
+        .presentationDragIndicator(.visible)
         // Closed by swiping down, so the thanks don't show again next time.
         .onDisappear { if tips.phase != .purchasing { tips.phase = .idle } }
     }
