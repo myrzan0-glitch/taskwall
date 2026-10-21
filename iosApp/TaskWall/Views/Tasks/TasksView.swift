@@ -23,15 +23,10 @@ struct TasksView: View {
         NavigationStack {
             List {
                 Section {
-                    Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
-                }
-
-                Section {
                     LockScreenStatusCard()
+                } header: {
+                    // A section header, like the ones in Settings.
+                    Text("Today · \(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))")
                 }
 
                 Section {
@@ -41,8 +36,8 @@ struct TasksView: View {
                         Text("Upcoming").tag(TaskFilter.upcoming)
                     }
                     .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
+                    .labelsHidden()
+                    // In a white card, like the other segmented controls.
                 }
 
                 // In the list, under the filter: an overlay centred on the whole
@@ -80,7 +75,8 @@ struct TasksView: View {
                 }
             }
             .listSectionSpacing(.compact)
-            .navigationTitle("Today")
+            .contentBelowLargeTitle()
+            .navigationTitle("Tasks")
             // Large title on the same row as the toolbar buttons, as in Wallet.
             .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {

@@ -67,12 +67,12 @@ final class ScreenshotTests: XCTestCase {
     func testTasks() {
         for look in appearances {
             let empty = launch(look, "-skipOnboarding")
-            XCTAssertTrue(empty.navigationBars["Today"].waitForExistence(timeout: 15))
+            XCTAssertTrue(empty.navigationBars["Tasks"].waitForExistence(timeout: 15))
             snap(empty, look, "10-tasks-empty")
             empty.terminate()
 
             let app = launch(look, "-skipOnboarding", "-seed")
-            XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 15))
+            XCTAssertTrue(app.navigationBars["Tasks"].waitForExistence(timeout: 15))
             snap(app, look, "11-tasks")
 
             if tap(app.buttons["New Task"].firstMatch, until: app.textFields["taskTitle"]) {
@@ -108,7 +108,7 @@ final class ScreenshotTests: XCTestCase {
     func testWallpaper() {
         for look in appearances {
             let app = launch(look, "-skipOnboarding", "-seed")
-            XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 15))
+            XCTAssertTrue(app.navigationBars["Tasks"].waitForExistence(timeout: 15))
             tab(app, "Wallpaper")
             XCTAssertTrue(app.navigationBars["Wallpaper"].waitForExistence(timeout: 5))
             snap(app, look, "20-wallpaper")
@@ -128,7 +128,7 @@ final class ScreenshotTests: XCTestCase {
     func testSettings() {
         for look in appearances {
             let app = launch(look, "-skipOnboarding", "-seed")
-            XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 15))
+            XCTAssertTrue(app.navigationBars["Tasks"].waitForExistence(timeout: 15))
             tab(app, "Settings")
             XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
             snap(app, look, "30-settings")

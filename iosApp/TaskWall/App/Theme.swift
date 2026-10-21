@@ -57,4 +57,10 @@ extension View {
             .tint(.brand)
             .foregroundStyle(Color.onBrand)
     }
+
+    /// A tab's list starts just under its large title, as in Wallet and Settings.
+    /// Lists and forms otherwise keep a header-sized gap above the first section.
+    func contentBelowLargeTitle() -> some View {
+        contentMargins(.top, 8, for: .scrollContent)
+    }
 }

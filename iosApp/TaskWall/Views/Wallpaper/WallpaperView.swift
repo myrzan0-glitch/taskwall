@@ -95,6 +95,7 @@ struct WallpaperView: View {
                     .listRowInsets(EdgeInsets())
                 }
             }
+            .contentBelowLargeTitle()
             .navigationTitle("Wallpaper")
             .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
