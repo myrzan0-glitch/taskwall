@@ -242,17 +242,6 @@ class StoreFlowsTest {
     }
 
     @Test
-    fun morningTimeIsClampedToTheDay() {
-        val store = newStore()
-        store.setAutomation(store.settings.automation.withMorningMinutes(25 * 60))
-        assertEquals(24 * 60 - 1, store.settings.automation.morningMinutes)
-        store.setAutomation(store.settings.automation.withMorningMinutes(-5))
-        assertEquals(0, store.settings.automation.morningMinutes)
-        store.setAutomation(store.settings.automation.withMorningMinutes(6 * 60 + 30))
-        assertEquals(6 * 60 + 30, store.settings.automation.morningMinutes)
-    }
-
-    @Test
     fun screenMetricsAreSavedOnceForTheShortcut() {
         val file = InMemoryTextFileStore()
         val store = newStore(file)

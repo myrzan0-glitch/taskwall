@@ -98,7 +98,7 @@ private struct WelcomeStep: View {
                 }
 
                 VStack(alignment: .leading, spacing: 10) {
-                    feature("refresh", "Updates itself every morning")
+                    feature("refresh", "Updates when you close the app")
                     feature("image-01", "Use any photo, tasks stay readable")
                     feature("favourite", "Free. No account, no ads")
                 }

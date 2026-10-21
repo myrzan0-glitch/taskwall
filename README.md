@@ -15,7 +15,7 @@ It is free: no ads, no account, no tracking. People who want to can leave a tip.
 - **Tasks:** title, notes, priority (Low / Med / High), due date and time. Shown as Today (due today, then undated), Upcoming and Past, the last two grouped by date.
 - **Wallpaper:** list or table layout with an optional progress bar, in five colour themes or on any photo from your library.
 - **Readable on any photo:** Auto measures the photo behind the task list and picks black or white text plus the lightest backdrop that keeps it readable (none, soft shade or frosted glass). People can reframe the photo and override Auto.
-- **Automatic updates:** a Shortcuts automation refreshes the wallpaper every morning and when you close TaskWall. Onboarding walks through the three taps iOS requires.
+- **Automatic updates:** a Shortcuts automation refreshes the wallpaper when you close TaskWall. Onboarding walks through the few taps iOS requires.
 - **Siri and Shortcuts:** "Make TaskWall Wallpaper" and "Add Task" work with no setup.
 - **Tip jar:** three one-time tips through the App Store that unlock nothing.
 - **Native iOS 27 design:** Liquid Glass tab bar, toolbars and sheets, SF Pro, Dynamic Type and Dark Mode, with [Hugeicons](https://hugeicons.com) (free stroke-rounded set, MIT) for icons.
@@ -29,7 +29,7 @@ TaskWall app ──saves──▶ App Group container ◀──reads── "Make
                          (tasks + photo)                        │ returns PNG
                                                                 ▼
                                        Shortcuts: "Set Wallpaper" (Lock Screen, no preview)
-                                       triggered every morning and when TaskWall closes
+                                       triggered when TaskWall closes
 ```
 
 The person adds the published TaskWall shortcut once, allows it to run when locked, and runs a test. See [docs/shortcut.md](docs/shortcut.md).

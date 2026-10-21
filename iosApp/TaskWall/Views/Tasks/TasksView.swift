@@ -313,15 +313,10 @@ struct LockScreenStatusCard: View {
     }
 
     private func subtitle(_ status: Status) -> String {
-        let time = Date.at(minutesAfterMidnight: Int(model.automation.morningMinutes))
-            .formatted(date: .omitted, time: .shortened)
         switch status {
-        case .notSetUp: return "Set it up once and your wallpaper keeps itself current."
-        case .upToDate:
-            return model.automation.updatesWhenClosed
-                ? "Updates when you close TaskWall and at \(time)."
-                : "Updates itself at \(time)."
-        case .updatesOnClose: return "Your latest changes show up as soon as you leave."
+        case .notSetUp: return "Set it up once and your Lock Screen updates whenever you close TaskWall."
+        case .upToDate: return "After a change, close TaskWall and your Lock Screen updates."
+        case .updatesOnClose: return "Close TaskWall and your latest changes show up."
         case .outOfDate: return "Your latest changes aren't on it yet."
         }
     }
