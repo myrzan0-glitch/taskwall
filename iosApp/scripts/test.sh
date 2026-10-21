@@ -24,6 +24,12 @@ if [ -z "$device" ]; then
 fi
 echo "Testing on $device"
 
+# Boot the simulator and wait until it's fully up before testing. Otherwise it
+# boots during the first UI test, whose app launch can then time out.
+udid="$(xcrun simctl list devices available | grep -m1 "^ *$device (" | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')"
+xcrun simctl boot "$udid" 2>/dev/null || true
+xcrun simctl bootstatus "$udid" -b
+
 mode="${1:-all}"
 only=()
 results="build/TestResults.xcresult"
@@ -49,7 +55,7 @@ run() {
   xcodebuild test \
     -project TaskWall.xcodeproj \
     -scheme TaskWall \
-    -destination "platform=iOS Simulator,name=$device" \
+    -destination "platform=iOS Simulator,id=$udid" \
     -resultBundlePath "$results" \
     CODE_SIGNING_ALLOWED=NO \
     ${only[@]+"${only[@]}"}
