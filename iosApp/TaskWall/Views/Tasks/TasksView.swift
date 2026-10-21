@@ -307,16 +307,16 @@ struct LockScreenStatusCard: View {
         switch status {
         case .notSetUp: "Automatic updates are off"
         case .upToDate: "Lock Screen is up to date"
-        case .updatesOnClose: "Updates when you close TaskWall"
+        case .updatesOnClose: "Updates when you close the app"
         case .outOfDate: "Lock Screen is out of date"
         }
     }
 
     private func subtitle(_ status: Status) -> String {
         switch status {
-        case .notSetUp: return "Set it up once and your Lock Screen updates whenever you close TaskWall."
-        case .upToDate: return "After a change, close TaskWall and your Lock Screen updates."
-        case .updatesOnClose: return "Close TaskWall and your latest changes show up."
+        case .notSetUp: return "Set it up once and your Lock Screen updates whenever you close the app."
+        case .upToDate: return "After a change, close the app and your Lock Screen updates."
+        case .updatesOnClose: return "Close the app and your latest changes show up."
         case .outOfDate: return "Your latest changes aren't on it yet."
         }
     }

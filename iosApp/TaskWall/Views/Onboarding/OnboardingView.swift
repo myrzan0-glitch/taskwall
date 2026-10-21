@@ -93,7 +93,7 @@ private struct WelcomeStep: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Your to-dos, on your Lock Screen.")
                         .font(.largeTitle.bold())
-                    Text("Write today's tasks. TaskWall turns them into a wallpaper and keeps it up to date for you.")
+                    Text("Write today's tasks. Task on Wallpaper turns them into a wallpaper and keeps it up to date for you.")
                         .foregroundStyle(.secondary)
                 }
 

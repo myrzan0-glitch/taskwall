@@ -1,12 +1,12 @@
-# TaskWall
+# Task on Wallpaper
 
 **Your to-dos, on your Lock Screen.**
 
-TaskWall turns today's tasks into a Lock Screen wallpaper and keeps it up to date by itself. Write your tasks, pick a colour or any photo, and every time you pick up your phone you see what's left.
+Task on Wallpaper turns today's tasks into a Lock Screen wallpaper and keeps it up to date by itself. Write your tasks, pick a colour or any photo, and every time you pick up your phone you see what's left.
 
 It is free: no ads, no account, no tracking. People who want to can leave a tip.
 
-> Design: [TaskWall App Design canvas](https://claude.ai/artifact/QFPVzTH5F5R1ddi22NJiXs)
+> Design: [Task on Wallpaper design canvas](https://claude.ai/artifact/QFPVzTH5F5R1ddi22NJiXs)
 
 ---
 
@@ -15,21 +15,21 @@ It is free: no ads, no account, no tracking. People who want to can leave a tip.
 - **Tasks:** title, notes, priority (Low / Med / High), due date and time. Shown as Today (due today, then undated), Upcoming and Past, the last two grouped by date.
 - **Wallpaper:** list or table layout with an optional progress bar, in five colour themes or on any photo from your library.
 - **Readable on any photo:** Auto measures the photo behind the task list and picks black or white text plus the lightest backdrop that keeps it readable (none, soft shade or frosted glass). People can reframe the photo and override Auto.
-- **Automatic updates:** a Shortcuts automation refreshes the wallpaper when you close TaskWall. Onboarding walks through the few taps iOS requires.
-- **Siri and Shortcuts:** "Make TaskWall Wallpaper" and "Add Task" work with no setup.
+- **Automatic updates:** a Shortcuts automation refreshes the wallpaper when you close the app. Onboarding walks through the few taps iOS requires.
+- **Siri and Shortcuts:** "Make Wallpaper" and "Add Task" work with no setup.
 - **Tip jar:** three one-time tips through the App Store that unlock nothing.
 - **Native iOS 27 design:** Liquid Glass tab bar, toolbars and sheets, SF Pro, Dynamic Type and Dark Mode, with [Hugeicons](https://hugeicons.com) (free stroke-rounded set, MIT) for icons.
 
 ## How it works
 
-iOS doesn't let apps change the wallpaper, so TaskWall works with the Shortcuts app:
+iOS doesn't let apps change the wallpaper, so Task on Wallpaper works with the Shortcuts app:
 
 ```
-TaskWall app ──saves──▶ App Group container ◀──reads── "Make TaskWall Wallpaper" (App Intent, runs in background)
+Task on Wallpaper ──saves──▶ App Group container ◀──reads── "Make Wallpaper" (App Intent, runs in background)
                          (tasks + photo)                        │ returns PNG
                                                                 ▼
                                        Shortcuts: "Set Wallpaper" (Lock Screen, no preview)
-                                       triggered when TaskWall closes
+                                       triggered when the app closes
 ```
 
 The person adds the published TaskWall shortcut once, allows it to run when locked, and runs a test. See [docs/shortcut.md](docs/shortcut.md).
@@ -38,7 +38,7 @@ The person adds the published TaskWall shortcut once, allows it to run when lock
 
 ## Architecture
 
-TaskWall is a Kotlin Multiplatform project, so an Android app can reuse everything that isn't UI.
+Task on Wallpaper is a Kotlin Multiplatform project, so an Android app can reuse everything that isn't UI.
 
 | Part | What's in it | Language |
 |---|---|---|
@@ -134,7 +134,7 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 
 ### TestFlight
 
-1. In App Store Connect, create the app (Apps → + → New App) with bundle ID `app.taskwall`. Its name must be unique on the App Store; the name under the icon on the Home Screen stays TaskWall.
+1. In App Store Connect, create the app (Apps → + → New App) with bundle ID `app.taskwall`. The app is listed as Task on Wallpaper, which is also the name under the icon. The code, Xcode project, bundle ID and the shortcut keep the name TaskWall.
 2. In Xcode, pick **Any iOS Device (arm64)**, then **Product → Archive**, then **Distribute App → TestFlight & App Store → Upload**.
 3. When processing finishes (Apple emails you), add testers under TestFlight → Internal Testing and install the TestFlight app.
 
@@ -146,7 +146,7 @@ Raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` before each upload: ever
 
 ### Before you submit
 
-- **The name "TaskWall" is taken on the App Store.** Pick a different name before submitting.
+- **The App Store name is Task on Wallpaper.** "TaskWall" was taken; it remains the name of the code, the Xcode project and the shortcut.
 - **Wallpaper apps are a crowded category.** App Review guideline 4.3(b) may reject apps that look like others, so the listing should lead with what's different: a real task manager whose Lock Screen updates itself, for free.
 
 ## Android (planned)

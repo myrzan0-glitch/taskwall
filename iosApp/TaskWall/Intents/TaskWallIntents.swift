@@ -5,7 +5,7 @@ import Shared
 /// The action the TaskWall shortcut runs: it returns today's wallpaper as an
 /// image for Shortcuts' own "Set Wallpaper" action. Runs without opening the app.
 struct MakeWallpaperIntent: AppIntent {
-    static let title: LocalizedStringResource = "Make TaskWall Wallpaper"
+    static let title: LocalizedStringResource = "Make Wallpaper"
     static let description = IntentDescription(
         "Makes a Lock Screen wallpaper from today's tasks. Pass it to Set Wallpaper.",
         categoryName: "Wallpaper"
@@ -25,10 +25,10 @@ struct MakeWallpaperIntent: AppIntent {
     }
 }
 
-/// "Add a task to TaskWall" from Siri, Spotlight or a shortcut.
+/// "Add a task to Task on Wallpaper" from Siri, Spotlight or a shortcut.
 struct AddTaskIntent: AppIntent {
     static let title: LocalizedStringResource = "Add Task"
-    static let description = IntentDescription("Adds a task to today's list in TaskWall.")
+    static let description = IntentDescription("Adds a task to today's list in Task on Wallpaper.")
     static let supportedModes: IntentModes = .background
 
     @Parameter(title: "Task")
@@ -50,7 +50,7 @@ enum TaskWallIntentError: Error, CustomLocalizedStringResourceConvertible {
 
     var localizedStringResource: LocalizedStringResource {
         switch self {
-        case .renderFailed: "TaskWall couldn't make the wallpaper. Open TaskWall once, then try again."
+        case .renderFailed: "Task on Wallpaper couldn't make the wallpaper. Open Task on Wallpaper once, then try again."
         case .emptyTitle: "The task needs a title."
         }
     }

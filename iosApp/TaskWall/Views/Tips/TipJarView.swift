@@ -1,7 +1,7 @@
 import SwiftUI
 import Shared
 
-/// "Keep TaskWall free": a full-screen tip jar in the style of the best paywalls,
+/// "Keep Task on Wallpaper free": a full-screen tip jar in the style of the best paywalls,
 /// without discounts, timers or pressure.
 struct TipJarView: View {
     @Environment(TipStore.self) private var tips
@@ -79,7 +79,7 @@ struct TipJarView: View {
                 .font(.footnote.weight(.bold))
                 .tracking(1.8)
                 .foregroundStyle(.white.opacity(0.72))
-            Text("Keep TaskWall free")
+            Text("Keep Task on Wallpaper free")
                 .font(.system(size: 34, weight: .heavy))
                 .multilineTextAlignment(.center)
                 .padding(.top, 8)
@@ -182,7 +182,7 @@ struct TipJarView: View {
         VStack(spacing: 16) {
             Image("favourite").renderingMode(.template).resizable().frame(width: 44, height: 44)
             Text("Thank you").font(.system(size: 34, weight: .heavy))
-            Text("Your \(name.lowercased()) keeps TaskWall free for everyone. It really means a lot.")
+            Text("Your \(name.lowercased()) keeps Task on Wallpaper free for everyone. It really means a lot.")
                 .font(.subheadline)
                 .foregroundStyle(Color(white: 0.68))
                 .multilineTextAlignment(.center)
