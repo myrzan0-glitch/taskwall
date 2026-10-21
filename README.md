@@ -65,7 +65,7 @@ shared/src/commonMain/kotlin/app/taskwall/shared/
   WallpaperAppearance.kt             themes and resolved colours
   WallpaperGeometry.kt               Lock Screen safe areas
   TipJar.kt, SampleData.kt, Formatting.kt
-shared/src/commonTest/               unit tests (53): dates, sorting, store, every user flow
+shared/src/commonTest/               unit tests (67): dates, sorting, store, every user flow
 iosApp/
   TaskWall.xcodeproj                 the Xcode project (generated from project.yml, committed)
   project.yml                        XcodeGen spec: app, unit tests, UI tests
