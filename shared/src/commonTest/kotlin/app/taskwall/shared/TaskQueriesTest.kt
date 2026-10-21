@@ -40,22 +40,40 @@ class TaskQueriesTest {
     }
 
     @Test
-    fun filtersSections() {
+    fun splitsIntoTodayUpcomingAndPastGroupedByDate() {
         val tasks = listOf(
             task("late", due = TODAY.plusDays(-1)),
+            task("older", due = TODAY.plusDays(-3)),
+            task("older-done", due = TODAY.plusDays(-3), done = true),
             task("now"),
             task("whenever", due = null),
+            task("soon", due = TODAY.plusDays(1)),
             task("later", due = TODAY.plusDays(3)),
+            task("later-too", due = TODAY.plusDays(3)),
         )
-        assertEquals(
-            listOf(SectionKind.OVERDUE, SectionKind.TODAY, SectionKind.ANYTIME, SectionKind.UPCOMING),
-            TaskQueries.sections(tasks, TODAY, TaskFilter.ALL).map { it.kind },
-        )
-        assertEquals(
-            listOf(SectionKind.OVERDUE, SectionKind.TODAY, SectionKind.ANYTIME),
-            TaskQueries.sections(tasks, TODAY, TaskFilter.TODAY).map { it.kind },
-        )
-        assertEquals(listOf("later"), TaskQueries.sections(tasks, TODAY, TaskFilter.UPCOMING).single().tasks.map { it.id })
+        val today = TaskQueries.sections(tasks, TODAY, TaskFilter.TODAY)
+        assertEquals(listOf("Today", "Anytime"), today.map { it.title })
+        assertEquals(listOf(listOf("now"), listOf("whenever")), today.map { s -> s.tasks.map { it.id } })
+        assertEquals(listOf(null, null), today.map { it.day })
+
+        // Soonest date first.
+        val upcoming = TaskQueries.sections(tasks, TODAY, TaskFilter.UPCOMING)
+        assertEquals(listOf("Tomorrow", "Friday, 23 Oct"), upcoming.map { it.title })
+        assertEquals(listOf(TODAY.plusDays(1), TODAY.plusDays(3)), upcoming.map { it.day })
+        assertEquals(listOf("later", "later-too"), upcoming[1].tasks.map { it.id })
+
+        // Most recent date first; finished and unfinished tasks both stay under their date.
+        val past = TaskQueries.sections(tasks, TODAY, TaskFilter.PAST)
+        assertEquals(listOf("Yesterday", "Saturday, 17 Oct"), past.map { it.title })
+        assertEquals(listOf("older", "older-done"), past[1].tasks.map { it.id })
+    }
+
+    @Test
+    fun emptyGroupsAreLeftOut() {
+        val tasks = listOf(task("whenever", due = null))
+        assertEquals(listOf("Anytime"), TaskQueries.sections(tasks, TODAY, TaskFilter.TODAY).map { it.title })
+        assertEquals(emptyList(), TaskQueries.sections(tasks, TODAY, TaskFilter.UPCOMING))
+        assertEquals(emptyList(), TaskQueries.sections(tasks, TODAY, TaskFilter.PAST))
     }
 
     @Test

@@ -52,17 +52,6 @@ func kotlinInt(_ value: Int?) -> KotlinInt? {
     value.map { KotlinInt(int: Int32($0)) }
 }
 
-extension SectionKind {
-    var title: String {
-        switch self {
-        case .overdue: "Overdue"
-        case .today: "Today"
-        case .anytime: "Anytime"
-        default: "Upcoming"
-        }
-    }
-}
-
 extension Priority {
     var title: String {
         switch self {

@@ -1,10 +1,14 @@
 package app.taskwall.shared
 
-enum class TaskFilter { ALL, TODAY, UPCOMING }
+enum class TaskFilter { TODAY, UPCOMING, PAST }
 
 enum class SectionKind { OVERDUE, TODAY, ANYTIME, UPCOMING }
 
-data class TaskSection(val kind: SectionKind, val tasks: List<TaskItem>)
+/**
+ * A titled group in the task list. [day] is set when the group is a single
+ * date (Upcoming and Past), so rows can leave the date out.
+ */
+data class TaskSection(val title: String, val tasks: List<TaskItem>, val day: CalendarDay? = null)
 
 data class TaskProgress(val done: Int, val total: Int) {
     val fraction: Double get() = if (total == 0) 0.0 else done.toDouble() / total
@@ -24,17 +28,26 @@ object TaskQueries {
         }
     }
 
-    fun sections(tasks: List<TaskItem>, today: CalendarDay, filter: TaskFilter): List<TaskSection> {
-        val kinds = when (filter) {
-            TaskFilter.ALL -> listOf(SectionKind.OVERDUE, SectionKind.TODAY, SectionKind.ANYTIME, SectionKind.UPCOMING)
-            TaskFilter.TODAY -> listOf(SectionKind.OVERDUE, SectionKind.TODAY, SectionKind.ANYTIME)
-            TaskFilter.UPCOMING -> listOf(SectionKind.UPCOMING)
-        }
-        val grouped = tasks.groupBy { kindOf(it, today) }
-        return kinds.mapNotNull { kind ->
-            grouped[kind]?.takeIf { it.isNotEmpty() }?.let { TaskSection(kind, sorted(it, today)) }
-        }
+    /**
+     * Today: due today, then undated. Upcoming: one group per date, soonest
+     * first. Past: one group per date before today, most recent first.
+     */
+    fun sections(tasks: List<TaskItem>, today: CalendarDay, filter: TaskFilter): List<TaskSection> = when (filter) {
+        TaskFilter.TODAY -> listOfNotNull(
+            section("Today", tasks.filter { it.dueDay == today }, today),
+            section("Anytime", tasks.filter { it.dueDay == null }, today),
+        )
+        TaskFilter.UPCOMING -> byDay(tasks.filter { it.dueDay?.let { day -> day > today } == true }, today)
+        TaskFilter.PAST -> byDay(tasks.filter { it.dueDay?.let { day -> day < today } == true }, today).reversed()
     }
+
+    private fun section(title: String, tasks: List<TaskItem>, today: CalendarDay): TaskSection? =
+        tasks.takeIf { it.isNotEmpty() }?.let { TaskSection(title, sorted(it, today)) }
+
+    private fun byDay(tasks: List<TaskItem>, today: CalendarDay): List<TaskSection> =
+        tasks.groupBy { it.dueDay!! }.entries.sortedBy { it.key }.map { (day, dayTasks) ->
+            TaskSection(Formatting.dayHeading(day, today), sorted(dayTasks, today), day)
+        }
 
     /** Progress across everything that belongs to today (overdue, today, anytime). */
     fun todayProgress(tasks: List<TaskItem>, today: CalendarDay): TaskProgress {

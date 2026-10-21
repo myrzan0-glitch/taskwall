@@ -33,8 +33,6 @@ final class BridgeTests: XCTestCase {
     }
 
     func testTitlesForEnums() {
-        XCTAssertEqual(SectionKind.overdue.title, "Overdue")
-        XCTAssertEqual(SectionKind.upcoming.title, "Upcoming")
         XCTAssertEqual(Priority.high.title, "High")
         XCTAssertEqual(Priority.noPriority.title, "None")
         XCTAssertEqual(Priority.pickerOrder.count, 4)

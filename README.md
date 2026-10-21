@@ -12,7 +12,7 @@ It is free: no ads, no account, no tracking. People who want to can leave a tip.
 
 ## Features
 
-- **Tasks:** title, notes, priority (Low / Med / High), due date and time. Grouped into Overdue, Today, Anytime and Upcoming.
+- **Tasks:** title, notes, priority (Low / Med / High), due date and time. Shown as Today (due today, then undated), Upcoming and Past, the last two grouped by date.
 - **Wallpaper:** list or table layout with an optional progress bar, in five colour themes or on any photo from your library.
 - **Readable on any photo:** Auto measures the photo behind the task list and picks black or white text plus the lightest backdrop that keeps it readable (none, soft shade or frosted glass). People can reframe the photo and override Auto.
 - **Automatic updates:** a Shortcuts automation refreshes the wallpaper every morning and when you close TaskWall. Onboarding walks through the three taps iOS requires.
@@ -42,7 +42,7 @@ TaskWall is a Kotlin Multiplatform project, so an Android app can reuse everythi
 
 | Part | What's in it | Language |
 |---|---|---|
-| `shared/` | Tasks and storage, the Overdue / Today / Upcoming rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes and geometry, tip product IDs | Kotlin (common) |
+| `shared/` | Tasks and storage, the Today / Upcoming / Past grouping and overdue rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes and geometry, tip product IDs | Kotlin (common) |
 | `iosApp/` | SwiftUI screens with native Liquid Glass components, wallpaper drawing and rendering, photo picking, App Intents for Shortcuts and Siri, StoreKit tips | Swift |
 | `androidApp/` (later) | Jetpack Compose screens reusing `shared/` | Kotlin |
 

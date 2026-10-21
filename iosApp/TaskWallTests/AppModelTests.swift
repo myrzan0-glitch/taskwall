@@ -28,7 +28,7 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(task.dueDay, CalendarDay.today)
         XCTAssertEqual(task.dueMinutes?.int32Value, 17 * 60)
         XCTAssertEqual(model.progress.total, 1)
-        XCTAssertEqual(model.sections(.today).first?.kind, SectionKind.today)
+        XCTAssertEqual(model.sections(.today).first?.title, "Today")
     }
 
     func testBlankQuickTaskIsIgnored() {

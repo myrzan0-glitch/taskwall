@@ -160,16 +160,21 @@ final class TaskWallUITests: XCTestCase {
 
     func testFilterAndClearCompleted() {
         let app = launch("-skipOnboarding", "-seed")
-        XCTAssertTrue(task(app, "Dentist").waitForExistence(timeout: 10))
-
-        app.buttons["Today"].tap()
-        XCTAssertTrue(task(app, "Buy milk").waitForExistence(timeout: 3))
+        XCTAssertTrue(task(app, "Buy milk").waitForExistence(timeout: 10))
         XCTAssertFalse(task(app, "Dentist").exists, "tomorrow's task is not in Today")
+        XCTAssertFalse(task(app, "Renew passport").exists, "yesterday's task is not in Today")
+
         app.buttons["Upcoming"].tap()
         XCTAssertTrue(task(app, "Dentist").waitForExistence(timeout: 3))
         XCTAssertEqual(rows(app).count, 1, "only tomorrow's task is upcoming")
-        app.buttons["All"].tap()
+        XCTAssertTrue(app.staticTexts["Tomorrow"].firstMatch.exists, "upcoming tasks are grouped by date")
 
+        app.buttons["Past"].tap()
+        XCTAssertTrue(task(app, "Renew passport").waitForExistence(timeout: 3))
+        XCTAssertEqual(rows(app).count, 1, "only yesterday's task is in the past")
+        XCTAssertTrue(app.staticTexts["Yesterday"].firstMatch.exists, "past tasks are grouped by date")
+
+        app.buttons["Today"].tap()
         XCTAssertTrue(task(app, "Pay rent").waitForExistence(timeout: 3))
         app.buttons["More"].tap()
         app.buttons["Clear Completed"].tap()
