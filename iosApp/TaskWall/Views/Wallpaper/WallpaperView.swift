@@ -41,6 +41,7 @@ struct WallpaperView: View {
                                 Text("List").tag(WallpaperLayout.list)
                                 Text("Table").tag(WallpaperLayout.table)
                             }
+                            .accessibilityIdentifier("layoutPicker")
                         }
                         DottedDivider()
                         row("Task list") {
@@ -48,6 +49,7 @@ struct WallpaperView: View {
                                 Text("Below clock").tag(TaskPosition.belowClock)
                                 Text("Bottom").tag(TaskPosition.bottom)
                             }
+                            .accessibilityIdentifier("positionPicker")
                         }
                         DottedDivider()
                         Toggle("Progress bar", isOn: progressBinding)

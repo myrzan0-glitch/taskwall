@@ -211,10 +211,13 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Sage theme"].isSelected)
         XCTAssertFalse(app.buttons["Ink theme"].isSelected)
 
-        let table = NSPredicate(format: "label CONTAINS 'Table' OR value CONTAINS 'Table'")
-        app.buttons["Layout"].firstMatch.tap()
+        // The menu's button is named after its current value, so find it by identifier or by "List".
+        let layout = app.buttons.matching(NSPredicate(format: "identifier == 'layoutPicker' OR label == 'List'")).firstMatch
+        XCTAssertTrue(layout.waitForExistence(timeout: 5))
+        layout.tap()
         XCTAssertTrue(app.buttons["Table"].waitForExistence(timeout: 3))
         app.buttons["Table"].tap()
+        let table = NSPredicate(format: "label CONTAINS 'Table' OR value CONTAINS 'Table'")
         XCTAssertTrue(app.buttons.matching(table).firstMatch.waitForExistence(timeout: 3))
 
         XCTAssertTrue(app.buttons["usePhoto"].exists)
