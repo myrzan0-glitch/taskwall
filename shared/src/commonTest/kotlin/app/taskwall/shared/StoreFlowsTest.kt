@@ -100,19 +100,16 @@ class StoreFlowsTest {
         val today = store.addQuickTask("Today", 2)
         store.addTask("Later", "", Priority.NO_PRIORITY, TODAY.plusDays(2), null, true, 3)
 
-        assertEquals(
-            listOf(SectionKind.OVERDUE, SectionKind.ANYTIME, SectionKind.UPCOMING),
-            store.sections(TODAY, TaskFilter.ALL).map { it.kind },
-        )
+        assertEquals(listOf("Anytime"), store.sections(TODAY, TaskFilter.TODAY).map { it.title })
+        assertEquals(listOf("Yesterday"), store.sections(TODAY, TaskFilter.PAST).map { it.title })
+        assertEquals(listOf(TODAY.plusDays(2)), store.sections(TODAY, TaskFilter.UPCOMING).map { it.day })
         assertEquals(TaskProgress(0, 2), store.todayProgress(TODAY))
 
         store.toggleDone(late.id, TODAY, 4)
         store.toggleDone(today.id, TODAY, 5)
-        // A finished overdue task moves into Today; an undated one stays in Anytime.
-        assertEquals(
-            listOf(SectionKind.TODAY, SectionKind.ANYTIME, SectionKind.UPCOMING),
-            store.sections(TODAY, TaskFilter.ALL).map { it.kind },
-        )
+        // Finished tasks stay under their date; the overdue one still counts towards today's progress.
+        assertEquals(listOf("Anytime"), store.sections(TODAY, TaskFilter.TODAY).map { it.title })
+        assertEquals(listOf(late.id), store.sections(TODAY, TaskFilter.PAST).single().tasks.map { it.id })
         assertEquals(TaskProgress(2, 2), store.todayProgress(TODAY))
         assertEquals(1.0, store.todayProgress(TODAY).fraction)
     }

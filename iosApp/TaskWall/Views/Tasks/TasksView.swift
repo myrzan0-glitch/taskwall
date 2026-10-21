@@ -15,7 +15,7 @@ enum TaskEditorTarget: Identifiable {
 
 struct TasksView: View {
     @Environment(AppModel.self) private var model
-    @State private var filter: TaskFilter = .all
+    @State private var filter: TaskFilter = .today
     @State private var editor: TaskEditorTarget?
 
     var body: some View {
@@ -31,13 +31,13 @@ struct TasksView: View {
 
                 Section {
                     Picker("Show", selection: $filter) {
-                        Text("All").tag(TaskFilter.all)
                         Text("Today").tag(TaskFilter.today)
                         Text("Upcoming").tag(TaskFilter.upcoming)
+                        Text("Past").tag(TaskFilter.past)
                     }
                     .pickerStyle(.segmented)
-                    .labelsHidden()
-                    // In a white card, like the other segmented controls.
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
                 }
 
                 // In the list, under the filter: an overlay centred on the whole
@@ -49,10 +49,10 @@ struct TasksView: View {
                     }
                 }
 
-                ForEach(sections, id: \.kind) { section in
+                ForEach(sections, id: \.title) { section in
                     Section {
                         ForEach(section.tasks, id: \.id) { task in
-                            TaskRow(task: task, today: model.today) { model.toggle(task) }
+                            TaskRow(task: task, today: model.today, showsDay: section.day == nil) { model.toggle(task) }
                                 .contentShape(Rectangle())
                                 .onTapGesture { editor = .edit(task) }
                                 .listRowInsets(TaskRow.insets)
@@ -66,8 +66,8 @@ struct TasksView: View {
                         }
                     } header: {
                         HStack {
-                            Text(section.kind.title)
-                                .foregroundStyle(section.kind == SectionKind.overdue ? Color.red : Color.primary)
+                            Text(section.title)
+                                .foregroundStyle(Color.primary)
                             Spacer()
                             Text("\(section.tasks.count)")
                         }
@@ -123,11 +123,17 @@ private extension TasksView {
             } description: {
                 Text("Tasks due after today show up here.")
             }
+        } else if filter == TaskFilter.past {
+            ContentUnavailableView {
+                Label("Nothing in the past", image: "calendar-03")
+            } description: {
+                Text("Tasks due before today show up here.")
+            }
         } else {
             ContentUnavailableView {
                 Label("Nothing for today", image: "task-done-01")
             } description: {
-                Text("Your other tasks are under Upcoming.")
+                Text("Your other tasks are under Upcoming and Past.")
             }
         }
     }
@@ -139,6 +145,8 @@ struct TaskRow: View {
 
     let task: TaskItem
     let today: CalendarDay
+    /// False in a date group, whose header already names the day.
+    var showsDay = true
     let onToggle: () -> Void
 
     private var isOverdue: Bool {
@@ -159,7 +167,9 @@ struct TaskRow: View {
                 Text(task.title)
                     .strikethrough(task.isDone)
                     .foregroundStyle(task.isDone ? .secondary : .primary)
-                if let label = Formatting.shared.dueLabel(task: task, today: today) {
+                if let label = showsDay
+                    ? Formatting.shared.dueLabel(task: task, today: today)
+                    : Formatting.shared.timeLabel(task: task, today: today) {
                     Text(label)
                         .font(.footnote)
                         .foregroundStyle(isOverdue && !task.isDone ? AnyShapeStyle(Color.red) : AnyShapeStyle(.secondary))

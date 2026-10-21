@@ -27,6 +27,19 @@ object Formatting {
         else -> shortDate(day)
     }
 
+    /** A date group's header: "Tomorrow", "Yesterday", else e.g. "Friday, 23 Oct" (with the year if it differs). */
+    fun dayHeading(day: CalendarDay, today: CalendarDay): String = when (today.daysUntil(day)) {
+        1 -> "Tomorrow"
+        -1 -> "Yesterday"
+        else -> WEEKDAYS[day.dayOfWeek - 1] + ", " + shortDate(day) + if (day.year != today.year) " ${day.year}" else ""
+    }
+
+    /** The line under a task in a date group, whose header already names the day: "Overdue", a time, or nothing. */
+    fun timeLabel(task: TaskItem, today: CalendarDay): String? {
+        if (TaskQueries.kindOf(task, today) == SectionKind.OVERDUE) return "Overdue"
+        return task.dueMinutes?.let { time(it) }
+    }
+
     /** The line under a task title in the app, e.g. "Overdue, 18 Oct" or "Tomorrow, 09:30". */
     fun dueLabel(task: TaskItem, today: CalendarDay): String? {
         val day = task.dueDay ?: return task.dueMinutes?.let { time(it) }

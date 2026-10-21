@@ -86,13 +86,20 @@ final class ScreenshotTests: XCTestCase {
                 app.buttons["closeEditor"].tap()
             }
 
-            // Swipe actions and the overdue section.
+            // The other two filters, grouped by date.
+            app.buttons["Upcoming"].tap()
+            snap(app, look, "16-upcoming")
+            app.buttons["Past"].tap()
+            snap(app, look, "17-past")
+
+            // Swipe actions, on the overdue task under Past.
             let overdue = app.descendants(matching: .any).matching(identifier: "taskRow").staticTexts["Renew passport"].firstMatch
             if overdue.waitForExistence(timeout: 5) {
                 overdue.swipeLeft()
                 snap(app, look, "15-swipe-delete")
                 app.navigationBars.firstMatch.tap()
             }
+            app.buttons["Today"].tap()
 
             app.buttons["Search"].firstMatch.tap()
             let field = app.searchFields.firstMatch

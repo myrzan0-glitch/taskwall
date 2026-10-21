@@ -132,4 +132,18 @@ class TaskWallStoreTest {
         assertEquals("Thursday", Formatting.dueLabel(task("d", due = TODAY.plusDays(2)), TODAY))
         assertEquals("3 Nov", Formatting.dueLabel(task("e", due = CalendarDay(2026, 11, 3)), TODAY))
     }
+
+    @Test
+    fun formatsDayHeadingsAndTimeLabels() {
+        assertEquals("Tomorrow", Formatting.dayHeading(TODAY.plusDays(1), TODAY))
+        assertEquals("Yesterday", Formatting.dayHeading(TODAY.plusDays(-1), TODAY))
+        assertEquals("Thursday, 22 Oct", Formatting.dayHeading(TODAY.plusDays(2), TODAY))
+        assertEquals("Friday, 1 Jan 2027", Formatting.dayHeading(CalendarDay(2027, 1, 1), TODAY))
+
+        // The header names the day, so a row shows only its time, or that it's overdue.
+        assertEquals("09:30", Formatting.timeLabel(task("a", due = TODAY.plusDays(2), minutes = 9 * 60 + 30), TODAY))
+        assertEquals(null, Formatting.timeLabel(task("b", due = TODAY.plusDays(2)), TODAY))
+        assertEquals("Overdue", Formatting.timeLabel(task("c", due = TODAY.plusDays(-1), minutes = 60), TODAY))
+        assertEquals(null, Formatting.timeLabel(task("d", due = TODAY.plusDays(-1), done = true), TODAY))
+    }
 }
