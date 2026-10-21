@@ -8,7 +8,9 @@ extension Color {
     /// Read by name so it works even if the build doesn't register a global accent.
     static let brand = Color("AccentColor")
     /// Text and icons drawn on top of `brand`: white in light mode, black in dark mode.
-    static let onBrand = Color(.systemBackground)
+    /// Plain black and white, not `systemBackground`: inside a glass sheet that
+    /// one renders see-through, which hid the switch knob on New Task.
+    static let onBrand = Color(UIColor { $0.userInterfaceStyle == .dark ? .black : .white })
 }
 
 /// The system switch draws a white knob, which vanishes on the white dark-mode
