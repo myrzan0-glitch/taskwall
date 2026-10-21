@@ -138,6 +138,8 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 2. In Xcode, pick **Any iOS Device (arm64)**, then **Product → Archive**, then **Distribute App → TestFlight & App Store → Upload**.
 3. When processing finishes (Apple emails you), add testers under TestFlight → Internal Testing and install the TestFlight app.
 
+**Or with Xcode Cloud:** its workflow must start on `main` (Edit Workflow → Start Conditions → Source Branch), with an Archive action and a TestFlight post-action. `iosApp/ci_scripts/ci_post_clone.sh` installs the Java that the Kotlin build needs, and Xcode Cloud numbers the builds itself.
+
 Raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` before each upload: every build needs a higher number. CI builds a Release archive on every push, so archive problems show up before you try. `Resources/PrivacyInfo.xcprivacy` declares no tracking and no data collection.
 
 ### Before you submit
