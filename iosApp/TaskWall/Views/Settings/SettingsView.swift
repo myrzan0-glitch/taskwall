@@ -5,9 +5,11 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var showTips = false
 
-    /// Replace with the App Store ID once the app is listed.
-    private let reviewURL = URL(string: "https://apps.apple.com/app/idREPLACE_WITH_APP_ID?action=write-review")!
-    private let feedbackURL = URL(string: "mailto:REPLACE_WITH_EMAIL?subject=TaskWall%20feedback")!
+    /// Set once the app is on the App Store, e.g.
+    /// `URL(string: "https://apps.apple.com/app/id1234567890?action=write-review")`.
+    /// Until then the Rate row is hidden.
+    private let reviewURL: URL? = nil
+    private let feedbackURL = URL(string: "mailto:izimbetov.myrzan@icloud.com?subject=TaskWall%20feedback")!
 
     var body: some View {
         NavigationStack {
@@ -21,10 +23,12 @@ struct SettingsView: View {
                         settingsRow("Buy Me a Coffee", icon: "coffee-02", filled: true)
                     }
                     .accessibilityIdentifier("tipJar")
-                    Link(destination: reviewURL) {
-                        settingsRow("Rate on the App Store", icon: "star")
+                    if let reviewURL {
+                        Link(destination: reviewURL) {
+                            settingsRow("Rate on the App Store", icon: "star")
+                        }
+                        .accessibilityIdentifier("rateApp")
                     }
-                    .accessibilityIdentifier("rateApp")
                     Link(destination: feedbackURL) {
                         settingsRow("Send Feedback", icon: "message-01")
                     }

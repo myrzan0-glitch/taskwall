@@ -128,9 +128,19 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 | Placeholder | Where |
 |---|---|
 | Bundle ID `app.taskwall` and App Group `group.app.taskwall` | `iosApp/project.yml`, `TaskWall.entitlements`, `App/AppGroup.swift` |
-| App Store ID `REPLACE_WITH_APP_ID` and feedback email | `Views/Settings/SettingsView.swift` |
+| App Store ID: the Rate row stays hidden until `reviewURL` is set | `Views/Settings/SettingsView.swift` |
 | Tip product IDs and prices | App Store Connect, matching `shared/.../TipJar.kt` |
 | App icon | `Resources/Assets.xcassets/AppIcon.appiconset` (placeholder) |
+
+### TestFlight
+
+1. In App Store Connect, create the app (Apps → + → New App) with bundle ID `app.taskwall`. Its name must be unique on the App Store; the name under the icon on the Home Screen stays TaskWall.
+2. In Xcode, pick **Any iOS Device (arm64)**, then **Product → Archive**, then **Distribute App → TestFlight & App Store → Upload**.
+3. When processing finishes (Apple emails you), add testers under TestFlight → Internal Testing and install the TestFlight app.
+
+**Or with Xcode Cloud:** its workflow must start on `main` (Edit Workflow → Start Conditions → Source Branch), with an Archive action and a TestFlight post-action. `iosApp/ci_scripts/ci_post_clone.sh` installs the Java that the Kotlin build needs, and Xcode Cloud numbers the builds itself.
+
+Raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` before each upload: every build needs a higher number. CI builds a Release archive on every push, so archive problems show up before you try. `Resources/PrivacyInfo.xcprivacy` declares no tracking and no data collection.
 
 ### Before you submit
 
