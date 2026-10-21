@@ -135,13 +135,18 @@ final class TaskWallUITests: XCTestCase {
         app.buttons["closeEditor"].tap()
         XCTAssertTrue(app.buttons["Discard Changes"].waitForExistence(timeout: 3))
         let keep = app.buttons["Keep Editing"]
+        let discard = app.buttons["Discard Changes"]
         if keep.waitForExistence(timeout: 2) {
             keep.tap()
         } else {
             // Anchored to the close button, the dialog has no cancel button: tapping outside keeps editing.
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).tap()
+            // Tap above the keyboard (a tap on a key leaves the dialog open), and retry if it stays.
+            for _ in 0..<3 where discard.exists {
+                app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4)).tap()
+                _ = discard.waitForNonExistence(timeout: 2)
+            }
         }
-        XCTAssertFalse(app.buttons["Discard Changes"].waitForExistence(timeout: 2))
+        XCTAssertFalse(discard.exists, "the dialog closes and editing goes on")
         XCTAssertTrue(title.waitForExistence(timeout: 2))
         app.buttons["closeEditor"].tap()
         app.buttons["Discard Changes"].tap()
