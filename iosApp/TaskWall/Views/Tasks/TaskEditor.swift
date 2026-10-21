@@ -94,6 +94,9 @@ struct TaskEditor: View {
                 Button("Keep Editing", role: .cancel) {}
             }
         }
+        // Styles set at the app root don't reach sheets, so the editor's switches
+        // fell back to the system one: a white knob on the white dark-mode tint.
+        .toggleStyle(BrandSwitchStyle())
         .presentationDetents([.large])
         .interactiveDismissDisabled(hasChanges)
         .onAppear {
