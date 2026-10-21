@@ -140,6 +140,8 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 
 **Or with Xcode Cloud:** its workflow must start on `main` (Edit Workflow → Start Conditions → Source Branch), with an Archive action and a TestFlight post-action. `iosApp/ci_scripts/ci_post_clone.sh` installs the Java that the Kotlin build needs, and Xcode Cloud numbers the builds itself.
 
+The privacy policy is `docs/privacy.html`, served by GitHub Pages (Settings → Pages → Deploy from a branch → `main`, `/docs`) at https://myrzan0-glitch.github.io/taskwall/privacy.html.
+
 Raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` before each upload: every build needs a higher number. CI builds a Release archive on every push, so archive problems show up before you try. `Resources/PrivacyInfo.xcprivacy` declares no tracking and no data collection.
 
 ### Before you submit
