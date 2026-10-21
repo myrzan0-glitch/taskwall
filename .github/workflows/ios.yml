@@ -39,6 +39,17 @@ jobs:
             echo "::error::iosApp/TaskWall.xcodeproj is out of date. Run 'cd iosApp && xcodegen' and commit the result."
             exit 1
           fi
+      - name: Build a Release archive, as Xcode does for TestFlight
+        if: always()
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project iosApp/TaskWall.xcodeproj -scheme TaskWall -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath iosApp/build/TaskWall.xcarchive \
+            CODE_SIGNING_ALLOWED=NO | xcbeautify
+          app=iosApp/build/TaskWall.xcarchive/Products/Applications/TaskWall.app
+          test -f "$app/PrivacyInfo.xcprivacy" || { echo "::error::The archive has no privacy manifest"; exit 1; }
+          test -f "$app/TaskWall.shortcut" || { echo "::error::The archive has no bundled shortcut"; exit 1; }
       - name: Capture screenshots (dark and light)
         if: always()
         continue-on-error: true
