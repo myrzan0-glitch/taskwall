@@ -26,14 +26,14 @@ targets:
     info:
       path: TaskWall/Info.plist
       properties:
-        CFBundleDisplayName: TaskWall
+        CFBundleDisplayName: Task on Wallpaper
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         NSAccentColorName: AccentColor
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
-        NSPhotoLibraryAddUsageDescription: TaskWall saves your wallpaper image to Photos when you tap Save Image.
+        NSPhotoLibraryAddUsageDescription: Task on Wallpaper saves your wallpaper image to Photos when you tap Save Image.
         LSApplicationQueriesSchemes: [shortcuts]
         CFBundleURLTypes:
           - CFBundleURLName: app.taskwall

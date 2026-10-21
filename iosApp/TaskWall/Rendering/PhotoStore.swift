@@ -46,7 +46,7 @@ enum PhotoSaver {
         case notAllowed
 
         var errorDescription: String? {
-            "TaskWall isn't allowed to add photos. You can change this in Settings › Privacy › Photos."
+            "Task on Wallpaper isn't allowed to add photos. You can change this in Settings › Privacy › Photos."
         }
     }
 

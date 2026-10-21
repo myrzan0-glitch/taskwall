@@ -9,7 +9,7 @@ struct SettingsView: View {
     /// `URL(string: "https://apps.apple.com/app/id1234567890?action=write-review")`.
     /// Until then the Rate row is hidden.
     private let reviewURL: URL? = nil
-    private let feedbackURL = URL(string: "mailto:izimbetov.myrzan@icloud.com?subject=TaskWall%20feedback")!
+    private let feedbackURL = URL(string: "mailto:izimbetov.myrzan@icloud.com?subject=Task%20on%20Wallpaper%20feedback")!
 
     var body: some View {
         NavigationStack {
@@ -34,9 +34,9 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("sendFeedback")
                 } header: {
-                    Text("Support TaskWall")
+                    Text("Support Task on Wallpaper")
                 } footer: {
-                    Text("TaskWall is free. No ads, no account, no tracking.")
+                    Text("Task on Wallpaper is free. No ads, no account, no tracking.")
                 }
 
                 Section("Tasks") {
@@ -112,7 +112,7 @@ struct AutomationSection: View {
 
             // Read from what actually happened, not a setting: TaskWall can't
             // create the automation, only notice the shortcut running after it closes.
-            LabeledContent("When I Close TaskWall") {
+            LabeledContent("When I Close the App") {
                 if automation.updatesWhenClosed {
                     Text("On")
                 } else if automation.automationAdded {
@@ -127,7 +127,7 @@ struct AutomationSection: View {
         } header: {
             Text("Automatic Updates")
         } footer: {
-            Text("Your Lock Screen updates when you close TaskWall, through the TaskWall shortcut and an automation in the Shortcuts app, the only app iOS lets change your wallpaper.")
+            Text("Your Lock Screen updates when you close Task on Wallpaper, through the TaskWall shortcut and an automation in the Shortcuts app, the only app iOS lets change your wallpaper.")
         }
         .sheet(isPresented: $showGuide) {
             AutomationGuideView {
@@ -177,7 +177,7 @@ struct AutomationSetupView: View {
         var title: String {
             switch self {
             case .add: "Add the TaskWall shortcut"
-            case .automate: "Update when you close TaskWall"
+            case .automate: "Update when you close the app"
             case .test: "Run a quick test"
             }
         }
@@ -207,7 +207,7 @@ struct AutomationSetupView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Make it automatic").font(.largeTitle.bold())
-                        Text("TaskWall updates your Lock Screen on its own. iOS asks you to approve that once in Shortcuts. It takes about 30 seconds.")
+                        Text("Task on Wallpaper updates your Lock Screen on its own. iOS asks you to approve that once in Shortcuts. It takes about 30 seconds.")
                             .foregroundStyle(.secondary)
                     }
                     .listRowBackground(Color.clear)
@@ -223,7 +223,7 @@ struct AutomationSetupView: View {
 
             if automation.isSetUp {
                 Section {
-                    Label("Automation is on. Your Lock Screen updates when you close TaskWall.", image: "refresh")
+                    Label("Automation is on. Your Lock Screen updates when you close Task on Wallpaper.", image: "refresh")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color(.systemBackground))
                         .listRowBackground(Color.primary)

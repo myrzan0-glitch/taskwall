@@ -15,8 +15,8 @@ struct AutomationGuideView: View {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Update when you close TaskWall").font(.title3.bold())
-                        Text("Tick off a task, leave TaskWall, and your Lock Screen catches up a moment later. You set this up once in Shortcuts.")
+                        Text("Update when you close the app").font(.title3.bold())
+                        Text("Tick off a task, leave Task on Wallpaper, and your Lock Screen catches up a moment later. You set this up once in Shortcuts.")
                             .foregroundStyle(.secondary)
                     }
                     .listRowBackground(Color.clear)
@@ -26,12 +26,12 @@ struct AutomationGuideView: View {
                 Section {
                     step(1, "Tap **Open Shortcuts** below and go to the **Automation** tab.")
                     step(2, "Tap **+** and choose **App**.")
-                    step(3, "Choose **TaskWall**, select **Is Closed** and deselect **Is Opened**. Choose **Run Immediately**.")
+                    step(3, "Choose **Task on Wallpaper**, select **Is Closed** and deselect **Is Opened**. Choose **Run Immediately**.")
                     step(4, "Tap **Next** and pick the **TaskWall** shortcut.")
                 } header: {
-                    Text("When you close TaskWall")
+                    Text("When you close Task on Wallpaper")
                 } footer: {
-                    Text("If iOS asks whether TaskWall can set the wallpaper, choose Always Allow.")
+                    Text("If iOS asks whether Task on Wallpaper can set the wallpaper, choose Always Allow.")
                 }
             }
             .navigationTitle("Automation")
