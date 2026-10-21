@@ -68,6 +68,7 @@ enum LaunchOptions {
         return model
     }
 
+    @MainActor
     private static func seed(_ model: AppModel) {
         let store = model.store
         let today = CalendarDay.today
