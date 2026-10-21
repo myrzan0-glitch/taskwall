@@ -36,8 +36,8 @@ struct TasksView: View {
                         Text("Upcoming").tag(TaskFilter.upcoming)
                     }
                     .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
+                    .labelsHidden()
+                    // In a white card, like the other segmented controls.
                 }
 
                 // In the list, under the filter: an overlay centred on the whole
