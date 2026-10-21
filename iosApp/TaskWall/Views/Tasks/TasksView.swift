@@ -24,6 +24,9 @@ struct TasksView: View {
             List {
                 Section {
                     LockScreenStatusCard()
+                } header: {
+                    // A section header, like the ones in Settings.
+                    Text("Today · \(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))")
                 }
 
                 Section {
@@ -73,9 +76,7 @@ struct TasksView: View {
             }
             .listSectionSpacing(.compact)
             .contentBelowLargeTitle()
-            .navigationTitle("Today")
-            // The date sits under the title, where iOS puts a screen's subtitle.
-            .navigationSubtitle(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+            .navigationTitle("Tasks")
             // Large title on the same row as the toolbar buttons, as in Wallet.
             .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {

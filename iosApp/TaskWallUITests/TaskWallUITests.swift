@@ -32,10 +32,10 @@ final class TaskWallUITests: XCTestCase {
         app.launch()
         if flags.contains("-skipOnboarding") {
             // Start every test on the Tasks tab, whatever the system restored.
-            let today = app.navigationBars["Today"]
-            if !today.waitForExistence(timeout: 10) {
+            let tasks = app.navigationBars["Tasks"]
+            if !tasks.waitForExistence(timeout: 10) {
                 tab(app, "Tasks").tap()
-                XCTAssertTrue(today.waitForExistence(timeout: 5), "couldn't get to the Tasks tab")
+                XCTAssertTrue(tasks.waitForExistence(timeout: 5), "couldn't get to the Tasks tab")
             }
         }
         return app
@@ -80,7 +80,7 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Make it automatic"].waitForExistence(timeout: 3))
         app.buttons["Set Up Later"].tap()
 
-        XCTAssertTrue(app.navigationBars["Today"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Tasks"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Feed the cat"].exists)
     }
 
@@ -186,7 +186,7 @@ final class TaskWallUITests: XCTestCase {
         again.launchArguments = ["-uiTesting"]
         again.launch()
         XCTAssertTrue(again.staticTexts["Buy milk"].waitForExistence(timeout: 10))
-        XCTAssertTrue(again.navigationBars["Today"].exists, "onboarding doesn't come back")
+        XCTAssertTrue(again.navigationBars["Tasks"].exists, "onboarding doesn't come back")
     }
 
     // MARK: Search
