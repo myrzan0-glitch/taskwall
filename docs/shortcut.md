@@ -19,12 +19,11 @@ On an iPhone with TaskWall installed, create a shortcut named **TaskWall** with 
 
 Keep the name exactly **TaskWall**. The app runs it by name (`ShortcutLinks.shortcutName`).
 
-## Add the automations
+## Add the automation
 
-iOS doesn't let apps create automations, so setup step 2 ("Update when you close TaskWall") walks people through it. In Shortcuts' **Automation** tab:
+iOS doesn't let apps create automations, so setup step 2 ("Update when you close TaskWall") walks people through it. In Shortcuts' **Automation** tab: **App › TaskWall › Is Closed** (deselect Is Opened), **Run Immediately**, then pick the TaskWall shortcut. This makes a finished task reach the Lock Screen as soon as the person leaves TaskWall.
 
-- **App › TaskWall › Is Closed** (deselect Is Opened), **Run Immediately**, then pick the TaskWall shortcut. This is the one that makes a finished task reach the Lock Screen as soon as the person leaves TaskWall.
-- **Time of Day** at the morning time, **Daily**, **Run Immediately**, then pick the TaskWall shortcut. Optional; it keeps the date and overdue tasks right on days TaskWall isn't opened.
+There's no daily automation: TaskWall can't see or change one, so its time couldn't be kept in step with the app. On a day TaskWall isn't opened, the wallpaper stays as it was until the next close.
 
 The first run may ask whether TaskWall can set the wallpaper; choose Always Allow.
 
@@ -48,7 +47,7 @@ shortcuts sign --mode anyone --input TaskWall-unsigned.shortcut --output iosApp/
 
 With the file in place, step 1's **Add** opens the share sheet; people choose **Shortcuts** and tap **Add Shortcut** there. The step is marked done only after they finish the share sheet or tap **I've Added It**, not on the first tap.
 
-Shared shortcuts arrive without automations, so step 2 guides people through adding them.
+Shared shortcuts arrive without automations, so step 2 guides people through adding the close automation.
 
 ## How the app knows it worked
 

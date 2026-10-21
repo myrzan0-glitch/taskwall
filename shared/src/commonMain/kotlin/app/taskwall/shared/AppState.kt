@@ -29,10 +29,8 @@ data class AppSettings(
 
 @Serializable
 data class AutomationSettings(
-    /** Daily update time, minutes after midnight. Default 07:00. Set in Shortcuts too. */
-    val morningMinutes: Int = 7 * 60,
     val shortcutAdded: Boolean = false,
-    /** The person says they added the Shortcuts automations. */
+    /** The person says they added the close automation in Shortcuts. */
     val automationAdded: Boolean = false,
     /** Set each time the shortcut asks TaskWall for a wallpaper. */
     val lastUpdateMillis: Long? = null,
@@ -46,7 +44,6 @@ data class AutomationSettings(
     val isSetUp: Boolean get() = shortcutAdded && automationAdded && lastUpdateMillis != null
 
     // Swift sees Kotlin's copy() with every argument required; these read better there.
-    fun withMorningMinutes(minutes: Int) = copy(morningMinutes = minutes.coerceIn(0, 24 * 60 - 1))
     fun withShortcutAdded(added: Boolean) = copy(shortcutAdded = added)
     fun withAutomationAdded(added: Boolean) = copy(automationAdded = added)
 }

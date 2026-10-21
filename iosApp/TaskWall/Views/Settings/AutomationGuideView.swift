@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// Step 2 of automatic updates: the Shortcuts automations that run the TaskWall
-/// shortcut on their own. iOS doesn't let apps create automations, so this walks
-/// through the few taps in Shortcuts. The close automation is what makes a
-/// finished task reach the Lock Screen as soon as the person leaves TaskWall.
+/// Step 2 of automatic updates: the Shortcuts automation that runs the TaskWall
+/// shortcut when TaskWall closes, so a finished task reaches the Lock Screen as
+/// soon as the person leaves. iOS doesn't let apps create automations, so this
+/// walks through the few taps in Shortcuts.
 struct AutomationGuideView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -11,8 +11,6 @@ struct AutomationGuideView: View {
     let onAdded: () -> Void
 
     var body: some View {
-        let morning = Date.at(minutesAfterMidnight: Int(model.automation.morningMinutes))
-            .formatted(date: .omitted, time: .shortened)
         NavigationStack {
             List {
                 Section {
@@ -25,24 +23,18 @@ struct AutomationGuideView: View {
                     .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
                 }
 
-                Section("When you close TaskWall") {
+                Section {
                     step(1, "Tap **Open Shortcuts** below and go to the **Automation** tab.")
                     step(2, "Tap **+** and choose **App**.")
                     step(3, "Choose **TaskWall**, select **Is Closed** and deselect **Is Opened**. Choose **Run Immediately**.")
                     step(4, "Tap **Next** and pick the **TaskWall** shortcut.")
-                }
-
-                Section {
-                    step(1, "In the **Automation** tab, tap **+** and choose **Time of Day**.")
-                    step(2, "Set **\(morning)**, **Daily**, and choose **Run Immediately**.")
-                    step(3, "Tap **Next** and pick the **TaskWall** shortcut.")
                 } header: {
-                    Text("Every morning (optional)")
+                    Text("When you close TaskWall")
                 } footer: {
-                    Text("Keeps the date and overdue tasks right even on days you don't open TaskWall. If iOS asks whether TaskWall can set the wallpaper, choose Always Allow.")
+                    Text("If iOS asks whether TaskWall can set the wallpaper, choose Always Allow.")
                 }
             }
-            .navigationTitle("Automations")
+            .navigationTitle("Automation")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

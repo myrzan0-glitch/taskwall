@@ -110,11 +110,6 @@ struct AutomationSection: View {
                     .controlSize(.small)
             }
 
-            DatePicker("Every Morning At", selection: Binding(
-                get: { Date.at(minutesAfterMidnight: Int(automation.morningMinutes)) },
-                set: { model.setAutomation(model.automation.withMorningMinutes(minutes: Int32($0.minutesAfterMidnight))) }
-            ), displayedComponents: .hourAndMinute)
-
             // Read from what actually happened, not a setting: TaskWall can't
             // create the automation, only notice the shortcut running after it closes.
             LabeledContent("When I Close TaskWall") {
@@ -132,7 +127,7 @@ struct AutomationSection: View {
         } header: {
             Text("Automatic Updates")
         } footer: {
-            Text("Runs through the TaskWall shortcut and automations in the Shortcuts app, the only app iOS lets change your wallpaper. Set the morning time there too.")
+            Text("Your Lock Screen updates when you close TaskWall, through the TaskWall shortcut and an automation in the Shortcuts app, the only app iOS lets change your wallpaper.")
         }
         .sheet(isPresented: $showGuide) {
             AutomationGuideView {
@@ -226,16 +221,9 @@ struct AutomationSetupView: View {
                 }
             }
 
-            Section("Update My Wallpaper") {
-                DatePicker("Every Morning At", selection: Binding(
-                    get: { Date.at(minutesAfterMidnight: Int(automation.morningMinutes)) },
-                    set: { model.setAutomation(model.automation.withMorningMinutes(minutes: Int32($0.minutesAfterMidnight))) }
-                ), displayedComponents: .hourAndMinute)
-            }
-
             if automation.isSetUp {
                 Section {
-                    Label("Automation is on. Your Lock Screen updates when you close TaskWall and at \(morningText).", image: "refresh")
+                    Label("Automation is on. Your Lock Screen updates when you close TaskWall.", image: "refresh")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color(.systemBackground))
                         .listRowBackground(Color.primary)
@@ -261,10 +249,6 @@ struct AutomationSetupView: View {
                 model.setAutomation(model.automation.withAutomationAdded(added: true))
             }
         }
-    }
-
-    private var morningText: String {
-        Date.at(minutesAfterMidnight: Int(model.automation.morningMinutes)).formatted(date: .omitted, time: .shortened)
     }
 
     private func currentStep(_ automation: AutomationSettings) -> Step? {
