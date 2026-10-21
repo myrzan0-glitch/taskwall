@@ -23,18 +23,25 @@ struct BrandSwitchStyle: ToggleStyle {
 private struct BrandSwitch: View {
     let configuration: ToggleStyleConfiguration
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         let isOn = configuration.isOn
+        // Fixed colours picked from the view's own scheme. Inside the New Task
+        // sheet in dark mode, the adaptive brand colours resolved as their
+        // light-mode values, leaving a white knob on a white track.
+        let dark = colorScheme == .dark
+        let track: Color = dark ? .white : .black
+        let knob: Color = dark ? .black : .white
         HStack {
             configuration.label
             Spacer(minLength: 12)
             Capsule()
-                .fill(isOn ? AnyShapeStyle(Color.brand) : AnyShapeStyle(.quaternary))
+                .fill(isOn ? AnyShapeStyle(track) : AnyShapeStyle(.quaternary))
                 .frame(width: 63, height: 28)
                 .overlay(alignment: isOn ? .trailing : .leading) {
                     Capsule()
-                        .fill(isOn ? Color.onBrand : Color.white)
+                        .fill(isOn ? knob : Color.white)
                         .frame(width: 37, height: 24)
                         .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
                         .padding(2)
