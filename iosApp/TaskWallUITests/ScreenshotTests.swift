@@ -51,8 +51,9 @@ final class ScreenshotTests: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)).tap()
         if !title.waitForNonExistence(timeout: 3) {
             let header = app.staticTexts["New task"].exists ? app.staticTexts["New task"] : app.staticTexts["Edit task"]
-            header.press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
-                         withVelocity: .fast, thenHoldForDuration: 0)
+            header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
+                       withVelocity: .fast, thenHoldForDuration: 0)
             _ = title.waitForNonExistence(timeout: 3)
         }
     }
