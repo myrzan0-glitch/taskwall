@@ -50,7 +50,7 @@ jobs:
           app=iosApp/build/TaskWall.xcarchive/Products/Applications/TaskWall.app
           test -f "$app/PrivacyInfo.xcprivacy" || { echo "::error::The archive has no privacy manifest"; exit 1; }
           test -f "$app/TaskWall.shortcut" || { echo "::error::The archive has no bundled shortcut"; exit 1; }
-      - name: Capture screenshots (dark and light)
+      - name: Capture screenshots
         if: always()
         continue-on-error: true
         run: iosApp/scripts/test.sh screenshots
