@@ -63,6 +63,13 @@ extension Priority {
     }
 
     static var pickerOrder: [Priority] { [.noPriority, .low, .medium, .high] }
+
+    /// The app shows one level of priority: a red flag. Any priority set
+    /// before (Low and Medium included) shows the flag.
+    var isFlagged: Bool { self != .noPriority }
+
+    /// What turning the flag on or off saves.
+    static func flag(_ on: Bool) -> Priority { on ? .high : .noPriority }
 }
 
 extension LegibilityResult {

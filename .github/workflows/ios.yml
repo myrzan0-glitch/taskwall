@@ -1,10 +1,17 @@
 name: iOS app
 
 on:
+  # Branches are tested through their pull request, so each push runs once.
   push:
-    branches: [main, "claude/**"]
+    branches: [main]
   pull_request:
   workflow_dispatch:
+
+# A new push cancels the older run for the same pull request or branch.
+# Runs on main always finish.
+concurrency:
+  group: ios-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   test:
@@ -50,7 +57,7 @@ jobs:
           app=iosApp/build/TaskWall.xcarchive/Products/Applications/TaskWall.app
           test -f "$app/PrivacyInfo.xcprivacy" || { echo "::error::The archive has no privacy manifest"; exit 1; }
           test -f "$app/TaskWall.shortcut" || { echo "::error::The archive has no bundled shortcut"; exit 1; }
-      - name: Capture screenshots (dark and light)
+      - name: Capture screenshots
         if: always()
         continue-on-error: true
         run: iosApp/scripts/test.sh screenshots

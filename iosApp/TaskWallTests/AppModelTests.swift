@@ -31,6 +31,27 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(model.sections(.today).first?.title, "Today")
     }
 
+    func testTodayListsUndatedTasksAndOtherDaysTheirOwn() throws {
+        let model = makeModel()
+        model.addQuickTask("Call mum")
+        var draft = TaskDraft()
+        draft.title = "Dentist"
+        draft.dueDate = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: Date()))
+        model.add(draft)
+
+        let tomorrow = model.today.plusDays(days: 1)
+        XCTAssertEqual(model.tasks(on: model.today).map(\.title), ["Call mum"])
+        XCTAssertEqual(model.tasks(on: tomorrow).map(\.title), ["Dentist"])
+        XCTAssertTrue(model.hasOpenTasks(on: tomorrow))
+        XCTAssertFalse(model.hasOpenTasks(on: model.today.plusDays(days: 2)))
+
+        let week = model.week(0)
+        XCTAssertEqual(week.count, 7)
+        XCTAssertTrue(week.contains(model.today))
+        XCTAssertEqual(week.first?.dayOfWeek, 1)
+        XCTAssertEqual(model.week(1).first, week.first?.plusDays(days: 7))
+    }
+
     func testBlankQuickTaskIsIgnored() {
         let model = makeModel()
         model.addQuickTask("   ")

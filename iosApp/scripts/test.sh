@@ -3,7 +3,7 @@
 #   iosApp/scripts/test.sh          unit tests and UI tests
 #   iosApp/scripts/test.sh unit     unit tests only (fast)
 #   iosApp/scripts/test.sh ui       UI tests only
-#   iosApp/scripts/test.sh screenshots   every screen, dark and light, into iosApp/build/screenshots
+#   iosApp/scripts/test.sh screenshots   every screen (dark only) into iosApp/build/screenshots
 # Set SIMULATOR to use another device, e.g. SIMULATOR="iPhone 16" iosApp/scripts/test.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -73,7 +73,7 @@ if [ "$mode" = screenshots ]; then
   out="build/screenshots"
   rm -rf "$out" "$out.raw"
   xcrun xcresulttool export attachments --path "$results" --output-path "$out.raw"
-  # Name each image after its attachment, e.g. dark-20-wallpaper.png.
+  # Name each image after its attachment, e.g. 20-wallpaper.png.
   python3 - "$out.raw" "$out" <<'PY'
 import json, os, shutil, sys
 raw, out = sys.argv[1], sys.argv[2]
