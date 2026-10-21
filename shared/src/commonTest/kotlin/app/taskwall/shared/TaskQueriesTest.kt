@@ -101,4 +101,44 @@ class TaskQueriesTest {
         )
         assertEquals(TaskProgress(done = 1, total = 3), TaskQueries.todayProgress(tasks, TODAY))
     }
+
+    @Test
+    fun weekRunsMondayToSunday() {
+        // 20 Oct 2026 is a Tuesday.
+        val week = TaskQueries.week(TODAY)
+        assertEquals(CalendarDay(2026, 10, 19), week.first())
+        assertEquals(CalendarDay(2026, 10, 25), week.last())
+        assertEquals(7, week.size)
+        assertEquals((1..7).toList(), week.map { it.dayOfWeek })
+        // A Sunday belongs to the week that ends on it, and weeks cross month ends.
+        assertEquals(CalendarDay(2026, 10, 19), TaskQueries.week(CalendarDay(2026, 10, 25)).first())
+        assertEquals(CalendarDay(2026, 11, 1), TaskQueries.week(CalendarDay(2026, 10, 28)).last())
+    }
+
+    @Test
+    fun todayListsOverdueUndatedAndToday() {
+        val tasks = listOf(
+            task("late", due = TODAY.plusDays(-2)),
+            task("late-done", due = TODAY.plusDays(-2), done = true, completedAt = 5),
+            task("now", priority = Priority.HIGH),
+            task("whenever", due = null),
+            task("soon", due = TODAY.plusDays(1)),
+        )
+        assertEquals(listOf("now", "late", "whenever", "late-done"), TaskQueries.forDay(tasks, TODAY, TODAY).map { it.id })
+        assertEquals(listOf("soon"), TaskQueries.forDay(tasks, TODAY.plusDays(1), TODAY).map { it.id })
+        // Another day lists only what is due then; the open overdue task also stays on today.
+        assertEquals(listOf("late", "late-done"), TaskQueries.forDay(tasks, TODAY.plusDays(-2), TODAY).map { it.id })
+        assertEquals(emptyList(), TaskQueries.forDay(tasks, TODAY.plusDays(3), TODAY))
+    }
+
+    @Test
+    fun dotMarksDaysWithOpenTasks() {
+        val tasks = listOf(
+            task("soon", due = TODAY.plusDays(1)),
+            task("done-later", due = TODAY.plusDays(2), done = true),
+        )
+        assertEquals(false, TaskQueries.hasOpenTasks(tasks, TODAY, TODAY))
+        assertEquals(true, TaskQueries.hasOpenTasks(tasks, TODAY.plusDays(1), TODAY))
+        assertEquals(false, TaskQueries.hasOpenTasks(tasks, TODAY.plusDays(2), TODAY))
+    }
 }

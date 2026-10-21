@@ -38,6 +38,16 @@ final class BridgeTests: XCTestCase {
         XCTAssertEqual(Priority.pickerOrder.count, 4)
     }
 
+    func testPriorityIsOneFlag() {
+        XCTAssertFalse(Priority.noPriority.isFlagged)
+        // Levels set before the redesign still show the flag.
+        XCTAssertTrue(Priority.low.isFlagged)
+        XCTAssertTrue(Priority.medium.isFlagged)
+        XCTAssertTrue(Priority.high.isFlagged)
+        XCTAssertEqual(Priority.flag(true), Priority.high)
+        XCTAssertEqual(Priority.flag(false), Priority.noPriority)
+    }
+
     func testLegibilityExplanationNamesTheChoice() {
         let clear = LegibilityResult(tone: .light, backdrop: .clear, whiteContrast: 12, blackContrast: 1.5, meanLuminance: 0.1)
         XCTAssertTrue(clear.explanation.contains("white text with no backdrop"))

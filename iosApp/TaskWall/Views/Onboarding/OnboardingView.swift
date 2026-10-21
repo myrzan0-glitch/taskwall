@@ -2,7 +2,7 @@ import SwiftUI
 import PhotosUI
 import Shared
 
-/// Four short steps: welcome, first tasks, pick a look, make it automatic.
+/// Welcome, then three short steps: first tasks, a look, automatic updates.
 /// Every step can be skipped and changed later.
 struct OnboardingView: View {
     @Environment(AppModel.self) private var model
@@ -15,27 +15,31 @@ struct OnboardingView: View {
                 case 0: WelcomeStep { step = 1 }
                 case 1: FirstTasksStep { step = 2 }
                 case 2: PickLookStep { step = 3 }
-                default: AutomationSetupView(onFinish: { model.completeOnboarding() })
+                default:
+                    AutomationSetupView(stepLabel: "Step 3", finishTitle: "Continue", onFinish: { model.completeOnboarding() })
                 }
             }
             .toolbar {
                 if step > 0 {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button { step -= 1 } label: { Image(systemName: "chevron.left") }
-                            .accessibilityLabel("Back")
+                        Button { step -= 1 } label: {
+                            Image("arrow-left-01").renderingMode(.template)
+                        }
+                        .accessibilityLabel("Back")
                     }
                     ToolbarItem(placement: .principal) {
                         StepDots(current: step, total: 3)
                     }
-                    if step < 3 {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Skip") { step += 1 }
-                        }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Skip") {
+                        if step == 0 || step == 3 { model.completeOnboarding() } else { step += 1 }
                     }
                 }
             }
             .animation(.default, value: step)
         }
+        .tint(.ink)
     }
 }
 
@@ -47,7 +51,7 @@ private struct StepDots: View {
         HStack(spacing: 6) {
             ForEach(1...total, id: \.self) { index in
                 Capsule()
-                    .fill(index <= current ? AnyShapeStyle(.primary) : AnyShapeStyle(.quaternary))
+                    .fill(index <= current ? Color.ink : Color.control)
                     .frame(width: 28, height: 5)
             }
         }
@@ -56,72 +60,65 @@ private struct StepDots: View {
     }
 }
 
-private struct PrimaryButton: View {
-    let title: String
-    let action: () -> Void
+/// "Step 1" and a large title with an icon in the line, as in the design.
+private struct StepHeading: View {
+    let step: String
+    let title: Text
+    var subtitle: String? = nil
 
     var body: some View {
-        Button(action: action) {
-            Text(title).frame(maxWidth: .infinity)
+        VStack(alignment: .leading, spacing: 10) {
+            Text(step).font(.subheadline.weight(.semibold))
+            title
+                .font(.system(size: 34, weight: .bold))
+                .tracking(-0.5)
+                .accessibilityAddTraits(.isHeader)
+            if let subtitle {
+                Text(subtitle).font(.subheadline).foregroundStyle(Color.muted)
+            }
         }
-        .prominentButton()
-        .controlSize(.large)
-        .padding(.horizontal, 24)
-        .padding(.bottom, 8)
     }
+}
+
+private func inlineIcon(_ name: String) -> Text {
+    Text(Image(name)).foregroundStyle(Color.peach)
 }
 
 // MARK: - Welcome
 
 private struct WelcomeStep: View {
-    @Environment(AppModel.self) private var model
     let next: () -> Void
 
     var body: some View {
-        let sample = SampleData.shared.wallpaperContent(today: model.today, style: WallpaperStyle.companion.defaultStyle)
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                ZStack {
-                    sampleScreen(.paper, content: sample, width: 136).rotationEffect(.degrees(-9)).offset(x: -78, y: 30)
-                    sampleScreen(.sage, content: sample, width: 136, layout: .table).rotationEffect(.degrees(9)).offset(x: 78, y: 30)
-                    sampleScreen(.ink, content: sample, width: 156)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 360)
+        VStack(spacing: 28) {
+            Image("wallpaper")
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 48, height: 48)
+                .foregroundStyle(Color.peach)
+                .frame(width: 96, height: 96)
+                .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color(hex: 0x1A1A1C)))
+                .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(Color.white.opacity(0.08)))
                 .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Your to-dos, on your Lock Screen.")
-                        .font(.largeTitle.bold())
-                    Text("Write today's tasks. Task on Wallpaper turns them into a wallpaper and keeps it up to date for you.")
-                        .foregroundStyle(.secondary)
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    feature("refresh", "Updates when you close the app")
-                    feature("image-01", "Use any photo, tasks stay readable")
-                    feature("favourite", "Free. No account, no ads")
-                }
+            VStack(spacing: 10) {
+                Text("Welcome")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.muted)
+                Text("Your tasks, on your Lock Screen")
+                    .font(.system(size: 36, weight: .bold))
+                    .tracking(-0.5)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
             }
-            .padding(.horizontal, 28)
-            .padding(.top, 16)
         }
+        .foregroundStyle(Color.ink)
+        .padding(.horizontal, 32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.ground.ignoresSafeArea())
         .safeAreaBar(edge: .bottom) {
-            PrimaryButton(title: "Get Started", action: next)
-        }
-    }
-
-    private func sampleScreen(_ theme: WallpaperTheme, content: WallpaperContent, width: CGFloat, layout: WallpaperLayout = .list) -> some View {
-        let style = WallpaperStyle.companion.defaultStyle.withTheme(theme: theme).withLayout(layout: layout)
-        return LockScreenPreview(style: style, content: content, width: width)
-            .shadow(color: .black.opacity(0.2), radius: 18, y: 12)
-    }
-
-    private func feature(_ icon: String, _ text: String) -> some View {
-        Label {
-            Text(text).font(.subheadline.weight(.medium))
-        } icon: {
-            Image(icon).renderingMode(.template).resizable().frame(width: 22, height: 22)
+            PrimaryButton("Get started", action: next)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
         }
     }
 }
@@ -135,69 +132,68 @@ private struct FirstTasksStep: View {
     let next: () -> Void
 
     var body: some View {
-        let titles = model.state.tasks.map { $0.title }
-        List {
-            Section {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("What's on today?").font(.largeTitle.bold())
-                    Text("Add a few things. They'll be on your Lock Screen in a minute.")
-                        .foregroundStyle(.secondary)
-                }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
-            }
+        let tasks = model.state.tasks
+        let titles = tasks.map { $0.title }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                StepHeading(step: "Step 1", title: Text("What's on \(inlineIcon("checkmark-circle-02")) today?"))
 
-            Section {
-                HStack {
-                    TextField("Add a task", text: $draft)
-                        .focused($focused)
-                        .submitLabel(.done)
-                        .onSubmit(add)
-                    Button(action: add) {
-                        Image("add-01").renderingMode(.template)
-                    }
-                    .prominentButton()
-                    .buttonBorderShape(.circle)
-                    .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
-                    .accessibilityLabel("Add task")
-                }
-            }
-
-            Section("Suggestions") {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(SampleData.shared.suggestions.filter { !titles.contains($0) }, id: \.self) { idea in
-                            Button {
-                                model.addQuickTask(idea)
-                            } label: {
-                                Label(idea, image: "add-01")
-                            }
-                            .buttonStyle(.bordered)
-                            .buttonBorderShape(.capsule)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-            }
-
-            if !model.state.tasks.isEmpty {
-                Section("Today · \(model.state.tasks.count)") {
-                    ForEach(model.state.tasks, id: \.id) { task in
-                        HStack {
+                VStack(spacing: 0) {
+                    ForEach(tasks, id: \.id) { task in
+                        HStack(spacing: 12) {
                             CheckCircle(done: false)
-                            Text(task.title)
+                            Text(task.title).font(.body)
+                            Spacer()
+                            Button { model.delete(task) } label: {
+                                Image("cancel-01").renderingMode(.template).resizable()
+                                    .frame(width: 16, height: 16)
+                                    .frame(width: 36, height: 36)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(Color.muted)
+                            .accessibilityLabel("Remove \(task.title)")
                         }
+                        .padding(.horizontal, 8)
+                        .frame(minHeight: 52)
+                        DottedDivider()
                     }
-                    .onDelete { offsets in
-                        offsets.map { model.state.tasks[$0] }.forEach(model.delete)
+                    HStack(spacing: 12) {
+                        Image("add-01").renderingMode(.template).resizable()
+                            .frame(width: 20, height: 20)
+                            .frame(width: 22)
+                            .accessibilityHidden(true)
+                        TextField("Add a task", text: $draft)
+                            .focused($focused)
+                            .submitLabel(.done)
+                            .onSubmit(add)
+                    }
+                    .padding(.horizontal, 8)
+                    .frame(minHeight: 52)
+                }
+
+                FlowLayout(spacing: 8) {
+                    ForEach(SampleData.shared.suggestions.filter { !titles.contains($0) }.prefix(4), id: \.self) { idea in
+                        Button { model.addQuickTask(idea) } label: {
+                            ChipLabel(title: idea)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Add \(idea)")
                     }
                 }
             }
+            .foregroundStyle(Color.ink)
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+            .padding(.bottom, 16)
         }
+        .defaultScrollAnchor(.bottom)
+        .scrollDismissesKeyboard(.interactively)
+        .background(Color.ground.ignoresSafeArea())
         .safeAreaBar(edge: .bottom) {
-            PrimaryButton(title: "Continue", action: next)
+            PrimaryButton("Continue", action: next)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
         }
     }
 
@@ -213,51 +209,41 @@ private struct FirstTasksStep: View {
 private struct PickLookStep: View {
     @Environment(AppModel.self) private var model
     @State private var pickedItem: PhotosPickerItem?
+    @State private var showPhotoPicker = false
     let next: () -> Void
 
     var body: some View {
         let style = model.style
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Pick a look").font(.largeTitle.bold())
-                    Text("Use a colour or any photo from your library. Your tasks stay readable on both.")
-                        .foregroundStyle(.secondary)
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            LockScreenPreview(width: 150)
+                .shadow(color: .black.opacity(0.5), radius: 25, y: 20)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 16)
 
-                LockScreenPreview(width: 148)
-                    .shadow(color: .black.opacity(0.2), radius: 18, y: 12)
-                    .frame(maxWidth: .infinity)
+            Spacer(minLength: 24)
 
-                HStack(spacing: 12) {
-                    // One row: five colours, then the photo button.
-                    ThemeSwatches(selected: style.source == BackgroundSource.color ? style.theme : WallpaperTheme.paper, columns: 5) {
-                        model.setStyle(style.withTheme(theme: $0))
+            VStack(alignment: .leading, spacing: 22) {
+                StepHeading(step: "Step 2", title: Text("Pick a \(inlineIcon("paint-board")) look"), subtitle: "A colour, or any photo.")
+                ThemeSwatches(
+                    selected: style.source == BackgroundSource.photo ? nil : style.theme,
+                    photoSelected: style.source == BackgroundSource.photo,
+                    onSelect: { model.setStyle(style.withTheme(theme: $0)) },
+                    onPhoto: {
+                        if style.hasPhoto { model.setStyle(style.withSource(source: .photo)) } else { showPhotoPicker = true }
                     }
-                    PhotosPicker(selection: $pickedItem, matching: .images) {
-                        Image("image-01").renderingMode(.template)
-                            .frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(.glass)
-                    .buttonBorderShape(.circle)
-                    .accessibilityLabel("Use your own photo")
-                }
-
-                Picker("Layout", selection: Binding(
-                    get: { model.style.layout },
-                    set: { model.setStyle(model.style.withLayout(layout: $0)) }
-                )) {
-                    Text("List").tag(WallpaperLayout.list)
-                    Text("Table").tag(WallpaperLayout.table)
-                }
-                .pickerStyle(.segmented)
+                )
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 8)
+            .padding(.bottom, 16)
         }
+        .foregroundStyle(Color.ink)
+        .padding(.horizontal, 24)
+        .background(Color.ground.ignoresSafeArea())
         .safeAreaBar(edge: .bottom) {
-            PrimaryButton(title: "Continue", action: next)
+            PrimaryButton("Continue", action: next)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
         }
+        .photosPicker(isPresented: $showPhotoPicker, selection: $pickedItem, matching: .images)
         .onChange(of: pickedItem) { _, item in
             guard let item else { return }
             Task {

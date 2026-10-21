@@ -49,6 +49,30 @@ object TaskQueries {
             TaskSection(Formatting.dayHeading(day, today), sorted(dayTasks, today), day)
         }
 
+    /** Monday to Sunday of the week that contains [day], for the week strip. */
+    fun week(day: CalendarDay): List<CalendarDay> {
+        val monday = day.plusDays(1 - day.dayOfWeek)
+        return (0 until 7).map { monday.plusDays(it) }
+    }
+
+    /**
+     * The list for one day of the week strip. Today also carries what is still
+     * open from earlier days and the tasks without a date, the same set the
+     * wallpaper and its progress count use. Any other day lists what is due then.
+     */
+    fun forDay(tasks: List<TaskItem>, day: CalendarDay, today: CalendarDay): List<TaskItem> {
+        val list = if (day == today) {
+            tasks.filter { kindOf(it, today) != SectionKind.UPCOMING }
+        } else {
+            tasks.filter { it.dueDay == day }
+        }
+        return sorted(list, today)
+    }
+
+    /** Whether [day] still has something open: the dot over a day in the week strip. */
+    fun hasOpenTasks(tasks: List<TaskItem>, day: CalendarDay, today: CalendarDay): Boolean =
+        forDay(tasks, day, today).any { !it.isDone }
+
     /** Progress across everything that belongs to today (overdue, today, anytime). */
     fun todayProgress(tasks: List<TaskItem>, today: CalendarDay): TaskProgress {
         val todays = tasks.filter { kindOf(it, today) != SectionKind.UPCOMING }

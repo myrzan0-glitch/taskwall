@@ -12,13 +12,13 @@ It is free: no ads, no account, no tracking. People who want to can leave a tip.
 
 ## Features
 
-- **Tasks:** title, notes, priority (Low / Med / High), due date and time. Shown as Today (due today, then undated), Upcoming and Past, the last two grouped by date.
+- **Tasks:** title, notes, a red Priority flag, due date and time. Today lists overdue, undated and today's tasks; a swipeable week strip shows any other day.
 - **Wallpaper:** list or table layout with an optional progress bar, in five colour themes or on any photo from your library.
 - **Readable on any photo:** Auto measures the photo behind the task list and picks black or white text plus the lightest backdrop that keeps it readable (none, soft shade or frosted glass). People can reframe the photo and override Auto.
 - **Automatic updates:** a Shortcuts automation refreshes the wallpaper when you close the app. Onboarding walks through the few taps iOS requires.
 - **Siri and Shortcuts:** "Make Wallpaper" and "Add Task" work with no setup.
 - **Tip jar:** three one-time tips through the App Store that unlock nothing.
-- **Native iOS 27 design:** Liquid Glass tab bar, toolbars and sheets, SF Pro, Dynamic Type and Dark Mode, with [Hugeicons](https://hugeicons.com) (free stroke-rounded set, MIT) for icons.
+- **Native iOS 27 design:** dark only, with a Liquid Glass bottom bar (Wallpaper, New Task, Settings), glass toolbars and fitted sheets, SF Pro and Dynamic Type. Icons are filled versions of [Hugeicons](https://hugeicons.com) (MIT).
 
 ## How it works
 
@@ -42,13 +42,13 @@ Task on Wallpaper is a Kotlin Multiplatform project, so an Android app can reuse
 
 | Part | What's in it | Language |
 |---|---|---|
-| `shared/` | Tasks and storage, the Today / Upcoming / Past grouping and overdue rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes and geometry, tip product IDs | Kotlin (common) |
+| `shared/` | Tasks and storage, the Today list, week and overdue rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes and geometry, tip product IDs | Kotlin (common) |
 | `iosApp/` | SwiftUI screens with native Liquid Glass components, wallpaper drawing and rendering, photo picking, App Intents for Shortcuts and Siri, StoreKit tips | Swift |
 | `androidApp/` (later) | Jetpack Compose screens reusing `shared/` | Kotlin |
 
 Design choices:
 
-- **Native UI on each platform.** Liquid Glass, the system tab bar, sheets and App Intents only exist in SwiftUI/UIKit, so screens are written per platform. Compose Multiplatform could be added later for shared screens.
+- **Native UI on each platform.** Liquid Glass, sheets and App Intents only exist in SwiftUI/UIKit, so screens are written per platform. Compose Multiplatform could be added later for shared screens.
 - **The shared code never reads the clock.** "Today" and the current time are passed in, which keeps the rules deterministic and easy to test.
 - **One JSON file.** `TaskWallStore` keeps everything in a single file. On iOS it lives in an App Group so the app and its background shortcut share it. The platform supplies the file through the `TextFileStore` interface.
 - **Swift-friendly API.** Kotlin types avoid names that clash with Swift (`TaskItem`, not `Task`; `WallpaperLayout`, not `Layout`), and data classes offer `with…` helpers because Kotlin's `copy()` reaches Swift with every argument required.
@@ -71,9 +71,9 @@ iosApp/
   project.yml                        XcodeGen spec: app, unit tests, UI tests
   scripts/test.sh                    runs the iOS tests on a simulator
   TaskWallTests/                     unit tests: AppModel flows, rendering, photo analysis, bridge
-  TaskWallUITests/                   XCUITests: onboarding, tasks, search, wallpaper, settings
+  TaskWallUITests/                   XCUITests: onboarding, tasks, wallpaper, settings
   TaskWall/App/                      app entry, AppModel, Kotlin bridge, App Group storage
-  TaskWall/Views/                    Tasks, Wallpaper, Settings, Tips, Onboarding, Search
+  TaskWall/Views/                    Tasks, Wallpaper, Settings, Tips, Onboarding
   TaskWall/Rendering/                WallpaperCanvas, renderer, photo storage and analysis
   TaskWall/Intents/                  App Intents and App Shortcuts
   TaskWall/Resources/                asset catalog (Hugeicons, colours), StoreKit test file
@@ -158,5 +158,4 @@ Raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` before each upload: ever
 
 ## Credits
 
-- Icons: [Hugeicons](https://hugeicons.com) free stroke-rounded set, MIT licence.
-- Tip jar photo: [Unsplash](https://unsplash.com) (Unsplash licence).
+- Icons: [Hugeicons](https://hugeicons.com) free stroke-rounded set, MIT licence, filled for this app.
