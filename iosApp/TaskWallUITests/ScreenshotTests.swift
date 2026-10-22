@@ -120,6 +120,18 @@ final class ScreenshotTests: XCTestCase {
         let app = launch("-skipOnboarding", "-seed")
         XCTAssertTrue(tap(app.buttons["Wallpaper"], until: app.navigationBars["Wallpaper"]))
         snap(app, "20-wallpaper")
+
+        // The Pro fonts in the preview, and the paywall.
+        if tap(app.buttons["font-matrix"], until: app.buttons["unlockPro"]) {
+            app.buttons["Signal theme"].tap()
+            snap(app, "21-font-matrix")
+            app.buttons["Ink theme"].tap()
+            app.buttons["font-orbit"].tap()
+            snap(app, "22-font-orbit")
+            if tap(app.buttons["unlockPro"], until: app.buttons["startPro"]) {
+                snap(app, "23-pro")
+            }
+        }
     }
 
     func testSettings() {

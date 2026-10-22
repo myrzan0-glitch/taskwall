@@ -132,6 +132,12 @@ final class AppModel {
         store.setWallpaperStyle(style: style)
     }
 
+    /// Without Pro, a Pro font goes back to Classic; everything else stays.
+    func dropProFeatures() {
+        let free = style.withoutProFeatures()
+        if free != style { setStyle(free) }
+    }
+
     /// Saves a photo from the library and measures how readable tasks will be on it.
     func choosePhoto(_ image: UIImage) throws {
         let fileName = try PhotoStore.save(image, replacing: style.photoFileName)

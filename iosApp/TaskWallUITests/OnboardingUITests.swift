@@ -12,9 +12,9 @@ final class OnboardingUITests: UITestCase {
         XCTAssertTrue(app.staticTexts["Feed the cat"].appears(within: 3))
         app.buttons["Continue"].tap()
 
-        XCTAssertTrue(app.buttons["Sage theme"].appears(within: 3))
-        app.buttons["Sage theme"].tap()
-        XCTAssertTrue(app.buttons["Sage theme"].isSelected)
+        XCTAssertTrue(app.buttons["Signal theme"].appears(within: 3))
+        app.buttons["Signal theme"].tap()
+        XCTAssertTrue(app.buttons["Signal theme"].isSelected)
         app.buttons["Continue"].tap()
 
         let finish = app.buttons["finishSetup"]
@@ -31,7 +31,7 @@ final class OnboardingUITests: UITestCase {
         app.buttons["Get started"].tap()
         XCTAssertTrue(app.buttons["Skip"].appears(within: 3))
         app.buttons["Skip"].tap()
-        XCTAssertTrue(app.buttons["Sage theme"].appears(within: 3))
+        XCTAssertTrue(app.buttons["Signal theme"].appears(within: 3))
         app.buttons["Back"].tap()
         XCTAssertTrue(app.textFields["Add a task"].appears(within: 3))
     }

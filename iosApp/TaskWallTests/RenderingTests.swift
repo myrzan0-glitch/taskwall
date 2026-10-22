@@ -35,6 +35,24 @@ final class RenderingTests: XCTestCase {
         XCTAssertNotNil(WallpaperRenderer.pngData(store: store, today: CalendarDay.today))
     }
 
+    func testProFontsAreBundledAndLoad() {
+        WallpaperFonts.register()
+        XCTAssertNotNil(UIFont(name: "DotoRounded-Black", size: 20), "Matrix font file missing from the app")
+        XCTAssertNotNil(UIFont(name: "Michroma-Regular", size: 20), "Orbit font file missing from the app")
+    }
+
+    func testRendersInEveryFontAndLayout() throws {
+        let store = TaskWallStore(file: InMemoryTextFileStore(text: nil))
+        store.setScreen(metrics: ScreenMetrics(widthPoints: 100, heightPoints: 200, scale: 1))
+        _ = store.addQuickTask(title: "Buy milk", nowMillis: 1)
+        for font in WallpaperFont.entries {
+            for layout in [WallpaperLayout.list, WallpaperLayout.table] {
+                store.setWallpaperStyle(style: store.settings.wallpaper.withFont(font: font).withLayout(layout: layout))
+                XCTAssertNotNil(WallpaperRenderer.image(store: store, today: CalendarDay.today, photo: nil), "\(font) \(layout)")
+            }
+        }
+    }
+
     func testRendersWithAPhotoAndEveryBackdrop() throws {
         let store = TaskWallStore(file: InMemoryTextFileStore(text: nil))
         store.setScreen(metrics: ScreenMetrics(widthPoints: 100, heightPoints: 200, scale: 1))

@@ -69,6 +69,8 @@ data class WallpaperStyle(
     val position: TaskPosition = TaskPosition.BELOW_CLOCK,
     /** Result of measuring the current photo; null until a photo is analysed. */
     val photoAnalysis: LegibilityResult? = null,
+    /** The typeface of the task list. Matrix and Orbit need Pro. */
+    val font: WallpaperFont = WallpaperFont.CLASSIC,
 ) {
     val hasPhoto: Boolean get() = photoFileName != null
 
@@ -97,6 +99,10 @@ data class WallpaperStyle(
     fun withTextTone(tone: ToneSetting) = copy(textTone = tone)
     fun withBackdrop(backdrop: BackdropSetting) = copy(backdrop = backdrop)
     fun withPosition(position: TaskPosition) = copy(position = position)
+    fun withFont(font: WallpaperFont) = copy(font = font)
+
+    /** What a person without Pro keeps: everything except a Pro font. */
+    fun withoutProFeatures() = if (font.isPro) copy(font = WallpaperFont.CLASSIC) else this
 
     companion object {
         /** Swift can't call the all-defaults constructor directly. */
@@ -105,6 +111,15 @@ data class WallpaperStyle(
 }
 
 enum class BackgroundSource { COLOR, PHOTO }
+
+/** Typefaces for the task list on the wallpaper. iOS draws the clock itself. */
+enum class WallpaperFont(val displayName: String, val isPro: Boolean) {
+    CLASSIC("Classic", false),
+    /** Doto, a dot-matrix face (SIL Open Font License). */
+    MATRIX("Matrix", true),
+    /** Michroma, a wide geometric face (SIL Open Font License). */
+    ORBIT("Orbit", true),
+}
 
 /** Named so it doesn't clash with SwiftUI's `Layout` protocol. */
 enum class WallpaperLayout { LIST, TABLE }

@@ -6,7 +6,12 @@ import Shared
 struct TaskWallApp: App {
     @State private var model = LaunchOptions.makeModel()
     @State private var tips = TipStore()
+    @State private var pro = ProStore(alwaysPro: LaunchOptions.isPro)
     @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        WallpaperFonts.register()
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -17,8 +22,15 @@ struct TaskWallApp: App {
                 .preferredColorScheme(.dark)
                 .environment(model)
                 .environment(tips)
+                .environment(pro)
                 .onOpenURL { model.handle($0) }
                 .task { await tips.load() }
+                .task { await pro.load() }
+                // Pro fonts go back to Classic when Pro ends, so the Lock Screen
+                // never keeps a font the person no longer has.
+                .onChange(of: pro.status) { _, status in
+                    if status == .free { model.dropProFeatures() }
+                }
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
@@ -48,10 +60,12 @@ struct RootView: View {
 /// - `-reset`: start with no tasks and no settings.
 /// - `-skipOnboarding`: open straight on Today.
 /// - `-seed`: start with a few example tasks.
+/// - `-pro`: act as if Pro is active, without the App Store.
 enum LaunchOptions {
     private static let arguments = Set(CommandLine.arguments)
 
     static var isUITesting: Bool { arguments.contains("-uiTesting") }
+    static var isPro: Bool { isUITesting && arguments.contains("-pro") }
 
     @MainActor
     static func makeModel() -> AppModel {

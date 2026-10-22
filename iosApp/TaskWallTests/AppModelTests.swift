@@ -162,6 +162,14 @@ final class AppModelTests: XCTestCase {
         XCTAssertNil(model.photo)
     }
 
+    func testLosingProPutsClassicBackAndKeepsTheRest() {
+        let model = makeModel()
+        model.setStyle(model.style.withTheme(theme: WallpaperTheme.signal).withFont(font: WallpaperFont.matrix))
+        model.dropProFeatures()
+        XCTAssertEqual(model.style.font, WallpaperFont.classic)
+        XCTAssertEqual(model.style.theme, WallpaperTheme.signal)
+    }
+
     func testWallpaperContentFollowsTheLayout() {
         let model = makeModel()
         for i in 0..<9 { model.addQuickTask("Task \(i)") }
