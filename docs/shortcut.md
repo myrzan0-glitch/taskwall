@@ -17,6 +17,7 @@ On an iPhone with Wallist installed, create a shortcut named **Wallist** with tw
    - Photo: *Wallpaper* (the output of step 1)
    - Wallpaper: **Lock Screen** and **Home Screen**
    - Show Preview: **off**
+   - Blur: **off** (otherwise the Home Screen shows a blurred copy)
    - Crop to Subject: **off**
 
 Keep the name exactly **Wallist**. The app runs it by name (`ShortcutLinks.shortcutName`).
@@ -65,3 +66,4 @@ The test opens `shortcuts://x-callback-url/run-shortcut?name=Wallist&x-success=t
 - **The automation asks before running:** edit it in Shortcuts and choose **Run Immediately**.
 - **Settings still says "Waiting for first run":** close the app once (swipe up to the Home Screen); the close automation should run within a few seconds.
 - **The wallpaper didn't change:** check that Set Wallpaper targets the Lock Screen and Home Screen and Show Preview is off.
+- **The Home Screen is blurred:** open Set Wallpaper Photo's options in the shortcut and turn **Blur** off.
