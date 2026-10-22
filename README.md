@@ -4,7 +4,7 @@
 
 Wallist turns today's tasks into a Lock Screen wallpaper and keeps it up to date by itself. Write your tasks, pick a colour or any photo, and every time you pick up your phone you see what's left.
 
-Tasks are free: no ads, no account, no tracking. People who want to can leave a tip, and Wallist Pro adds wallpaper fonts.
+Tasks are free: no ads, no account, no tracking. Wallist Pro, a subscription, adds wallpaper fonts.
 
 > Design: [Wallist design canvas](https://claude.ai/artifact/QFPVzTH5F5R1ddi22NJiXs)
 
@@ -18,7 +18,6 @@ Tasks are free: no ads, no account, no tracking. People who want to can leave a 
 - **Automatic updates:** a Shortcuts automation refreshes the wallpaper when you close the app. Onboarding walks through the few taps iOS requires.
 - **Siri and Shortcuts:** "Make Wallpaper" and "Add Task" work with no setup.
 - **Wallist Pro:** a monthly or yearly subscription that unlocks two wallpaper fonts for the task list, Matrix (dot-matrix) and Orbit (wide, space-age). Anyone can preview them in the Wallpaper sheet; iOS keeps drawing its own clock.
-- **Tip jar:** three one-time tips through the App Store that unlock nothing.
 - **Native iOS 27 design:** dark only, with a Liquid Glass bottom bar (Wallpaper, New Task, Settings), glass toolbars and fitted sheets, SF Pro and Dynamic Type. Icons are filled versions of [Hugeicons](https://hugeicons.com) (MIT).
 
 ## How it works
@@ -43,8 +42,8 @@ Wallist is a Kotlin Multiplatform project, so an Android app can reuse everythin
 
 | Part | What's in it | Language |
 |---|---|---|
-| `shared/` | Tasks and storage, the Today list, week and overdue rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes, fonts and geometry, tip and Pro product IDs | Kotlin (common) |
-| `iosApp/` | SwiftUI screens with native Liquid Glass components, wallpaper drawing and rendering, photo picking, App Intents for Shortcuts and Siri, StoreKit tips | Swift |
+| `shared/` | Tasks and storage, the Today list, week and overdue rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes, fonts and geometry, Pro product IDs | Kotlin (common) |
+| `iosApp/` | SwiftUI screens with native Liquid Glass components, wallpaper drawing and rendering, photo picking, App Intents for Shortcuts and Siri, StoreKit subscriptions | Swift |
 | `androidApp/` (later) | Jetpack Compose screens reusing `shared/` | Kotlin |
 
 Design choices:
@@ -65,7 +64,7 @@ shared/src/commonMain/kotlin/app/taskwall/shared/
   LegibilityAnalyzer.kt, Contrast.kt readability rule for photos
   WallpaperAppearance.kt             themes and resolved colours
   WallpaperGeometry.kt               Lock Screen safe areas
-  TipJar.kt, SampleData.kt, Formatting.kt
+  ProPlan.kt, SampleData.kt, Formatting.kt
 shared/src/commonTest/               unit tests (67): dates, sorting, store, every user flow
 iosApp/
   TaskWall.xcodeproj                 the Xcode project (generated from project.yml, committed)
@@ -74,7 +73,7 @@ iosApp/
   TaskWallTests/                     unit tests: AppModel flows, rendering, photo analysis, bridge
   TaskWallUITests/                   XCUITests: onboarding, tasks, wallpaper, settings
   TaskWall/App/                      app entry, AppModel, Kotlin bridge, App Group storage
-  TaskWall/Views/                    Tasks, Wallpaper, Settings, Tips, Onboarding
+  TaskWall/Views/                    Tasks, Wallpaper, Settings, Pro, Onboarding
   TaskWall/Rendering/                WallpaperCanvas, renderer, photo storage and analysis
   TaskWall/Intents/                  App Intents and App Shortcuts
   TaskWall/Resources/                asset catalog (Hugeicons, colours), StoreKit test file
@@ -105,7 +104,7 @@ Everything day to day happens in Xcode, with no Terminal needed:
 
 The project uses Xcode 16+ synchronized folders, so added or removed files appear without any extra step. It's generated from `iosApp/project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen); only after editing that file, run `cd iosApp && xcodegen` and commit the result. CI fails if the committed project and `project.yml` disagree.
 
-Building the app runs `iosApp/scripts/build-shared.sh` first, which compiles the Kotlin code into the `Shared` framework with Gradle. The first build downloads the Kotlin/Native toolchain (about 1 GB). The scheme uses `Resources/TaskWall.storekit`, so tips work in the simulator without App Store Connect.
+Building the app runs `iosApp/scripts/build-shared.sh` first, which compiles the Kotlin code into the `Shared` framework with Gradle. The first build downloads the Kotlin/Native toolchain (about 1 GB). The scheme uses `Resources/TaskWall.storekit`, so Pro can be bought in the simulator without App Store Connect. In TestFlight, until the Pro subscriptions exist in App Store Connect, Start Pro unlocks Pro for free on the tester's device; App Store downloads never do this.
 
 If Xcode reports **"Command PhaseScriptExecution failed with a nonzero exit code"**, the Kotlin build failed. Open the Report navigator (⌘9), select the build and expand **Build Kotlin shared framework** to see why. The usual causes:
 
@@ -130,7 +129,6 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 |---|---|
 | Bundle ID `app.taskwall` and App Group `group.app.taskwall` | `iosApp/project.yml`, `TaskWall.entitlements`, `App/AppGroup.swift` |
 | App Store ID: the Rate row stays hidden until `reviewURL` is set | `Views/Settings/SettingsView.swift` |
-| Tip product IDs and prices | App Store Connect, matching `shared/.../TipJar.kt` |
 | Pro subscriptions: one group with `app.taskwall.pro.yearly` and `app.taskwall.pro.monthly`, their prices and the Terms link in the App Store description | App Store Connect, matching `shared/.../ProPlan.kt` |
 | App icon | `Resources/Assets.xcassets/AppIcon.appiconset` (placeholder) |
 
@@ -177,6 +175,6 @@ When you upload from Xcode, raise `CURRENT_PROJECT_VERSION` in `iosApp/project.y
 ## Credits
 
 - Icons: [Hugeicons](https://hugeicons.com) free stroke-rounded set, MIT licence, filled for this app.
-- Matrix font: [Doto](https://github.com/oliverlalan/Doto) by Óliver Lalan, SIL Open Font License 1.1. Shipped as "Doto Rounded", a static instance with round dots at Black weight.
+- Matrix font: [Doto](https://github.com/oliverlalan/Doto) by Óliver Lalan, SIL Open Font License 1.1. Shipped as "Doto Rounded", a static instance at Black weight with roundness 70.
 - Orbit font: [Michroma](https://github.com/googlefonts/Michroma-font) by Vernon Adams, SIL Open Font License 1.1.
 - Both licences ship with the fonts in `iosApp/TaskWall/Resources/Fonts`.

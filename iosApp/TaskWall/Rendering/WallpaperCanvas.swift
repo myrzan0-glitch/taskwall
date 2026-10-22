@@ -117,7 +117,101 @@ struct WallpaperCanvas: View {
         .shadow(color: textShadow, radius: 1.5 * s, x: 0, y: 1 * s)
     }
 
+    @ViewBuilder
     private func header(s: CGFloat) -> some View {
+        if typeface == .matrix {
+            matrixHeader(s: s)
+        } else if typeface == .orbit {
+            orbitHeader(s: s)
+        } else {
+            standardHeader(s: s)
+        }
+    }
+
+    /// "01", "02" … "10": Orbit counts like an instrument readout.
+    static func twoDigits(_ n: Int) -> String {
+        n < 10 ? "0\(n)" : "\(n)"
+    }
+
+    /// Orbit's accent: peach on dark backgrounds, the text colour on light ones.
+    private var orbitAccent: Color {
+        appearance.tone == TextTone.light ? Color.peach : Color(argb: palette.foreground)
+    }
+
+    /// Orbit, an instrument panel: spaced capitals, then progress as a hairline
+    /// with a dot where it ends.
+    private func orbitHeader(s: CGFloat) -> some View {
+        let done = "\(Self.twoDigits(Int(content.doneCount))) / \(Self.twoDigits(Int(content.totalCount))) DONE"
+        return VStack(alignment: .leading, spacing: 10 * s) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(content.heading.uppercased())
+                    .tracking(typeface.tracking(.heading, s: s))
+                Spacer()
+                Text(done)
+                    .tracking(1.32 * s)
+                    .accessibilityLabel(content.progressLabel)
+            }
+            .font(typeface.font(.heading, s: s))
+            .foregroundStyle(Color(argb: palette.muted))
+            if style.showProgress {
+                GeometryReader { g in
+                    let end = g.size.width * CGFloat(content.progress)
+                    ZStack(alignment: .leading) {
+                        Rectangle().fill(Color(argb: palette.line)).frame(height: 2 * s)
+                        Rectangle().fill(orbitAccent).frame(width: end, height: 2 * s)
+                        Circle().fill(orbitAccent)
+                            .frame(width: 8 * s, height: 8 * s)
+                            .offset(x: end - 4 * s)
+                    }
+                    .frame(height: 8 * s)
+                }
+                .frame(height: 8 * s)
+                .accessibilityHidden(true)
+            }
+        }
+    }
+
+    /// Matrix, after a dot-matrix watch face: the day on the left, a big
+    /// done/total count on the right, and progress as a row of dots.
+    private func matrixHeader(s: CGFloat) -> some View {
+        let muted = Color(argb: palette.muted)
+        return VStack(alignment: .leading, spacing: 16 * s) {
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 2 * s) {
+                    Text(content.heading.uppercased())
+                        .tracking(typeface.tracking(.heading, s: s))
+                    Text(Date.now.formatted(.dateTime.weekday(.abbreviated).day()).uppercased())
+                        .foregroundStyle(muted)
+                }
+                .font(typeface.font(.heading, s: s))
+                Spacer(minLength: 8 * s)
+                HStack(alignment: .firstTextBaseline, spacing: 4 * s) {
+                    Text("\(content.doneCount)")
+                        .font(.custom("DotoRounded-Black", fixedSize: 64 * s))
+                    Text("/\(content.totalCount)")
+                        .font(.custom("DotoRounded-Black", fixedSize: 22 * s))
+                        .foregroundStyle(muted)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(content.progressLabel)
+            }
+            if style.showProgress {
+                let dots = 25
+                let filled = Int((content.progress * Double(dots)).rounded())
+                HStack(spacing: 4 * s) {
+                    ForEach(0..<dots, id: \.self) { i in
+                        Circle()
+                            .fill(Color(argb: i < filled ? palette.foreground : palette.line))
+                            .aspectRatio(1, contentMode: .fit)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .accessibilityHidden(true)
+            }
+        }
+    }
+
+    private func standardHeader(s: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 8 * s) {
             HStack(alignment: .firstTextBaseline) {
                 Text(content.heading.uppercased())
@@ -144,8 +238,61 @@ struct WallpaperCanvas: View {
         }
     }
 
+    @ViewBuilder
     private func list(s: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 15 * s) {
+        if typeface == .orbit {
+            orbitList(s: s)
+        } else {
+            standardList(s: s)
+        }
+    }
+
+    /// Orbit's rows: a two-digit number instead of a circle, hairlines between
+    /// rows, and the due time in spaced capitals (red when overdue).
+    private func orbitList(s: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(content.lines.enumerated()), id: \.element.id) { index, line in
+                HStack(alignment: .top, spacing: 14 * s) {
+                    Text(Self.twoDigits(index + 1))
+                        .font(.custom("Michroma-Regular", fixedSize: 10 * s))
+                        .tracking(1 * s)
+                        .foregroundStyle(Color(argb: palette.muted).opacity(line.isDone ? 0.55 : 1))
+                        .frame(width: 22 * s, alignment: .leading)
+                        .padding(.top, 4 * s)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 5 * s) {
+                        Text(line.title)
+                            .font(typeface.font(.title, s: s))
+                            .foregroundStyle(Color(argb: line.isDone ? palette.muted : palette.foreground))
+                            .strikethrough(line.isDone, color: Color(argb: palette.muted))
+                            .lineLimit(2)
+                        if let detail = line.detail, !line.isDone {
+                            Text(detail.uppercased().replacingOccurrences(of: ", ", with: " · "))
+                                .font(typeface.font(.detail, s: s))
+                                .tracking(typeface.tracking(.detail, s: s))
+                                .foregroundStyle(Color(argb: line.isOverdue ? palette.flag : palette.muted))
+                        }
+                    }
+                    Spacer(minLength: 0)
+                    if line.isFlagged && !line.isDone {
+                        Image("flag-02")
+                            .resizable()
+                            .renderingMode(.template)
+                            .frame(width: 16 * s, height: 16 * s)
+                            .foregroundStyle(Color(argb: palette.flag))
+                            .padding(.top, 2 * s)
+                    }
+                }
+                .padding(.vertical, 13 * s)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(Color(argb: palette.line)).frame(height: 1)
+                }
+            }
+        }
+    }
+
+    private func standardList(s: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: (typeface == .matrix ? 12 : 15) * s) {
             ForEach(content.lines, id: \.id) { line in
                 HStack(alignment: .top, spacing: 12 * s) {
                     checkMark(done: line.isDone, s: s)
@@ -226,6 +373,14 @@ struct WallpaperCanvas: View {
                         .frame(width: 14 * s, height: 14 * s)
                         .foregroundStyle(Color(argb: appearance.isPhoto ? palette.onForeground : palette.background))
                 }
+                .frame(width: 21 * s, height: 21 * s)
+        } else if typeface == .matrix {
+            // A ring of dots, to match the type.
+            Circle()
+                .strokeBorder(
+                    Color(argb: palette.foreground),
+                    style: StrokeStyle(lineWidth: 2.4 * s, lineCap: .round, dash: [0, 4.2 * s])
+                )
                 .frame(width: 21 * s, height: 21 * s)
         } else {
             Circle()

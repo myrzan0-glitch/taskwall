@@ -89,6 +89,11 @@ struct ProView: View {
                 .accessibilityIdentifier("proPlan")
 
                 Button {
+                    if pro.canTestUnlock {
+                        pro.testUnlock()
+                        unlocked()
+                        return
+                    }
                     Task {
                         if await pro.purchase(selected) { unlocked() }
                     }
@@ -105,8 +110,15 @@ struct ProView: View {
                 }
                 .prominentButton()
                 .controlSize(.large)
-                .disabled(pro.phase == .purchasing || pro.price(for: selected) == nil)
+                .disabled(pro.phase == .purchasing || (pro.price(for: selected) == nil && !pro.canTestUnlock))
                 .accessibilityIdentifier("startPro")
+
+                if pro.canTestUnlock {
+                    Text("TestFlight: Start Pro unlocks Pro for free on this device.")
+                        .font(.footnote)
+                        .foregroundStyle(Color.peach)
+                        .multilineTextAlignment(.center)
+                }
 
                 if case .failed(let reason) = pro.phase {
                     Text(reason).font(.footnote).foregroundStyle(Color.flag).multilineTextAlignment(.center)

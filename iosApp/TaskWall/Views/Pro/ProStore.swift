@@ -27,6 +27,15 @@ final class ProStore {
 
     var isPro: Bool { status == .pro }
 
+    /// True in TestFlight (the App Store's sandbox), never for App Store downloads.
+    private(set) var isTestBuild = false
+
+    /// In TestFlight, until the Pro subscriptions exist in App Store Connect the
+    /// store returns no products. Testers can then unlock Pro on their device for free.
+    var canTestUnlock: Bool { isTestBuild && products.isEmpty }
+
+    private static let testerProKey = "testerPro"
+
     /// UI tests launch with `-pro` to try Pro fonts without the App Store.
     @ObservationIgnored private let alwaysPro: Bool
     @ObservationIgnored private var updates: Task<Void, Never>?
@@ -46,6 +55,9 @@ final class ProStore {
     }
 
     func load() async {
+        if case .verified(let app)? = try? await AppTransaction.shared {
+            isTestBuild = app.environment == .sandbox
+        }
         let ids = ProPlan.entries.map { $0.productId }
         if let list = try? await Product.products(for: ids) {
             products = Dictionary(uniqueKeysWithValues: list.map { ($0.id, $0) })
@@ -64,7 +76,16 @@ final class ProStore {
                 active = true
             }
         }
-        status = active ? .pro : .free
+        let testerPro = isTestBuild && UserDefaults.standard.bool(forKey: Self.testerProKey)
+        status = active || testerPro ? .pro : .free
+    }
+
+    /// TestFlight only: unlocks Pro on this device without a purchase.
+    func testUnlock() {
+        guard canTestUnlock else { return }
+        UserDefaults.standard.set(true, forKey: Self.testerProKey)
+        status = .pro
+        phase = .idle
     }
 
     func price(for plan: ProPlan) -> String? {

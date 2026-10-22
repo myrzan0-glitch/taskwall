@@ -5,7 +5,8 @@ import Shared
 /// The typefaces the task list can use on the wallpaper. iOS draws the clock itself.
 ///
 /// The Pro fonts ship in the app under the SIL Open Font License (see Resources/Fonts):
-/// Matrix is Doto with round dots, fixed at its Black weight; Orbit is Michroma.
+/// Matrix is Doto with softly rounded dots (roundness 70, the heaviest that still
+/// reads as dots), fixed at its Black weight; Orbit is Michroma.
 enum WallpaperFonts {
     private static let names = ["DotoRounded-Black", "Michroma-Regular"]
 
@@ -45,9 +46,9 @@ extension WallpaperFont {
     func tracking(_ role: WallpaperTextRole, s: CGFloat) -> CGFloat {
         let wide = self == .orbit
         switch role {
-        case .heading: return (wide ? 2.4 : 1) * s
+        case .heading: return (wide ? 2.64 : 1) * s
         case .tableHeading: return (wide ? 2.4 : 0.6) * s
-        case .detail, .tableDetail, .more: return wide ? 1.2 * s : 0
+        case .detail, .tableDetail, .more: return wide ? 1.4 * s : 0
         case .title, .tableTitle: return 0
         }
     }
@@ -72,9 +73,9 @@ extension WallpaperFont {
 
     private func matrixSize(_ role: WallpaperTextRole) -> CGFloat {
         switch role {
-        case .heading: 14
+        case .heading: 15
         case .tableHeading: 12
-        case .title: 20
+        case .title: 22
         case .detail, .more: 15
         case .tableTitle, .tableDetail: 16
         }
@@ -82,9 +83,10 @@ extension WallpaperFont {
 
     private func orbitSize(_ role: WallpaperTextRole) -> CGFloat {
         switch role {
-        case .heading, .tableHeading: 10
+        case .heading: 11
+        case .tableHeading: 10
         case .title: 15
-        case .detail, .more: 11
+        case .detail, .more: 10
         case .tableTitle, .tableDetail: 13
         }
     }
