@@ -138,11 +138,27 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 2. In Xcode, pick **Any iOS Device (arm64)**, then **Product → Archive**, then **Distribute App → TestFlight & App Store → Upload**.
 3. When processing finishes (Apple emails you), add testers under TestFlight → Internal Testing and install the TestFlight app.
 
-**Or with Xcode Cloud:** its workflow must start on `main` (Edit Workflow → Start Conditions → Source Branch), with an Archive action and a TestFlight post-action. `iosApp/ci_scripts/ci_post_clone.sh` installs the Java that the Kotlin build needs, and Xcode Cloud numbers the builds itself.
+**Or from GitHub, automatically:** every push to `main` signs the Release archive that CI builds anyway and uploads it to TestFlight, alongside the tests. Set it up once:
+
+1. **API key:** App Store Connect → Users and Access → Integrations → Team Keys → +, with the App Manager role. Download the `.p8` file (you can only do this once) and note its Key ID and the Issuer ID above the list.
+2. **Certificate:** in Xcode → Settings → Accounts → your team → Manage Certificates, add an **Apple Distribution** certificate if there isn't one, then right-click it → Export Certificate, with a password, to a `.p12` file.
+3. **Profile:** at developer.apple.com → Certificates, Identifiers & Profiles → Profiles → +, create an **App Store Connect** profile for `app.taskwall` with that certificate, and download it. The App ID needs the App Groups capability with `group.app.taskwall`; Xcode added it when you first signed the app.
+4. **Secrets:** in the GitHub repository → Settings → Secrets and variables → Actions, add:
+
+   | Secret | Value |
+   |---|---|
+   | `ASC_KEY_ID` | the Key ID |
+   | `ASC_ISSUER_ID` | the Issuer ID |
+   | `ASC_KEY_P8` | the whole text of the `.p8` file |
+   | `DIST_CERTIFICATE_P12` | `base64 -i certificate.p12 \| pbcopy`, then paste |
+   | `DIST_CERTIFICATE_PASSWORD` | the `.p12` password |
+   | `APPSTORE_PROFILE` | `base64 -i profile.mobileprovision \| pbcopy`, then paste |
+
+Until `ASC_KEY_ID` is set, CI only checks that the archive builds. To upload without pushing, open Actions → iOS app → Run workflow on `main`. Builds are numbered after the workflow run. If TestFlight already has a higher number for this version (for example from Xcode Cloud), add a repository variable `BUILD_NUMBER_OFFSET` (Settings → Secrets and variables → Actions → Variables) to add to it. The certificate and profile expire after a year; then replace those two secrets.
 
 The privacy policy is `docs/privacy.html`, served by GitHub Pages (Settings → Pages → Deploy from a branch → `main`, `/docs`) at https://myrzan0-glitch.github.io/taskwall/privacy.html.
 
-Raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` before each upload: every build needs a higher number. CI builds a Release archive on every push, so archive problems show up before you try. `Resources/PrivacyInfo.xcprivacy` declares no tracking and no data collection.
+When you upload from Xcode, raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` above the last build in TestFlight first: every build needs a higher number. CI builds a Release archive on every push, so archive problems show up before you try. `Resources/PrivacyInfo.xcprivacy` declares no tracking and no data collection.
 
 ### Before you submit
 

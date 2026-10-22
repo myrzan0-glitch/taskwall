@@ -25,6 +25,10 @@ jobs:
       fail-fast: false
       matrix:
         task: [test, archive, screenshots]
+    env:
+      # Pushes to main (and runs started by hand on main) send the archive to
+      # TestFlight, once the signing secrets are set; see the README.
+      TESTFLIGHT: ${{ matrix.task == 'archive' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.ASC_KEY_ID != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -59,17 +63,91 @@ jobs:
             echo "::error::iosApp/TaskWall.xcodeproj is out of date. Run 'cd iosApp && xcodegen' and commit the result."
             exit 1
           fi
+      - name: Install the distribution certificate and provisioning profile
+        if: env.TESTFLIGHT == 'true'
+        env:
+          CERTIFICATE: ${{ secrets.DIST_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.DIST_CERTIFICATE_PASSWORD }}
+          PROFILE: ${{ secrets.APPSTORE_PROFILE }}
+        run: |
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password="$(uuidgen)"
+          echo -n "$CERTIFICATE" | base64 --decode -o "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security set-key-partition-list -S apple-tool:,apple: -k "$password" "$keychain"
+          security list-keychain -d user -s "$keychain"
+
+          profile="$RUNNER_TEMP/profile.mobileprovision"
+          echo -n "$PROFILE" | base64 --decode -o "$profile"
+          security cms -D -i "$profile" > "$RUNNER_TEMP/profile.plist"
+          uuid="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/profile.plist")"
+          # Xcode 16 and later look in UserData; older versions in MobileDevice.
+          for dir in ~/Library/Developer/Xcode/UserData/"Provisioning Profiles" ~/Library/MobileDevice/"Provisioning Profiles"; do
+            mkdir -p "$dir" && cp "$profile" "$dir/$uuid.mobileprovision"
+          done
+          echo "PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/profile.plist")" >> "$GITHUB_ENV"
+
       - name: Build a Release archive, as Xcode does for TestFlight
         if: matrix.task == 'archive'
+        env:
+          BUILD_NUMBER_OFFSET: ${{ vars.BUILD_NUMBER_OFFSET }}
         run: |
           set -o pipefail
+          # Pull requests only check that the archive builds; main signs it for TestFlight,
+          # numbered after the workflow run so every upload is higher than the last.
+          if [ "$TESTFLIGHT" = true ]; then
+            build=$(( GITHUB_RUN_NUMBER + ${BUILD_NUMBER_OFFSET:-0} ))
+            echo "BUILD_NUMBER=$build" >> "$GITHUB_ENV"
+            signing=(CODE_SIGN_STYLE=Manual "CODE_SIGN_IDENTITY=Apple Distribution"
+              "PROVISIONING_PROFILE_SPECIFIER=$PROFILE_NAME" "CURRENT_PROJECT_VERSION=$build")
+          else
+            signing=(CODE_SIGNING_ALLOWED=NO)
+          fi
           xcodebuild archive \
             -project iosApp/TaskWall.xcodeproj -scheme TaskWall -configuration Release \
             -destination 'generic/platform=iOS' -archivePath iosApp/build/TaskWall.xcarchive \
-            CODE_SIGNING_ALLOWED=NO | xcbeautify
+            "${signing[@]}" | xcbeautify
           app=iosApp/build/TaskWall.xcarchive/Products/Applications/TaskWall.app
           test -f "$app/PrivacyInfo.xcprivacy" || { echo "::error::The archive has no privacy manifest"; exit 1; }
           test -f "$app/Wallist.shortcut" || { echo "::error::The archive has no bundled shortcut"; exit 1; }
+
+      - name: Upload to TestFlight
+        if: env.TESTFLIGHT == 'true'
+        env:
+          ASC_KEY: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          key="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+          printf '%s\n' "$ASC_KEY" > "$key"
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>9KHCK2Z846</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict><key>app.taskwall</key><string>$PROFILE_NAME</string></dict>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath iosApp/build/TaskWall.xcarchive \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -authenticationKeyPath "$key" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" | xcbeautify
+          echo "::notice::Uploaded build $BUILD_NUMBER to TestFlight"
 
       - name: Capture screenshots
         if: matrix.task == 'screenshots'
