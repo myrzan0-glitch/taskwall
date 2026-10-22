@@ -89,12 +89,14 @@ struct ProView: View {
                 .accessibilityIdentifier("proPlan")
 
                 Button {
-                    if pro.canTestUnlock {
-                        pro.testUnlock()
-                        unlocked()
-                        return
-                    }
                     Task {
+                        if pro.price(for: selected) == nil {
+                            if await pro.startWithoutProducts() {
+                                unlocked()
+                                return
+                            }
+                            guard pro.price(for: selected) != nil else { return }
+                        }
                         if await pro.purchase(selected) { unlocked() }
                     }
                 } label: {
@@ -110,7 +112,7 @@ struct ProView: View {
                 }
                 .prominentButton()
                 .controlSize(.large)
-                .disabled(pro.phase == .purchasing || (pro.price(for: selected) == nil && !pro.canTestUnlock))
+                .disabled(pro.phase == .purchasing)
                 .accessibilityIdentifier("startPro")
 
                 if pro.canTestUnlock {
