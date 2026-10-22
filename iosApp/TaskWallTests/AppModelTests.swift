@@ -31,6 +31,27 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(model.sections(.today).first?.title, "Today")
     }
 
+    func testTodayListsUndatedTasksAndOtherDaysTheirOwn() throws {
+        let model = makeModel()
+        model.addQuickTask("Call mum")
+        var draft = TaskDraft()
+        draft.title = "Dentist"
+        draft.dueDate = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: Date()))
+        model.add(draft)
+
+        let tomorrow = model.today.plusDays(days: 1)
+        XCTAssertEqual(model.tasks(on: model.today).map(\.title), ["Call mum"])
+        XCTAssertEqual(model.tasks(on: tomorrow).map(\.title), ["Dentist"])
+        XCTAssertTrue(model.hasOpenTasks(on: tomorrow))
+        XCTAssertFalse(model.hasOpenTasks(on: model.today.plusDays(days: 2)))
+
+        let week = model.week(0)
+        XCTAssertEqual(week.count, 7)
+        XCTAssertTrue(week.contains(model.today))
+        XCTAssertEqual(week.first?.dayOfWeek, 1)
+        XCTAssertEqual(model.week(1).first, week.first?.plusDays(days: 7))
+    }
+
     func testBlankQuickTaskIsIgnored() {
         let model = makeModel()
         model.addQuickTask("   ")
@@ -180,6 +201,34 @@ final class AppModelTests: XCTestCase {
         model.becameActive()
         XCTAssertTrue(model.isWallpaperCurrent)
         XCTAssertTrue(model.automation.updatesWhenClosed)
+    }
+
+    /// The close automation's shortcut can finish before SwiftUI reports the app went to the background.
+    func testCloseAutomationThatFinishesFirstIsNotOverwritten() throws {
+        let file = InMemoryTextFileStore(text: nil)
+        let model = AppModel(store: TaskWallStore(file: file))
+        model.addQuickTask("Buy milk")
+        model.toggle(try XCTUnwrap(model.state.tasks.first))
+
+        TaskWallStore(file: file).recordWallpaperUpdate(nowMillis: Date().millis, today: CalendarDay.today)
+        model.appClosed()
+        XCTAssertTrue(model.isWallpaperCurrent)
+        XCTAssertTrue(model.automation.updatesWhenClosed)
+
+        model.becameActive()
+        XCTAssertTrue(model.isWallpaperCurrent)
+        XCTAssertNotNil(model.lastUpdate)
+    }
+
+    /// Siri's Add Task runs in the app's process with its own store while the app is open.
+    func testTaskAddedBySiriWhileTheAppIsOpenIsKept() {
+        let file = InMemoryTextFileStore(text: nil)
+        let model = AppModel(store: TaskWallStore(file: file))
+        model.addQuickTask("Buy milk")
+        _ = TaskWallStore(file: file).addQuickTask(title: "Call mum", nowMillis: Date().millis)
+        model.addQuickTask("Bread")
+        XCTAssertEqual(model.state.tasks.map(\.title), ["Buy milk", "Call mum", "Bread"])
+        XCTAssertEqual(TaskWallStore(file: file).tasks.count, 3)
     }
 
     func testShortcutUrlReloadsTheStore() throws {

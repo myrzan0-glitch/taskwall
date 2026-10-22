@@ -1,204 +1,166 @@
 import SwiftUI
 import Shared
 
-/// "Keep Wallist free": a full-screen tip jar in the style of the best paywalls,
-/// without discounts, timers or pressure.
+/// The tip jar, laid out like a paywall that sells nothing: what stays free,
+/// one tip size at a time, and a single button. No discounts, timers or pressure.
 struct TipJarView: View {
     @Environment(TipStore.self) private var tips
     @Environment(\.dismiss) private var dismiss
     @State private var selected: Tip = .flatWhite
 
-    private let perks = ["Free for everyone, forever", "New themes and photo styles", "Fixes for every iOS update"]
+    private let promises = ["No ads", "No account", "No tracking"]
 
     var body: some View {
-        ZStack(alignment: .top) {
-            Color.black.ignoresSafeArea()
-
-            hero
-
-            ScrollView {
-                VStack(spacing: 0) {
-                    Color.clear.frame(height: 250)
-                    if case .thanked(let name) = tips.phase {
-                        thanks(name)
-                    } else {
-                        picker
-                    }
+        NavigationStack {
+            Group {
+                if case .thanked(let name) = tips.phase {
+                    thanks(name)
+                } else {
+                    picker
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
             }
-            .scrollBounceBehavior(.basedOnSize)
+            .foregroundStyle(Color.ink)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.sheet.ignoresSafeArea())
         }
-        .overlay(alignment: .topTrailing) {
-            Button {
-                tips.phase = .idle
-                dismiss()
-            } label: {
-                Image("cancel-01").renderingMode(.template).resizable()
-                    .frame(width: 18, height: 18)
-                    .frame(width: 44, height: 44)
-            }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.circle)
-            .accessibilityLabel("Close")
-            .padding(.trailing, 16)
-        }
-        .foregroundStyle(.white)
-        .preferredColorScheme(.dark)
-    }
-
-    private var hero: some View {
-        Image("CoffeeHero")
-            .resizable()
-            .scaledToFill()
-            .grayscale(1)
-            .frame(height: 400)
-            .frame(maxWidth: .infinity)
-            .clipped()
-            .overlay(
-                LinearGradient(
-                    stops: [
-                        .init(color: .black.opacity(0.35), location: 0),
-                        .init(color: .black.opacity(0), location: 0.22),
-                        .init(color: .black.opacity(0), location: 0.45),
-                        .init(color: .black.opacity(0.75), location: 0.78),
-                        .init(color: .black, location: 1),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .ignoresSafeArea(edges: .top)
-            .accessibilityHidden(true)
+        .tint(.ink)
+        .presentationBackground(Color.sheet)
+        .presentationDragIndicator(.visible)
+        // Closed by swiping down, so the thanks don't show again next time.
+        .onDisappear { if tips.phase != .purchasing { tips.phase = .idle } }
     }
 
     private var picker: some View {
         VStack(spacing: 0) {
-            Text("FREE FOREVER")
-                .font(.footnote.weight(.bold))
-                .tracking(1.8)
-                .foregroundStyle(.white.opacity(0.72))
-            Text("Keep Wallist free")
-                .font(.system(size: 34, weight: .heavy))
-                .multilineTextAlignment(.center)
-                .padding(.top, 8)
-            Text("Made by one person. No ads, no tracking, no subscription. A coffee keeps it that way.")
-                .font(.subheadline)
-                .foregroundStyle(Color(white: 0.68))
-                .multilineTextAlignment(.center)
-                .padding(.top, 10)
+            Image("wallpaper")
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 48, height: 48)
+                .foregroundStyle(Color.peach)
+                .frame(width: 96, height: 96)
+                .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.ground))
+                .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(Color.white.opacity(0.08)))
+                .accessibilityHidden(true)
+                .padding(.top, 24)
 
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(perks, id: \.self) { perk in
-                    Label {
-                        Text(perk).font(.subheadline.weight(.medium))
-                    } icon: {
-                        Image("checkmark-circle-02").renderingMode(.template).resizable().frame(width: 20, height: 20)
+            VStack(spacing: 22) {
+                ForEach(promises, id: \.self) { Text($0) }
+                HStack(spacing: 10) {
+                    Text("Free forever")
+                    Text("Tip jar")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(Color.ground)
+                        .padding(.horizontal, 12)
+                        .frame(height: 30)
+                        .background(Capsule().fill(Color.peach))
+                }
+                Text("Made by one person").foregroundStyle(Color.muted)
+            }
+            .font(.system(size: 30, weight: .semibold))
+            .multilineTextAlignment(.center)
+            .padding(.top, 48)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+
+            Spacer(minLength: 24)
+
+            VStack(spacing: 12) {
+                Button(action: nextTip) {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack(spacing: 8) {
+                                Text(selected.displayName).font(.title3.weight(.semibold))
+                                Image("arrow-right-01")
+                                    .renderingMode(.template)
+                                    .resizable()
+                                    .frame(width: 12, height: 12)
+                                    .foregroundStyle(Color.control)
+                                    .frame(width: 20, height: 20)
+                                    .background(Circle().fill(Color.muted))
+                            }
+                            Text(note(for: selected))
+                                .font(.subheadline)
+                                .foregroundStyle(Color.muted)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(tips.price(for: selected) ?? "–")
+                            .font(.title2.weight(.semibold))
+                            .monospacedDigit()
                     }
+                    .padding(.horizontal, 24)
+                    .frame(minHeight: 84)
+                    .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color.control))
+                    .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 }
-            }
-            .padding(.top, 22)
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(selected.displayName), \(tips.price(for: selected) ?? "")")
+                .accessibilityHint("Tap for another tip size.")
+                .accessibilityIdentifier("tipSize")
 
-            HStack(spacing: 10) {
-                ForEach(Tip.entries, id: \.self) { tip in
-                    tipCard(tip)
-                }
-            }
-            .padding(.top, 28)
-
-            Button {
-                Task { await tips.purchase(selected) }
-            } label: {
-                Group {
-                    if tips.phase == .purchasing {
-                        ProgressView().tint(.black)
-                    } else {
-                        Text("Tip \(tips.price(for: selected) ?? "")")
+                Button {
+                    Task { await tips.purchase(selected) }
+                } label: {
+                    Group {
+                        if tips.phase == .purchasing {
+                            ProgressView().tint(Color.ground)
+                        } else {
+                            Text("Tip \(tips.price(for: selected) ?? "")")
+                        }
                     }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
                 }
-                .font(.headline)
-                .foregroundStyle(.black)
-                .frame(maxWidth: .infinity, minHeight: 56)
-                .background(Capsule().fill(.white))
-            }
-            .buttonStyle(.plain)
-            .disabled(tips.phase == .purchasing || tips.price(for: selected) == nil)
-            .padding(.top, 20)
+                .prominentButton()
+                .controlSize(.large)
+                .disabled(tips.phase == .purchasing || tips.price(for: selected) == nil)
+                .accessibilityIdentifier("tipButton")
 
-            if case .failed(let reason) = tips.phase {
-                Text(reason).font(.footnote).foregroundStyle(.red).padding(.top, 10)
-            }
+                if case .failed(let reason) = tips.phase {
+                    Text(reason).font(.footnote).foregroundStyle(Color.flag).multilineTextAlignment(.center)
+                }
 
-            Text("One-time tip through the App Store. It doesn't unlock anything.")
-                .font(.caption)
-                .foregroundStyle(Color(white: 0.56))
-                .multilineTextAlignment(.center)
-                .padding(.top, 12)
+                Text("One-time, through the App Store · Unlocks nothing")
+                    .font(.footnote)
+                    .foregroundStyle(Color.muted)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.bottom, 12)
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private func nextTip() {
+        let all = Tip.entries
+        guard let index = all.firstIndex(of: selected) else { return }
+        selected = all[(index + 1) % all.count]
+    }
+
+    private func note(for tip: Tip) -> String {
+        switch tip {
+        case .espresso: "A small thank-you"
+        case .flatWhite: "Keeps the updates coming"
+        default: "You made my week"
         }
     }
 
-    private func tipCard(_ tip: Tip) -> some View {
-        let isSelected = tip == selected
-        return Button {
-            selected = tip
-        } label: {
-            VStack(spacing: 4) {
-                Text(tip.displayName)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(isSelected ? .white : Color(white: 0.68))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Text(tips.price(for: tip) ?? "–")
-                    .font(.title3.bold())
-            }
-            .frame(maxWidth: .infinity, minHeight: 96)
-            .background(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(isSelected ? Color(white: 0.17) : Color(white: 0.11))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .strokeBorder(isSelected ? Color.white : Color.white.opacity(0.14), lineWidth: isSelected ? 2 : 1)
-            )
-            .overlay(alignment: .top) {
-                if tip.isPopular {
-                    Text("Most popular")
-                        .font(.caption2.bold())
-                        .foregroundStyle(.black)
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 3)
-                        .background(Capsule().fill(.white))
-                        .offset(y: -10)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(tip.displayName), \(tips.price(for: tip) ?? "")")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    private func close() {
+        tips.phase = .idle
+        dismiss()
     }
 
     private func thanks(_ name: String) -> some View {
         VStack(spacing: 16) {
-            Image("favourite").renderingMode(.template).resizable().frame(width: 44, height: 44)
-            Text("Thank you").font(.system(size: 34, weight: .heavy))
+            Spacer()
+            Image("coffee-02").renderingMode(.template).resizable().frame(width: 44, height: 44).foregroundStyle(Color.peach)
+            Text("Thank you").font(.system(size: 34, weight: .bold))
             Text("Your \(name.lowercased()) keeps Wallist free for everyone. It really means a lot.")
                 .font(.subheadline)
-                .foregroundStyle(Color(white: 0.68))
+                .foregroundStyle(Color.muted)
                 .multilineTextAlignment(.center)
-            Button {
-                tips.phase = .idle
-                dismiss()
-            } label: {
-                Text("Done")
-                    .font(.headline)
-                    .foregroundStyle(.black)
-                    .frame(maxWidth: .infinity, minHeight: 56)
-                    .background(Capsule().fill(.white))
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 24)
+            Spacer()
+            PrimaryButton("Done", action: close)
+                .padding(.bottom, 12)
         }
-        .padding(.top, 40)
+        .padding(.horizontal, 24)
     }
 }

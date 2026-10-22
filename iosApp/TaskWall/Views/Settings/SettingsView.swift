@@ -1,9 +1,15 @@
 import SwiftUI
 import Shared
 
+/// The Settings sheet, from the right button on Today.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openURL) private var openURL
     @State private var showTips = false
+    @State private var showGuide = false
+    @State private var path: [Route] = []
+
+    enum Route: Hashable { case automation }
 
     /// Set once the app is on the App Store, e.g.
     /// `URL(string: "https://apps.apple.com/app/id1234567890?action=write-review")`.
@@ -12,163 +18,178 @@ struct SettingsView: View {
     private let feedbackURL = URL(string: "mailto:izimbetov.myrzan@icloud.com?subject=Task%20on%20Wallpaper%20feedback")!
 
     var body: some View {
-        NavigationStack {
-            Form {
-                AutomationSection()
-
-                Section {
-                    Button {
-                        showTips = true
-                    } label: {
-                        settingsRow("Buy Me a Coffee", icon: "coffee-02", filled: true)
-                    }
-                    .accessibilityIdentifier("tipJar")
-                    if let reviewURL {
-                        Link(destination: reviewURL) {
-                            settingsRow("Rate on the App Store", icon: "star")
-                        }
-                        .accessibilityIdentifier("rateApp")
-                    }
-                    Link(destination: feedbackURL) {
-                        settingsRow("Send Feedback", icon: "message-01")
-                    }
-                    .accessibilityIdentifier("sendFeedback")
-                } header: {
-                    Text("Support Wallist")
-                } footer: {
-                    Text("Wallist is free. No ads, no account, no tracking.")
-                }
-
-                Section("Tasks") {
-                    Toggle("Clear Completed Each Morning", isOn: Binding(
-                        get: { model.settings.clearCompletedEachMorning },
-                        set: { model.setClearCompletedEachMorning($0) }
-                    ))
-                }
-
-                Section {
-                    LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")
-                }
-            }
-            .contentBelowLargeTitle()
-            .navigationTitle("Settings")
-            .toolbarTitleDisplayMode(.inlineLarge)
-            .fullScreenCover(isPresented: $showTips) {
-                TipJarView()
-            }
-        }
-    }
-
-    private func settingsRow(_ title: String, icon: String, filled: Bool = false) -> some View {
-        HStack(spacing: 12) {
-            Image(icon)
-                .renderingMode(.template)
-                .resizable()
-                .frame(width: 18, height: 18)
-                .foregroundStyle(filled ? Color(.systemBackground) : .primary)
-                .frame(width: 30, height: 30)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(filled ? AnyShapeStyle(.primary) : AnyShapeStyle(.quaternary))
-                )
-            Text(title).foregroundStyle(.primary)
-            Spacer()
-            Image("arrow-right-01")
-                .renderingMode(.template)
-                .resizable()
-                .frame(width: 16, height: 16)
-                .foregroundStyle(.tertiary)
-        }
-        // The icons are decoration; VoiceOver should read the title only.
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(title)
-    }
-}
-
-/// Automatic updates: status, schedule, and a way back into setup.
-struct AutomationSection: View {
-    @Environment(AppModel.self) private var model
-    @Environment(\.openURL) private var openURL
-    @State private var showSetup = false
-    @State private var showGuide = false
-
-    var body: some View {
         let automation = model.automation
-        Section {
-            HStack(spacing: 12) {
-                Image(automation.isSetUp ? "checkmark-circle-02" : "clock-01")
-                    .renderingMode(.template)
-                    .resizable()
-                    .frame(width: 26, height: 26)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(automation.isSetUp ? "On" : "Not set up").font(.headline)
-                    Text(lastUpdateText).font(.footnote).foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button("Update Now") { openURL(ShortcutLinks.runShortcut) }
-                    .buttonStyle(.glass)
-                    .controlSize(.small)
-            }
+        NavigationStack(path: $path) {
+            ScrollView {
+                VStack(spacing: 0) {
+                    Button { showTips = true } label: { tipCard }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("tipJar")
+                        .padding(.top, 8)
 
-            // Read from what actually happened, not a setting: TaskWall can't
-            // create the automation, only notice the shortcut running after it closes.
-            LabeledContent("When I Close the App") {
-                if automation.updatesWhenClosed {
-                    Text("On")
-                } else if automation.automationAdded {
-                    Text("Waiting for first run")
-                } else {
-                    Button("Set Up") { showGuide = true }
-                        .accessibilityIdentifier("setUpCloseAutomation")
-                }
-            }
+                    VStack(spacing: 0) {
+                        NavigationLink(value: Route.automation) {
+                            row("Automatic updates", icon: "refresh") {
+                                Text(automation.isSetUp ? "On" : "Off").foregroundStyle(Color.muted)
+                                chevron
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("automaticUpdates")
+                        DottedDivider()
 
-            Button(automation.isSetUp ? "Set Up Again" : "Set Up Automatic Updates") { showSetup = true }
-        } header: {
-            Text("Automatic Updates")
-        } footer: {
-            Text("Your Lock Screen updates when you close the app, through the Wallist shortcut and an automation in the Shortcuts app, the only app iOS lets change your wallpaper.")
+                        row("Lock Screen", icon: "square-lock-02") {
+                            Text(lastUpdateText)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.muted)
+                                .padding(.horizontal, 12)
+                                .frame(height: 34)
+                                .background(Capsule().fill(Color.control))
+                            Button("Update") { openURL(ShortcutLinks.runShortcut) }
+                                .font(.subheadline.weight(.semibold))
+                                .prominentButton()
+                                .accessibilityIdentifier("updateNow")
+                        }
+                        DottedDivider()
+
+                        row("Update when I close the app", icon: "smartphone") {
+                            // Read from what actually happened, not a setting: the app can't
+                            // create the automation, only notice the shortcut running after it closes.
+                            if automation.updatesWhenClosed {
+                                Text("On").foregroundStyle(Color.muted)
+                            } else if automation.automationAdded {
+                                Text("Waiting").foregroundStyle(Color.muted)
+                            } else {
+                                Button("Set up") { showGuide = true }
+                                    .font(.subheadline.weight(.semibold))
+                                    .buttonStyle(.glass)
+                                    .buttonBorderShape(.capsule)
+                                    .accessibilityIdentifier("setUpCloseAutomation")
+                            }
+                        }
+                        DottedDivider()
+
+                        if let reviewURL {
+                            Link(destination: reviewURL) {
+                                row("Rate on the App Store", icon: "star") { chevron }
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("rateApp")
+                            DottedDivider()
+                        }
+
+                        Link(destination: feedbackURL) {
+                            row("Send feedback", icon: "message-01") { chevron }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("sendFeedback")
+                        DottedDivider()
+
+                        row("Version", icon: "information-circle") {
+                            Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")
+                                .foregroundStyle(Color.muted)
+                        }
+                    }
+                    .padding(.top, 10)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 24)
+            }
+            .foregroundStyle(Color.ink)
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: Route.self) { _ in
+                AutomationSetupView(finishTitle: "Done", onFinish: { path.removeAll() })
+            }
+        }
+        .toggleStyle(BrandSwitchStyle())
+        .tint(.ink)
+        .presentationBackground(Color.sheet)
+        .presentationDragIndicator(.visible)
+        .sheet(isPresented: $showTips) {
+            TipJarView()
         }
         .sheet(isPresented: $showGuide) {
             AutomationGuideView {
                 model.setAutomation(model.automation.withAutomationAdded(added: true))
             }
         }
-        .sheet(isPresented: $showSetup) {
-            NavigationStack {
-                AutomationSetupView(onFinish: { showSetup = false })
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button(role: .close) { showSetup = false }
-                        }
-                    }
+    }
+
+    private var tipCard: some View {
+        HStack(spacing: 14) {
+            Image("coffee-02")
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 36, height: 36)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Buy me a coffee")
+                    .font(.system(size: 20, weight: .bold))
+                Text("Free forever. No ads, no tracking.")
+                    .font(.subheadline)
+                    .opacity(0.7)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Text("Tip")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.ink)
+                .padding(.horizontal, 16)
+                .frame(height: 40)
+                .background(Capsule().fill(Color.ground.opacity(0.9)))
         }
+        .foregroundStyle(Color.ground)
+        .padding(.horizontal, 20)
+        .frame(minHeight: 96)
+        .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.peach))
+        .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Buy me a coffee. Free forever. No ads, no tracking.")
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private var chevron: some View {
+        Image("arrow-right-01")
+            .renderingMode(.template)
+            .resizable()
+            .frame(width: 18, height: 18)
+            .foregroundStyle(Color.muted)
+    }
+
+    private func row<Trailing: View>(_ title: String, icon: String, @ViewBuilder trailing: () -> Trailing) -> some View {
+        HStack(spacing: 14) {
+            Image(icon)
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 22, height: 22)
+                .foregroundStyle(Color.muted)
+                .frame(width: 28)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(.system(size: 19, weight: .medium))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            trailing()
+        }
+        .frame(minHeight: 68)
+        .contentShape(Rectangle())
     }
 
     private var lastUpdateText: String {
-        guard let date = model.lastUpdate else { return "Hasn't run yet" }
-        return "Last update " + date.formatted(.relative(presentation: .named))
+        guard let date = model.lastUpdate else { return "Never" }
+        return date.formatted(.relative(presentation: .named, unitsStyle: .abbreviated))
     }
 }
 
-/// Pushed from the Wallpaper tab.
-struct AutomationSettingsView: View {
-    var body: some View {
-        Form { AutomationSection() }
-            .navigationTitle("Automatic Updates")
-            .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-/// The three steps that connect TaskWall to Shortcuts. iOS has no way for an
+/// The three steps that connect the app to Shortcuts. iOS has no way for an
 /// app to create an automation itself, so this keeps it to a few taps.
+/// Shown as the last onboarding step, from Settings, and from Today.
 struct AutomationSetupView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openURL) private var openURL
     @State private var addingShortcut = false
     @State private var addingAutomation = false
-    var showsHeader = true
+    /// "Step 3" above the title, during onboarding.
+    var stepLabel: String? = nil
+    let finishTitle: LocalizedStringKey
     let onFinish: () -> Void
 
     private enum Step: Int, CaseIterable {
@@ -182,18 +203,10 @@ struct AutomationSetupView: View {
             }
         }
 
-        var detail: String {
-            switch self {
-            case .add: "One tap. It makes your wallpaper and sets it."
-            case .automate: "An automation in Shortcuts, so finished tasks reach your Lock Screen as soon as you leave."
-            case .test: "Watch your Lock Screen update."
-            }
-        }
-
         var action: String {
             switch self {
             case .add: "Add"
-            case .automate: "Set Up"
+            case .automate: "Set up"
             case .test: "Test"
             }
         }
@@ -202,42 +215,50 @@ struct AutomationSetupView: View {
     var body: some View {
         let automation = model.automation
         let current = currentStep(automation)
-        List {
-            if showsHeader {
-                Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Make it automatic").font(.largeTitle.bold())
-                        Text("Wallist updates your Lock Screen on its own. iOS asks you to approve that once in Shortcuts. It takes about 30 seconds.")
-                            .foregroundStyle(.secondary)
-                    }
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 8, trailing: 4))
+        VStack(alignment: .leading, spacing: 22) {
+            Spacer(minLength: 24)
+            VStack(alignment: .leading, spacing: 10) {
+                if let stepLabel {
+                    Text(stepLabel).font(.subheadline.weight(.semibold))
                 }
+                Text("Let your \(Text(Image("square-lock-02")).foregroundStyle(Color.peach)) Lock Screen update itself")
+                    .font(.system(size: 34, weight: .bold))
+                    .tracking(-0.5)
+                    .accessibilityAddTraits(.isHeader)
+                Text("Three taps in Shortcuts, once.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.muted)
             }
 
-            Section {
+            VStack(spacing: 0) {
                 ForEach(Step.allCases, id: \.self) { step in
                     stepRow(step, current: current)
+                    if step != .test { DottedDivider() }
                 }
             }
+            .padding(.horizontal, 16)
+            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Color(hex: 0x141416)))
 
             if automation.isSetUp {
-                Section {
-                    Label("Automation is on. Your Lock Screen updates when you close Wallist.", image: "refresh")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color(.systemBackground))
-                        .listRowBackground(Color.primary)
+                Label {
+                    Text("Automation is on. Your Lock Screen updates when you close the app.")
+                } icon: {
+                    Image("checkmark-circle-02").renderingMode(.template)
                 }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.peach)
             }
         }
+        .foregroundStyle(Color.ink)
+        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        .background(Color.ground.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaBar(edge: .bottom) {
-            Button(action: onFinish) {
-                Text(automation.isSetUp ? "Done" : "Set Up Later").frame(maxWidth: .infinity)
-            }
-            .prominentButton()
-            .controlSize(.large)
-            .padding()
+            PrimaryButton(finishTitle, action: onFinish)
+                .accessibilityIdentifier("finishSetup")
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
         }
         .sheet(isPresented: $addingShortcut) {
             AddShortcutView {
@@ -272,32 +293,34 @@ struct AutomationSetupView: View {
         return HStack(spacing: 14) {
             ZStack {
                 if done {
-                    Circle().fill(.primary)
-                    Image("tick-02").renderingMode(.template).resizable()
-                        .frame(width: 16, height: 16)
-                        .foregroundStyle(Color(.systemBackground))
+                    Image("checkmark-circle-02").renderingMode(.template).resizable()
+                        .frame(width: 28, height: 28)
                 } else {
-                    Circle().strokeBorder(isCurrent ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary), lineWidth: 1.5)
-                    Text("\(step.rawValue + 1)").font(.subheadline.bold())
-                        .foregroundStyle(isCurrent ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
+                    Circle().strokeBorder(isCurrent ? Color.ink : Color(hex: 0x3A3A3C), lineWidth: 1.5)
+                    Text("\(step.rawValue + 1)")
+                        .font(.footnote.bold())
+                        .foregroundStyle(isCurrent ? Color.ink : Color.muted)
                 }
             }
             .frame(width: 28, height: 28)
+            .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(step.title).font(.headline)
-                    .foregroundStyle(done || isCurrent ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                Text(step.detail).font(.footnote).foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 8)
-            // Only the next step gets a button; disabled filled buttons for later
-            // steps were nearly invisible in light mode.
+            Text(step.title)
+                .font(.body.weight(isCurrent ? .semibold : .regular))
+                .foregroundStyle(done || !isCurrent ? Color.muted : Color.ink)
+                .strikethrough(done, color: Color.muted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Only the next step gets a button, so the steps go in order.
             if isCurrent {
                 Button(step.action) { run(step) }
+                    .font(.footnote.weight(.semibold))
                     .prominentButton()
             }
         }
-        .padding(.vertical, 6)
+        .frame(minHeight: isCurrent ? 68 : 60)
+        // The step's button stays its own element, so it can be tapped on its own.
+        .accessibilityElement(children: .contain)
     }
 
     private func run(_ step: Step) {

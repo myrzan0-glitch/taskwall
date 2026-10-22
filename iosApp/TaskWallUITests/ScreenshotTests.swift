@@ -1,11 +1,9 @@
 import XCTest
 
-/// Captures every screen in dark and light mode for design review.
+/// Captures every screen for design review. The app is dark only.
 /// Skipped unless SCREENSHOTS is set; `scripts/test.sh screenshots` sets it and
 /// exports the images to `iosApp/build/screenshots`.
 final class ScreenshotTests: XCTestCase {
-
-    private let appearances = ["dark", "light"]
 
     override func setUpWithError() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["SCREENSHOTS"] != nil, "Set SCREENSHOTS=1 to capture screens")
@@ -13,18 +11,18 @@ final class ScreenshotTests: XCTestCase {
         continueAfterFailure = true
     }
 
-    private func launch(_ appearance: String, _ flags: String...) -> XCUIApplication {
+    private func launch(_ flags: String...) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting", "-reset", "-appearance", appearance] + flags
+        app.launchArguments = ["-uiTesting", "-reset"] + flags
         app.launch()
         return app
     }
 
-    private func snap(_ app: XCUIApplication, _ appearance: String, _ name: String) {
+    private func snap(_ app: XCUIApplication, _ name: String) {
         // Let sheets and glass finish settling.
         Thread.sleep(forTimeInterval: 1)
         let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = "\(appearance)-\(name)"
+        shot.name = name
         shot.lifetime = .keepAlways
         add(shot)
     }
@@ -39,120 +37,106 @@ final class ScreenshotTests: XCTestCase {
         return false
     }
 
-    private func tab(_ app: XCUIApplication, _ name: String) {
-        let button = app.tabBars.buttons[name]
-        if button.waitForExistence(timeout: 5) { button.tap() } else { app.buttons[name].firstMatch.tap() }
+    /// Sheets have no close button: pull one down from its header, as a person would.
+    private func pullDownSheet(_ app: XCUIApplication) {
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98))
+        start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .fast, thenHoldForDuration: 0)
     }
 
-    func testOnboarding() {
-        for look in appearances {
-            let app = launch(look)
-            XCTAssertTrue(app.buttons["Get Started"].waitForExistence(timeout: 15))
-            snap(app, look, "01-welcome")
-
-            tap(app.buttons["Get Started"], until: app.textFields["Add a task"])
-            app.buttons["Workout"].firstMatch.tap()
-            app.buttons["Call mum"].firstMatch.tap()
-            snap(app, look, "02-first-tasks")
-
-            tap(app.buttons["Continue"], until: app.staticTexts["Pick a look"])
-            snap(app, look, "03-pick-look")
-
-            tap(app.buttons["Continue"], until: app.staticTexts["Make it automatic"])
-            snap(app, look, "04-make-it-automatic")
-            app.terminate()
+    /// The composer floats over the dimmed list. Tapping above it closes it without saving;
+    /// pulling it down by its header does the same.
+    private func closeComposer(_ app: XCUIApplication) {
+        let title = app.textFields["taskTitle"]
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)).tap()
+        if !title.waitForNonExistence(timeout: 3) {
+            let header = app.staticTexts["New task"].exists ? app.staticTexts["New task"] : app.staticTexts["Edit task"]
+            header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
+                       withVelocity: .fast, thenHoldForDuration: 0)
+            _ = title.waitForNonExistence(timeout: 3)
         }
     }
 
-    func testTasks() {
-        for look in appearances {
-            let empty = launch(look, "-skipOnboarding")
-            XCTAssertTrue(empty.navigationBars["Tasks"].waitForExistence(timeout: 15))
-            snap(empty, look, "10-tasks-empty")
-            empty.terminate()
+    private func row(_ app: XCUIApplication, _ title: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: "taskRow").staticTexts[title].firstMatch
+    }
 
-            let app = launch(look, "-skipOnboarding", "-seed")
-            XCTAssertTrue(app.navigationBars["Tasks"].waitForExistence(timeout: 15))
-            snap(app, look, "11-tasks")
+    func testOnboarding() {
+        let app = launch()
+        XCTAssertTrue(app.buttons["Get started"].waitForExistence(timeout: 15))
+        snap(app, "01-welcome")
 
-            if tap(app.buttons["New Task"].firstMatch, until: app.textFields["taskTitle"]) {
-                snap(app, look, "12-new-task")
-                app.buttons["closeEditor"].tap()
+        tap(app.buttons["Get started"], until: app.textFields["Add a task"])
+        app.buttons["Add Workout"].firstMatch.tap()
+        app.buttons["Add Call mum"].firstMatch.tap()
+        snap(app, "02-first-tasks")
+
+        tap(app.buttons["Continue"], until: app.buttons["Choose a photo"])
+        snap(app, "03-pick-look")
+
+        tap(app.buttons["Continue"], until: app.buttons["finishSetup"])
+        snap(app, "04-automatic-updates")
+    }
+
+    func testToday() {
+        let empty = launch("-skipOnboarding")
+        XCTAssertTrue(empty.buttons["New Task"].waitForExistence(timeout: 15))
+        snap(empty, "10-today-empty")
+        empty.terminate()
+
+        let app = launch("-skipOnboarding", "-seed")
+        XCTAssertTrue(app.buttons["New Task"].waitForExistence(timeout: 15))
+        snap(app, "11-today")
+
+        if tap(app.buttons["New Task"], until: app.textFields["taskTitle"]) {
+            snap(app, "12-new-task")
+            closeComposer(app)
+        }
+
+        if tap(row(app, "Buy milk"), until: app.textFields["taskTitle"]) {
+            snap(app, "13-edit-task")
+            if tap(app.buttons["dateChip"], until: app.datePickers.firstMatch) {
+                snap(app, "14-date")
+                app.buttons["Done"].firstMatch.tap()
             }
-
-            let row = app.descendants(matching: .any).matching(identifier: "taskRow").staticTexts["Buy milk"].firstMatch
-            if tap(row, until: app.textFields["taskTitle"]) {
-                snap(app, look, "13-edit-task")
-                app.buttons["closeEditor"].tap()
+            if tap(app.buttons["timeChip"], until: app.datePickers.firstMatch) {
+                snap(app, "15-time")
+                app.swipeDown()
             }
+            closeComposer(app)
+        }
 
-            // The other two filters, grouped by date.
-            app.buttons["Upcoming"].tap()
-            snap(app, look, "16-upcoming")
-            app.buttons["Past"].tap()
-            snap(app, look, "17-past")
-
-            // Swipe actions, on the overdue task under Past.
-            let overdue = app.descendants(matching: .any).matching(identifier: "taskRow").staticTexts["Renew passport"].firstMatch
-            if overdue.waitForExistence(timeout: 5) {
-                overdue.swipeLeft()
-                snap(app, look, "15-swipe-delete")
-                app.navigationBars.firstMatch.tap()
+        let overdue = row(app, "Renew passport")
+        if overdue.waitForExistence(timeout: 5) {
+            overdue.press(forDuration: 0.8)
+            if app.buttons["Delete"].waitForExistence(timeout: 4) {
+                snap(app, "16-task-actions")
             }
-            app.buttons["Today"].tap()
-
-            app.buttons["Search"].firstMatch.tap()
-            let field = app.searchFields.firstMatch
-            if field.waitForExistence(timeout: 5) {
-                field.tap()
-                field.typeText("m")
-                snap(app, look, "14-search")
-            }
-            app.terminate()
         }
     }
 
     func testWallpaper() {
-        for look in appearances {
-            let app = launch(look, "-skipOnboarding", "-seed")
-            XCTAssertTrue(app.navigationBars["Tasks"].waitForExistence(timeout: 15))
-            tab(app, "Wallpaper")
-            XCTAssertTrue(app.navigationBars["Wallpaper"].waitForExistence(timeout: 5))
-            snap(app, look, "20-wallpaper")
-
-            if tap(app.buttons["Themes"], until: app.navigationBars["Themes"]) {
-                snap(app, look, "21-themes")
-                app.navigationBars["Themes"].buttons.firstMatch.tap()
-            }
-
-            if tap(app.staticTexts["Automatic Updates"].firstMatch, until: app.navigationBars["Automatic Updates"]) {
-                snap(app, look, "22-automatic-updates")
-            }
-            app.terminate()
-        }
+        let app = launch("-skipOnboarding", "-seed")
+        XCTAssertTrue(tap(app.buttons["Wallpaper"], until: app.navigationBars["Wallpaper"]))
+        snap(app, "20-wallpaper")
     }
 
     func testSettings() {
-        for look in appearances {
-            let app = launch(look, "-skipOnboarding", "-seed")
-            XCTAssertTrue(app.navigationBars["Tasks"].waitForExistence(timeout: 15))
-            tab(app, "Settings")
-            XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
-            snap(app, look, "30-settings")
+        let app = launch("-skipOnboarding", "-seed")
+        XCTAssertTrue(tap(app.buttons["Settings"], until: app.navigationBars["Settings"]))
+        snap(app, "30-settings")
 
-            if tap(app.buttons["tipJar"], until: app.staticTexts["Keep Wallist free"]) {
-                snap(app, look, "31-tip-jar")
-                app.buttons["Close"].firstMatch.tap()
-            }
+        if tap(app.buttons["tipJar"], until: app.buttons["tipButton"]) {
+            snap(app, "31-tip-jar")
+            pullDownSheet(app)
+        }
 
-            let setUp = app.buttons["Set Up Automatic Updates"].firstMatch
-            if tap(setUp, until: app.staticTexts["Make it automatic"]) {
-                snap(app, look, "32-setup")
-                if tap(app.buttons["Add"], until: app.buttons["shortcutAdded"]) {
-                    snap(app, look, "33-add-shortcut")
-                }
+        if tap(app.buttons["automaticUpdates"], until: app.buttons["finishSetup"]) {
+            snap(app, "32-automatic-updates")
+            if tap(app.buttons["Add"], until: app.buttons["shortcutAdded"]) {
+                snap(app, "33-add-shortcut")
             }
-            app.terminate()
         }
     }
 }

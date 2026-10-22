@@ -39,6 +39,21 @@ final class AppModel {
         TaskQueries.shared.sections(tasks: state.tasks, today: today, filter: filter)
     }
 
+    /// What Today lists for one day of the week strip.
+    func tasks(on day: CalendarDay) -> [TaskItem] {
+        TaskQueries.shared.forDay(tasks: state.tasks, day: day, today: today)
+    }
+
+    /// The dot over a day in the week strip.
+    func hasOpenTasks(on day: CalendarDay) -> Bool {
+        TaskQueries.shared.hasOpenTasks(tasks: state.tasks, day: day, today: today)
+    }
+
+    /// Monday to Sunday of the week `weeksFromNow` weeks away.
+    func week(_ weeksFromNow: Int) -> [CalendarDay] {
+        TaskQueries.shared.week(day: today.plusDays(days: Int32(weeksFromNow * 7)))
+    }
+
     var progress: TaskProgress {
         TaskQueries.shared.todayProgress(tasks: state.tasks, today: today)
     }

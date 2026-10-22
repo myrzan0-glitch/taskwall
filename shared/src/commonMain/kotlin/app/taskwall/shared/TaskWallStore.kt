@@ -11,15 +11,25 @@ class ListenerHandle internal constructor(private val onClose: () -> Unit) {
 /**
  * The single source of truth for tasks and settings.
  *
- * Every change is saved straight away. Methods that depend on the date or the
- * time take them as arguments, so the platform stays in charge of clocks and
- * time zones. Not thread-safe: call it from one thread (the main thread on iOS).
+ * Every change is saved straight away, on top of what's in the file: the
+ * shortcut and Siri save to the same file while the app keeps its own store
+ * open, so a change never starts from this store's older copy. Methods that
+ * depend on the date or the time take them as arguments, so the platform stays
+ * in charge of clocks and time zones. Not thread-safe: call it from one thread
+ * (the main thread on iOS).
  */
 class TaskWallStore(private val file: TextFileStore) {
 
     companion object {
-        /** A shortcut run this soon after TaskWall closed counts as the close automation. */
+        /**
+         * A shortcut run this close to TaskWall closing counts as the close automation.
+         * Either can be recorded first: the shortcut can finish before the app hears it closed.
+         */
         const val CLOSE_RUN_WINDOW_MILLIS = 2 * 60 * 1000L
+
+        private fun isCloseRun(closedMillis: Long?, runMillis: Long?): Boolean =
+            closedMillis != null && runMillis != null &&
+                kotlin.math.abs(runMillis - closedMillis) <= CLOSE_RUN_WINDOW_MILLIS
     }
 
     private val json = Json {
@@ -60,7 +70,7 @@ class TaskWallStore(private val file: TextFileStore) {
         showOnWallpaper: Boolean,
         nowMillis: Long,
     ): TaskItem {
-        val task = TaskItem(
+        val draft = TaskItem(
             id = newId(),
             title = title.trim(),
             notes = notes.trim(),
@@ -69,9 +79,12 @@ class TaskWallStore(private val file: TextFileStore) {
             dueMinutes = dueMinutes,
             showOnWallpaper = showOnWallpaper,
             createdAtMillis = nowMillis,
-            sortOrder = (state.tasks.maxOfOrNull { it.sortOrder } ?: -1) + 1,
         )
-        update { it.copy(tasks = it.tasks + task) }
+        var task = draft
+        update { s ->
+            task = draft.copy(sortOrder = (s.tasks.maxOfOrNull { it.sortOrder } ?: -1) + 1)
+            s.copy(tasks = s.tasks + task)
+        }
         return task
     }
 
@@ -96,6 +109,7 @@ class TaskWallStore(private val file: TextFileStore) {
     }
 
     fun toggleDone(id: String, today: CalendarDay, nowMillis: Long) {
+        syncWithFile()
         val task = state.tasks.firstOrNull { it.id == id } ?: return
         setDone(id, !task.isDone, today, nowMillis)
     }
@@ -118,22 +132,23 @@ class TaskWallStore(private val file: TextFileStore) {
      * that on. Returns how many were removed.
      */
     fun clearCompletedIfDue(today: CalendarDay): Int {
-        val settings = state.settings
-        if (!settings.clearCompletedEachMorning || settings.lastClearedDay == today) return 0
-        val stale = state.tasks.count { it.isDone && (it.completedOn ?: today) < today }
+        var stale = 0
         update { s ->
-            s.copy(
-                tasks = s.tasks.filterNot { it.isDone && (it.completedOn ?: today) < today },
-                settings = s.settings.copy(lastClearedDay = today),
-            )
+            if (!s.settings.clearCompletedEachMorning || s.settings.lastClearedDay == today) return@update s
+            val kept = s.tasks.filterNot { it.isDone && (it.completedOn ?: today) < today }
+            stale = s.tasks.size - kept.size
+            s.copy(tasks = kept, settings = s.settings.copy(lastClearedDay = today))
         }
         return stale
     }
 
     /** Removes every finished task. Returns how many were removed. */
     fun clearCompleted(): Int {
-        val count = state.tasks.count { it.isDone }
-        update { s -> s.copy(tasks = s.tasks.filterNot { it.isDone }) }
+        var count = 0
+        update { s ->
+            count = s.tasks.count { it.isDone }
+            s.copy(tasks = s.tasks.filterNot { it.isDone })
+        }
         return count
     }
 
@@ -151,31 +166,38 @@ class TaskWallStore(private val file: TextFileStore) {
 
     fun setClearCompletedEachMorning(on: Boolean) = updateSettings { it.withClearCompletedEachMorning(on) }
 
-    fun setScreen(metrics: ScreenMetrics) {
-        if (state.settings.screen != metrics) updateSettings { it.copy(screen = metrics) }
-    }
+    fun setScreen(metrics: ScreenMetrics) = updateSettings { it.copy(screen = metrics) }
 
-    /** Called when TaskWall goes to the background, to recognise the close automation. */
-    fun recordAppClosed(nowMillis: Long) =
-        updateSettings { it.copy(automation = it.automation.copy(lastAppClosedMillis = nowMillis)) }
+    /**
+     * Called when TaskWall goes to the background, to recognise the close automation.
+     * The automation's shortcut may already have run by the time this is heard.
+     */
+    fun recordAppClosed(nowMillis: Long) = updateSettings { s ->
+        val afterRun = isCloseRun(closedMillis = nowMillis, runMillis = s.automation.lastUpdateMillis)
+        s.copy(
+            automation = s.automation.copy(
+                lastAppClosedMillis = nowMillis,
+                updatesWhenClosed = s.automation.updatesWhenClosed || afterRun,
+            ),
+        )
+    }
 
     /**
      * Called by the shortcut each time it makes a wallpaper. Remembers what the
      * wallpaper shows, and notices when the run came right after TaskWall closed.
      */
-    fun recordWallpaperUpdate(nowMillis: Long, today: CalendarDay) {
-        val signature = wallpaperSignature(today)
-        updateSettings { s ->
-            val closed = s.automation.lastAppClosedMillis
-            val afterClose = closed != null && nowMillis - closed in 0..CLOSE_RUN_WINDOW_MILLIS
-            s.copy(
-                automation = s.automation.copy(
+    fun recordWallpaperUpdate(nowMillis: Long, today: CalendarDay) = update { s ->
+        val automation = s.settings.automation
+        val afterClose = isCloseRun(closedMillis = automation.lastAppClosedMillis, runMillis = nowMillis)
+        s.copy(
+            settings = s.settings.copy(
+                automation = automation.copy(
                     lastUpdateMillis = nowMillis,
-                    lastWallpaperSignature = signature,
-                    updatesWhenClosed = s.automation.updatesWhenClosed || afterClose,
+                    lastWallpaperSignature = signature(s, today),
+                    updatesWhenClosed = automation.updatesWhenClosed || afterClose,
                 ),
-            )
-        }
+            ),
+        )
     }
 
     /** Whether the Lock Screen already shows today's tasks in the current style. */
@@ -189,17 +211,21 @@ class TaskWallStore(private val file: TextFileStore) {
 
     fun todayProgress(today: CalendarDay): TaskProgress = TaskQueries.todayProgress(state.tasks, today)
 
-    fun wallpaperContent(today: CalendarDay): WallpaperContent {
-        val style = state.settings.wallpaper
-        return WallpaperComposer.compose(state.tasks, today, WallpaperGeometry.maxLines(style.layout, style.showProgress))
-    }
+    fun wallpaperContent(today: CalendarDay): WallpaperContent = wallpaperContent(state, today)
 
     /**
      * A stable fingerprint of what the wallpaper would show now. Built from text,
      * not hashCode(), so the app and the shortcut (separate processes) agree.
      */
-    fun wallpaperSignature(today: CalendarDay): String {
-        val text = wallpaperContent(today).toString() + "|" + state.settings.wallpaper.toString()
+    fun wallpaperSignature(today: CalendarDay): String = signature(state, today)
+
+    private fun wallpaperContent(state: AppState, today: CalendarDay): WallpaperContent {
+        val style = state.settings.wallpaper
+        return WallpaperComposer.compose(state.tasks, today, WallpaperGeometry.maxLines(style.layout, style.showProgress))
+    }
+
+    private fun signature(state: AppState, today: CalendarDay): String {
+        val text = wallpaperContent(state, today).toString() + "|" + state.settings.wallpaper.toString()
         var hash = 0xcbf29ce484222325uL
         for (byte in text.encodeToByteArray()) {
             hash = (hash xor byte.toUByte().toULong()) * 0x100000001b3uL
@@ -221,6 +247,7 @@ class TaskWallStore(private val file: TextFileStore) {
     // Internals
 
     private fun update(transform: (AppState) -> AppState) {
+        syncWithFile()
         val next = transform(state)
         if (next == state) return
         state = next
@@ -228,17 +255,31 @@ class TaskWallStore(private val file: TextFileStore) {
         notifyListeners()
     }
 
+    /**
+     * Takes up what another store saved, so the next change builds on it. Keeps this
+     * store's copy if the file can't be read, so a bad read never loses data.
+     */
+    private fun syncWithFile() {
+        val saved = loadSaved() ?: return
+        if (saved != state) {
+            state = saved
+            notifyListeners()
+        }
+    }
+
     private fun notifyListeners() {
         listeners.toList().forEach { it(state) }
     }
 
-    private fun load(): AppState {
-        val text = file.read() ?: return AppState()
+    // A damaged file shouldn't lock people out; start fresh rather than crash.
+    private fun load(): AppState = loadSaved() ?: AppState()
+
+    private fun loadSaved(): AppState? {
+        val text = file.read() ?: return null
         return try {
             json.decodeFromString(AppState.serializer(), text)
         } catch (e: Exception) {
-            // A damaged file shouldn't lock people out; start fresh rather than crash.
-            AppState()
+            null
         }
     }
 

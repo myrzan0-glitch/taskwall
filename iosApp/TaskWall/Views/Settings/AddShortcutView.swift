@@ -25,13 +25,8 @@ struct AddShortcutView: View {
             }
             .navigationTitle("Add the Shortcut")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .close) { dismiss() }
-                        .accessibilityIdentifier("closeAddShortcut")
-                }
-            }
         }
+        .presentationDragIndicator(.visible)
         .sheet(isPresented: $sharing) {
             if let file = ShortcutLinks.bundledFile {
                 ShareSheet(items: [file]) { completed in

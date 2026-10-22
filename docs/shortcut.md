@@ -29,7 +29,9 @@ There's no daily automation: the app can't see or change one, so its time couldn
 
 The first run may ask whether Wallist can set the wallpaper; choose Always Allow.
 
-The app can't see automations, so it works out the close automation from what happens: it records when it goes to the background (`TaskWallStore.recordAppClosed`), and a shortcut run within two minutes of that marks **When I Close the App** as **On** in Settings.
+The app can't see automations, so it works out the close automation from what happens: it records when it goes to the background (`TaskWallStore.recordAppClosed`), and a shortcut run within two minutes of that marks **When I Close the App** as **On** in Settings. Either can be recorded first: the shortcut can finish before the app hears that it closed.
+
+The app stays open in the background while the shortcut runs, and both save to the same file, so every change the app makes starts from what's saved there rather than from its own copy. Otherwise the app's "closed" record would overwrite the shortcut's run, and the app would show the Lock Screen as out of date although the wallpaper was set.
 
 ## Ship it in the app
 
