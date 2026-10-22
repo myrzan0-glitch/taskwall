@@ -153,7 +153,7 @@ struct TipJarView: View {
             Spacer()
             Image("coffee-02").renderingMode(.template).resizable().frame(width: 44, height: 44).foregroundStyle(Color.peach)
             Text("Thank you").font(.system(size: 34, weight: .bold))
-            Text("Your \(name.lowercased()) keeps Task on Wallpaper free for everyone. It really means a lot.")
+            Text("Your \(name.lowercased()) keeps Wallist free for everyone. It really means a lot.")
                 .font(.subheadline)
                 .foregroundStyle(Color.muted)
                 .multilineTextAlignment(.center)

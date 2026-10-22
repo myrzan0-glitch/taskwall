@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Task on Wallpaper</string>
+	<string>Wallist</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -40,7 +40,7 @@
 	<key>NSAccentColorName</key>
 	<string>AccentColor</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Task on Wallpaper saves your wallpaper image to Photos when you tap Save Image.</string>
+	<string>Wallist saves your wallpaper image to Photos when you tap Save Image.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

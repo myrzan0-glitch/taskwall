@@ -16,7 +16,7 @@ struct AutomationGuideView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Update when you close the app").font(.title3.bold())
-                        Text("Tick off a task, leave Task on Wallpaper, and your Lock Screen catches up a moment later. You set this up once in Shortcuts.")
+                        Text("Tick off a task, leave Wallist, and your Lock Screen catches up a moment later. You set this up once in Shortcuts.")
                             .foregroundStyle(.secondary)
                     }
                     .listRowBackground(Color.clear)
@@ -26,12 +26,12 @@ struct AutomationGuideView: View {
                 Section {
                     step(1, "Tap **Open Shortcuts** below and go to the **Automation** tab.")
                     step(2, "Tap **+** and choose **App**.")
-                    step(3, "Choose **Task on Wallpaper**, select **Is Closed** and deselect **Is Opened**. Choose **Run Immediately**.")
-                    step(4, "Tap **Next** and pick the **TaskWall** shortcut.")
+                    step(3, "Choose **Wallist**, select **Is Closed** and deselect **Is Opened**. Choose **Run Immediately**.")
+                    step(4, "Tap **Next** and pick the **Wallist** shortcut.")
                 } header: {
-                    Text("When you close Task on Wallpaper")
+                    Text("When you close Wallist")
                 } footer: {
-                    Text("If iOS asks whether Task on Wallpaper can set the wallpaper, choose Always Allow.")
+                    Text("If iOS asks whether Wallist can set the wallpaper, choose Always Allow.")
                 }
             }
             .navigationTitle("Automation")

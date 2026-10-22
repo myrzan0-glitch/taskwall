@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Task on Wallpaper's look: iOS 27, dark. Warm white type on a near-black ground,
+// Wallist's look: iOS 27, dark. Warm white type on a near-black ground,
 // one peach marker for today and one red flag for priority. Liquid Glass stays on
 // the control layer (the bottom bar, bar buttons, sheets); content is flat lists
 // with dotted separators. The app always runs in dark mode (see TaskWallApp).

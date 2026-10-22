@@ -197,7 +197,7 @@ struct AutomationSetupView: View {
 
         var title: String {
             switch self {
-            case .add: "Add the TaskWall shortcut"
+            case .add: "Add the Wallist shortcut"
             case .automate: "Update when you close the app"
             case .test: "Run a quick test"
             }

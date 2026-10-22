@@ -40,10 +40,10 @@ final class AppGroupFileStore: NSObject, TextFileStore {
 
 /// Links into the Shortcuts app. iOS only lets Shortcuts set the wallpaper.
 enum ShortcutLinks {
-    static let shortcutName = "TaskWall"
+    static let shortcutName = "Wallist"
 
-    /// The signed TaskWall shortcut ([Make TaskWall Wallpaper] → [Set Wallpaper]) shipped
-    /// inside the app. Nil until `Resources/TaskWall.shortcut` is added (see docs/shortcut.md);
+    /// The signed Wallist shortcut ([Make Wallpaper] → [Set Wallpaper]) shipped
+    /// inside the app. Nil until `Resources/Wallist.shortcut` is added (see docs/shortcut.md);
     /// without it, setup shows how to build the shortcut instead.
     static var bundledFile: URL? {
         Bundle.main.url(forResource: shortcutName, withExtension: "shortcut")
@@ -54,7 +54,7 @@ enum ShortcutLinks {
     /// Opens Shortcuts on a new, empty shortcut.
     static let createShortcut = URL(string: "shortcuts://create-shortcut")!
 
-    /// Runs the shortcut, then comes back to TaskWall.
+    /// Runs the shortcut, then comes back to the app.
     static var runShortcut: URL {
         var components = URLComponents(string: "shortcuts://x-callback-url/run-shortcut")!
         components.queryItems = [

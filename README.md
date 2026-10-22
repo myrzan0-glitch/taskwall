@@ -1,12 +1,12 @@
-# Task on Wallpaper
+# Wallist
 
 **Your to-dos, on your Lock Screen.**
 
-Task on Wallpaper turns today's tasks into a Lock Screen wallpaper and keeps it up to date by itself. Write your tasks, pick a colour or any photo, and every time you pick up your phone you see what's left.
+Wallist turns today's tasks into a Lock Screen wallpaper and keeps it up to date by itself. Write your tasks, pick a colour or any photo, and every time you pick up your phone you see what's left.
 
 It is free: no ads, no account, no tracking. People who want to can leave a tip.
 
-> Design: [Task on Wallpaper design canvas](https://claude.ai/artifact/QFPVzTH5F5R1ddi22NJiXs)
+> Design: [Wallist design canvas](https://claude.ai/artifact/QFPVzTH5F5R1ddi22NJiXs)
 
 ---
 
@@ -22,23 +22,23 @@ It is free: no ads, no account, no tracking. People who want to can leave a tip.
 
 ## How it works
 
-iOS doesn't let apps change the wallpaper, so Task on Wallpaper works with the Shortcuts app:
+iOS doesn't let apps change the wallpaper, so Wallist works with the Shortcuts app:
 
 ```
-Task on Wallpaper ──saves──▶ App Group container ◀──reads── "Make Wallpaper" (App Intent, runs in background)
+Wallist ──saves──▶ App Group container ◀──reads── "Make Wallpaper" (App Intent, runs in background)
                          (tasks + photo)                        │ returns PNG
                                                                 ▼
-                                       Shortcuts: "Set Wallpaper" (Lock Screen, no preview)
+                                       Shortcuts: "Set Wallpaper" (Lock and Home Screen, no preview)
                                        triggered when the app closes
 ```
 
-The person adds the published TaskWall shortcut once, allows it to run when locked, and runs a test. See [docs/shortcut.md](docs/shortcut.md).
+The person adds the published Wallist shortcut once, allows it to run when locked, and runs a test. See [docs/shortcut.md](docs/shortcut.md).
 
 ---
 
 ## Architecture
 
-Task on Wallpaper is a Kotlin Multiplatform project, so an Android app can reuse everything that isn't UI.
+Wallist is a Kotlin Multiplatform project, so an Android app can reuse everything that isn't UI.
 
 | Part | What's in it | Language |
 |---|---|---|
@@ -77,7 +77,7 @@ iosApp/
   TaskWall/Rendering/                WallpaperCanvas, renderer, photo storage and analysis
   TaskWall/Intents/                  App Intents and App Shortcuts
   TaskWall/Resources/                asset catalog (Hugeicons, colours), StoreKit test file
-docs/shortcut.md                     how to build and publish the TaskWall shortcut
+docs/shortcut.md                     how to build and publish the Wallist shortcut
 ```
 
 ---
@@ -134,7 +134,7 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 
 ### TestFlight
 
-1. In App Store Connect, create the app (Apps → + → New App) with bundle ID `app.taskwall`. The app is listed as Task on Wallpaper, which is also the name under the icon. The code, Xcode project, bundle ID and the shortcut keep the name TaskWall.
+1. In App Store Connect, create the app (Apps → + → New App) with bundle ID `app.taskwall`. The app is listed as Wallist, which is also the name under the icon and the name of the shortcut. The code, Xcode project and bundle ID keep the name TaskWall.
 2. In Xcode, pick **Any iOS Device (arm64)**, then **Product → Archive**, then **Distribute App → TestFlight & App Store → Upload**.
 3. When processing finishes (Apple emails you), add testers under TestFlight → Internal Testing and install the TestFlight app.
 
@@ -146,7 +146,7 @@ Raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` before each upload: ever
 
 ### Before you submit
 
-- **The App Store name is Task on Wallpaper.** "TaskWall" was taken; it remains the name of the code, the Xcode project and the shortcut.
+- **The App Store name is Wallist.** "TaskWall" was taken; it remains the name of the code and the Xcode project.
 - **Wallpaper apps are a crowded category.** App Review guideline 4.3(b) may reject apps that look like others, so the listing should lead with what's different: a real task manager whose Lock Screen updates itself, for free.
 
 ## Android (planned)

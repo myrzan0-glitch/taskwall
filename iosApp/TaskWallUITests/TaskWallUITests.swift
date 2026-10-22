@@ -255,7 +255,7 @@ final class TaskWallUITests: XCTestCase {
 
         // Step 2 walks through the automation and is done once confirmed.
         XCTAssertTrue(tap(app.buttons["Set up"], until: app.buttons["automationAdded"]))
-        XCTAssertTrue(app.staticTexts["When you close Task on Wallpaper"].exists)
+        XCTAssertTrue(app.staticTexts["When you close Wallist"].exists)
         app.buttons["automationAdded"].tap()
         XCTAssertTrue(app.buttons["Test"].waitForExistence(timeout: 3), "step 3 is next")
 
