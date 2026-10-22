@@ -13,6 +13,8 @@ data class WallpaperPalette(
     val onForeground: Long,
     val panelTint: Long,
     val shade: Long,
+    /** The Priority flag. Red, except on a red background where it takes the text colour. */
+    val flag: Long = 0xFFFF5F57L,
 )
 
 enum class WallpaperTheme(val displayName: String, val palette: WallpaperPalette) {
@@ -21,6 +23,12 @@ enum class WallpaperTheme(val displayName: String, val palette: WallpaperPalette
     SAGE("Sage", WallpaperPalette(0xFFDDE3D8L, 0xFF1D2A20L, 0xFF46564AL, 0x291D2A20L, 0xFFDDE3D8L, 0L, 0L)),
     CLAY("Clay", WallpaperPalette(0xFFECDFD3L, 0xFF3A2618L, 0xFF6B5242L, 0x293A2618L, 0xFFECDFD3L, 0L, 0L)),
     NAVY("Navy", WallpaperPalette(0xFF0F1C2EL, 0xFFE8EEF6L, 0xFF9FB0C6L, 0x29E8EEF6L, 0xFF0F1C2EL, 0L, 0L)),
+    SIGNAL("Signal", WallpaperPalette(0xFFFF4A2BL, 0xFF0C0C0DL, 0xA80C0C0DL, 0x380C0C0DL, 0xFFFF4A2BL, 0L, 0L, flag = 0xFF0C0C0DL));
+
+    companion object {
+        /** The themes offered in the picker. Sage stays for people who already chose it. */
+        val picker: List<WallpaperTheme> = listOf(PAPER, INK, SIGNAL, CLAY, NAVY)
+    }
 }
 
 /** How the wallpaper will actually be drawn once Auto has been resolved. */

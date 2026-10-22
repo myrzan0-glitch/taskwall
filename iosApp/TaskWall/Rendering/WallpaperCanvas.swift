@@ -15,6 +15,7 @@ struct WallpaperCanvas: View {
     var showsSystemUI = false
 
     private var palette: WallpaperPalette { appearance.palette }
+    private var typeface: WallpaperFont { style.font }
     private var isGlass: Bool { appearance.isPhoto && appearance.backdrop == Backdrop.glass && photo != nil }
     private var isShade: Bool { appearance.isPhoto && appearance.backdrop == Backdrop.shade }
     private var textShadow: Color {
@@ -95,7 +96,8 @@ struct WallpaperCanvas: View {
             }
             if content.hiddenCount > 0 {
                 Text("+\(content.hiddenCount) more")
-                    .font(.system(size: 15 * s, weight: .semibold))
+                    .font(typeface.font(.more, s: s))
+                    .tracking(typeface.tracking(.more, s: s))
                     .foregroundStyle(Color(argb: palette.muted))
             }
         }
@@ -119,11 +121,12 @@ struct WallpaperCanvas: View {
         VStack(alignment: .leading, spacing: 8 * s) {
             HStack(alignment: .firstTextBaseline) {
                 Text(content.heading.uppercased())
-                    .font(.system(size: 13 * s, weight: .bold))
-                    .tracking(1 * s)
+                    .font(typeface.font(.heading, s: s))
+                    .tracking(typeface.tracking(.heading, s: s))
                 Spacer()
-                Text(content.progressLabel)
-                    .font(.system(size: 13 * s, weight: .semibold))
+                Text(typeface == .orbit ? content.progressLabel.uppercased() : content.progressLabel)
+                    .font(typeface.font(.heading, s: s))
+                    .tracking(typeface.tracking(.heading, s: s))
             }
             .foregroundStyle(Color(argb: palette.muted))
             if style.showProgress {
@@ -149,13 +152,14 @@ struct WallpaperCanvas: View {
                         .padding(.top, 2 * s)
                     VStack(alignment: .leading, spacing: 1 * s) {
                         Text(line.title)
-                            .font(.system(size: 20 * s, weight: .semibold))
+                            .font(typeface.font(.title, s: s))
                             .foregroundStyle(Color(argb: line.isDone ? palette.muted : palette.foreground))
                             .strikethrough(line.isDone, color: Color(argb: palette.muted))
                             .lineLimit(2)
                         if let detail = line.detail {
                             Text(detail)
-                                .font(.system(size: 15 * s, weight: .medium))
+                                .font(typeface.font(.detail, s: s))
+                                .tracking(typeface.tracking(.detail, s: s))
                                 .foregroundStyle(Color(argb: palette.muted))
                         }
                     }
@@ -166,7 +170,7 @@ struct WallpaperCanvas: View {
                             .resizable()
                             .renderingMode(.template)
                             .frame(width: 18 * s, height: 18 * s)
-                            .foregroundStyle(Color.flag)
+                            .foregroundStyle(Color(argb: palette.flag))
                             .padding(.top, 3 * s)
                     }
                 }
@@ -182,8 +186,8 @@ struct WallpaperCanvas: View {
                 Spacer()
                 Text("DUE")
             }
-            .font(.system(size: 11 * s, weight: .bold))
-            .tracking(0.6 * s)
+            .font(typeface.font(.tableHeading, s: s))
+            .tracking(typeface.tracking(.tableHeading, s: s))
             .foregroundStyle(Color(argb: palette.muted))
             .padding(.bottom, 8 * s)
             line.frame(height: 1)
@@ -194,13 +198,14 @@ struct WallpaperCanvas: View {
                         .background(Circle().fill(row.isDone ? Color(argb: palette.muted) : .clear))
                         .frame(width: 9 * s, height: 9 * s)
                     Text(row.title)
-                        .font(.system(size: 16 * s, weight: .semibold))
+                        .font(typeface.font(.tableTitle, s: s))
                         .foregroundStyle(Color(argb: row.isDone ? palette.muted : palette.foreground))
                         .strikethrough(row.isDone, color: Color(argb: palette.muted))
                         .lineLimit(1)
                     Spacer(minLength: 8 * s)
                     Text(row.isOverdue ? "Overdue" : (row.detail ?? "Today"))
-                        .font(.system(size: 16 * s, weight: .medium))
+                        .font(typeface.font(.tableDetail, s: s))
+                        .tracking(typeface.tracking(.tableDetail, s: s))
                         .foregroundStyle(Color(argb: palette.muted))
                 }
                 .padding(.vertical, 12 * s)

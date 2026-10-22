@@ -5,6 +5,8 @@ import Shared
 @MainActor
 enum WallpaperRenderer {
     static func image(store: TaskWallStore, today: CalendarDay, photo: UIImage?) -> UIImage? {
+        // The shortcut can render before the app's own launch code has run.
+        WallpaperFonts.register()
         let settings = store.settings
         let size = CGSize(
             width: settings.screen?.widthPoints ?? 393,

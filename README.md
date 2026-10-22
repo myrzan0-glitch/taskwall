@@ -4,7 +4,7 @@
 
 Wallist turns today's tasks into a Lock Screen wallpaper and keeps it up to date by itself. Write your tasks, pick a colour or any photo, and every time you pick up your phone you see what's left.
 
-It is free: no ads, no account, no tracking. People who want to can leave a tip.
+Tasks are free: no ads, no account, no tracking. People who want to can leave a tip, and Wallist Pro adds wallpaper fonts.
 
 > Design: [Wallist design canvas](https://claude.ai/artifact/QFPVzTH5F5R1ddi22NJiXs)
 
@@ -13,10 +13,11 @@ It is free: no ads, no account, no tracking. People who want to can leave a tip.
 ## Features
 
 - **Tasks:** title, notes, a red Priority flag, due date and time. Today lists overdue, undated and today's tasks; a swipeable week strip shows any other day.
-- **Wallpaper:** list or table layout with an optional progress bar, in five colour themes or on any photo from your library.
+- **Wallpaper:** list or table layout with an optional progress bar, in five colour themes (including the red Signal) or on any photo from your library.
 - **Readable on any photo:** Auto measures the photo behind the task list and picks black or white text plus the lightest backdrop that keeps it readable (none, soft shade or frosted glass). People can reframe the photo and override Auto.
 - **Automatic updates:** a Shortcuts automation refreshes the wallpaper when you close the app. Onboarding walks through the few taps iOS requires.
 - **Siri and Shortcuts:** "Make Wallpaper" and "Add Task" work with no setup.
+- **Wallist Pro:** a monthly or yearly subscription that unlocks two wallpaper fonts for the task list, Matrix (dot-matrix) and Orbit (wide, space-age). Anyone can preview them in the Wallpaper sheet; iOS keeps drawing its own clock.
 - **Tip jar:** three one-time tips through the App Store that unlock nothing.
 - **Native iOS 27 design:** dark only, with a Liquid Glass bottom bar (Wallpaper, New Task, Settings), glass toolbars and fitted sheets, SF Pro and Dynamic Type. Icons are filled versions of [Hugeicons](https://hugeicons.com) (MIT).
 
@@ -42,7 +43,7 @@ Wallist is a Kotlin Multiplatform project, so an Android app can reuse everythin
 
 | Part | What's in it | Language |
 |---|---|---|
-| `shared/` | Tasks and storage, the Today list, week and overdue rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes and geometry, tip product IDs | Kotlin (common) |
+| `shared/` | Tasks and storage, the Today list, week and overdue rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes, fonts and geometry, tip and Pro product IDs | Kotlin (common) |
 | `iosApp/` | SwiftUI screens with native Liquid Glass components, wallpaper drawing and rendering, photo picking, App Intents for Shortcuts and Siri, StoreKit tips | Swift |
 | `androidApp/` (later) | Jetpack Compose screens reusing `shared/` | Kotlin |
 
@@ -130,6 +131,7 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 | Bundle ID `app.taskwall` and App Group `group.app.taskwall` | `iosApp/project.yml`, `TaskWall.entitlements`, `App/AppGroup.swift` |
 | App Store ID: the Rate row stays hidden until `reviewURL` is set | `Views/Settings/SettingsView.swift` |
 | Tip product IDs and prices | App Store Connect, matching `shared/.../TipJar.kt` |
+| Pro subscriptions: one group with `app.taskwall.pro.yearly` and `app.taskwall.pro.monthly`, their prices and the Terms link in the App Store description | App Store Connect, matching `shared/.../ProPlan.kt` |
 | App icon | `Resources/Assets.xcassets/AppIcon.appiconset` (placeholder) |
 
 ### TestFlight
@@ -175,3 +177,6 @@ When you upload from Xcode, raise `CURRENT_PROJECT_VERSION` in `iosApp/project.y
 ## Credits
 
 - Icons: [Hugeicons](https://hugeicons.com) free stroke-rounded set, MIT licence, filled for this app.
+- Matrix font: [Doto](https://github.com/oliverlalan/Doto) by Óliver Lalan, SIL Open Font License 1.1. Shipped as "Doto Rounded", a static instance with round dots at Black weight.
+- Orbit font: [Michroma](https://github.com/googlefonts/Michroma-font) by Vernon Adams, SIL Open Font License 1.1.
+- Both licences ship with the fonts in `iosApp/TaskWall/Resources/Fonts`.
