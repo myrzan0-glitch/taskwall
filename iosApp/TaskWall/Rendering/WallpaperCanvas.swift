@@ -278,11 +278,7 @@ struct WallpaperCanvas: View {
                     }
                     Spacer(minLength: 0)
                     if line.isFlagged && !line.isDone {
-                        Image("flag-02")
-                            .resizable()
-                            .renderingMode(.template)
-                            .frame(width: 16 * s, height: 16 * s)
-                            .foregroundStyle(Color(argb: palette.flag))
+                        priorityFlag(size: 16 * s)
                             .padding(.top, 2 * s)
                     }
                 }
@@ -315,12 +311,7 @@ struct WallpaperCanvas: View {
                     }
                     Spacer(minLength: 0)
                     if line.isFlagged && !line.isDone {
-                        // The same red Priority flag as the app's task rows.
-                        Image("flag-02")
-                            .resizable()
-                            .renderingMode(.template)
-                            .frame(width: 18 * s, height: 18 * s)
-                            .foregroundStyle(Color(argb: palette.flag))
+                        priorityFlag(size: 18 * s)
                             .padding(.top, 3 * s)
                     }
                 }
@@ -352,6 +343,9 @@ struct WallpaperCanvas: View {
                         .foregroundStyle(Color(argb: row.isDone ? palette.muted : palette.foreground))
                         .strikethrough(row.isDone, color: Color(argb: palette.muted))
                         .lineLimit(1)
+                    if row.isFlagged && !row.isDone {
+                        priorityFlag(size: 14 * s)
+                    }
                     Spacer(minLength: 8 * s)
                     Text(row.isOverdue ? "Overdue" : (row.detail ?? "Today"))
                         .font(typeface.font(.tableDetail, s: s))
@@ -362,6 +356,14 @@ struct WallpaperCanvas: View {
                 line.frame(height: 1)
             }
         }
+    }
+
+    /// The Priority flag, drawn in the typeface's style: Classic uses the app's own
+    /// flag, Matrix builds it from dots and Orbit draws it as a line pennant.
+    private func priorityFlag(size: CGFloat) -> some View {
+        PriorityFlag(typeface: typeface, color: Color(argb: palette.flag))
+            .frame(width: size, height: size)
+            .accessibilityLabel("Priority")
     }
 
     @ViewBuilder
@@ -389,6 +391,66 @@ struct WallpaperCanvas: View {
             Circle()
                 .strokeBorder(Color(argb: palette.foreground), lineWidth: 2 * s)
                 .frame(width: 21 * s, height: 21 * s)
+        }
+    }
+}
+
+/// The Priority flag in each typeface's style, filling its frame.
+struct PriorityFlag: View {
+    let typeface: WallpaperFont
+    let color: Color
+
+    /// Matrix's flag on a dot grid: a swallowtail cloth on a pole.
+    static let matrixDots = [
+        "111111",
+        "111110",
+        "111110",
+        "111111",
+        "100000",
+        "100000",
+        "100000",
+        "100000",
+    ]
+
+    var body: some View {
+        if typeface == .matrix {
+            Canvas { context, size in
+                let rows = Self.matrixDots
+                let pitch = size.height / CGFloat(rows.count)
+                let dot = pitch * 0.82
+                let left = (size.width - pitch * CGFloat(rows[0].count)) / 2
+                for (r, row) in rows.enumerated() {
+                    for (c, cell) in row.enumerated() where cell == "1" {
+                        let rect = CGRect(
+                            x: left + CGFloat(c) * pitch + (pitch - dot) / 2,
+                            y: CGFloat(r) * pitch + (pitch - dot) / 2,
+                            width: dot, height: dot
+                        )
+                        context.fill(Path(ellipseIn: rect), with: .color(color))
+                    }
+                }
+            }
+        } else if typeface == .orbit {
+            // A pennant in outline on a thin pole, like a marker on an instrument dial.
+            Canvas { context, size in
+                let u = size.width / 24
+                var pole = Path()
+                pole.move(to: CGPoint(x: 5 * u, y: 3 * u))
+                pole.addLine(to: CGPoint(x: 5 * u, y: 21 * u))
+                var pennant = Path()
+                pennant.move(to: CGPoint(x: 5 * u, y: 3.5 * u))
+                pennant.addLine(to: CGPoint(x: 20 * u, y: 8.5 * u))
+                pennant.addLine(to: CGPoint(x: 5 * u, y: 13.5 * u))
+                let line = StrokeStyle(lineWidth: 2 * u, lineCap: .round, lineJoin: .round)
+                context.stroke(pole, with: .color(color), style: line)
+                context.stroke(pennant, with: .color(color), style: line)
+            }
+        } else {
+            // The same red Priority flag as the app's task rows.
+            Image("flag-02")
+                .resizable()
+                .renderingMode(.template)
+                .foregroundStyle(color)
         }
     }
 }
