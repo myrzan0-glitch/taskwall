@@ -1,9 +1,9 @@
 import SwiftUI
 import UIKit
 
-/// Step 1 of automatic updates: get the TaskWall shortcut into the Shortcuts app.
+/// Step 1 of automatic updates: get the Wallist shortcut into the Shortcuts app.
 ///
-/// With a signed `TaskWall.shortcut` in the app bundle, this offers the file to
+/// With a signed `Wallist.shortcut` in the app bundle, this offers the file to
 /// Shortcuts through the share sheet, which shows Shortcuts' own "Add Shortcut"
 /// screen. Without one, it walks through building the two-action shortcut.
 struct AddShortcutView: View {
@@ -50,7 +50,7 @@ struct AddShortcutView: View {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Tap Add, then choose **Shortcuts**.").font(.title3.bold())
-                    Text("Shortcuts opens with the TaskWall shortcut ready. Tap **Add Shortcut** there, then come back.")
+                    Text("Shortcuts opens with the Wallist shortcut ready. Tap **Add Shortcut** there, then come back.")
                         .foregroundStyle(.secondary)
                 }
                 .listRowBackground(Color.clear)
@@ -87,11 +87,11 @@ struct AddShortcutView: View {
 
     private let steps: [Step] = [
         Step(id: 1, text: "Tap **Open Shortcuts** below. A new, empty shortcut opens."),
-        Step(id: 2, text: "Tap the name at the top and call it **TaskWall**."),
-        Step(id: 3, text: "Search actions for **Task on Wallpaper** and add **Make Wallpaper**."),
-        Step(id: 4, text: "Search for **Set Wallpaper Photo**, add it, and choose **Lock Screen**."),
+        Step(id: 2, text: "Tap the name at the top and call it **Wallist**."),
+        Step(id: 3, text: "Search actions for **Wallist** and add **Make Wallpaper**."),
+        Step(id: 4, text: "Search for **Set Wallpaper Photo**, add it, and choose **Lock Screen** and **Home Screen**."),
         Step(id: 5, text: "In Set Wallpaper Photo, open its options and turn **Show Preview** off."),
-        Step(id: 6, text: "Tap **Done**, then come back to Task on Wallpaper."),
+        Step(id: 6, text: "Tap **Done**, then come back to Wallist."),
     ]
 
     private var guide: some View {
@@ -99,7 +99,7 @@ struct AddShortcutView: View {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Build the shortcut").font(.title3.bold())
-                    Text("It takes about a minute. The name has to be exactly TaskWall, because the app runs it by name.")
+                    Text("It takes about a minute. The name has to be exactly Wallist, because the app runs it by name.")
                         .foregroundStyle(.secondary)
                 }
                 .listRowBackground(Color.clear)

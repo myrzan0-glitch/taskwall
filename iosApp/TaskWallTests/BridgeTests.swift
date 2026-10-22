@@ -51,7 +51,7 @@ final class BridgeTests: XCTestCase {
         let run = ShortcutLinks.runShortcut
         XCTAssertEqual(run.scheme, "shortcuts")
         let items = URLComponents(url: run, resolvingAgainstBaseURL: false)?.queryItems ?? []
-        XCTAssertEqual(items.first { $0.name == "name" }?.value, "TaskWall")
+        XCTAssertEqual(items.first { $0.name == "name" }?.value, "Wallist")
         XCTAssertEqual(items.first { $0.name == "x-success" }?.value, "taskwall://shortcut-ran")
         XCTAssertEqual(ShortcutLinks.createShortcut.absoluteString, "shortcuts://create-shortcut")
     }

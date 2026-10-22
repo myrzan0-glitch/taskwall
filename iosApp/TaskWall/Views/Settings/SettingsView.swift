@@ -34,9 +34,9 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("sendFeedback")
                 } header: {
-                    Text("Support Task on Wallpaper")
+                    Text("Support Wallist")
                 } footer: {
-                    Text("Task on Wallpaper is free. No ads, no account, no tracking.")
+                    Text("Wallist is free. No ads, no account, no tracking.")
                 }
 
                 Section("Tasks") {
@@ -127,7 +127,7 @@ struct AutomationSection: View {
         } header: {
             Text("Automatic Updates")
         } footer: {
-            Text("Your Lock Screen updates when you close Task on Wallpaper, through the TaskWall shortcut and an automation in the Shortcuts app, the only app iOS lets change your wallpaper.")
+            Text("Your Lock Screen updates when you close the app, through the Wallist shortcut and an automation in the Shortcuts app, the only app iOS lets change your wallpaper.")
         }
         .sheet(isPresented: $showGuide) {
             AutomationGuideView {
@@ -176,7 +176,7 @@ struct AutomationSetupView: View {
 
         var title: String {
             switch self {
-            case .add: "Add the TaskWall shortcut"
+            case .add: "Add the Wallist shortcut"
             case .automate: "Update when you close the app"
             case .test: "Run a quick test"
             }
@@ -207,7 +207,7 @@ struct AutomationSetupView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Make it automatic").font(.largeTitle.bold())
-                        Text("Task on Wallpaper updates your Lock Screen on its own. iOS asks you to approve that once in Shortcuts. It takes about 30 seconds.")
+                        Text("Wallist updates your Lock Screen on its own. iOS asks you to approve that once in Shortcuts. It takes about 30 seconds.")
                             .foregroundStyle(.secondary)
                     }
                     .listRowBackground(Color.clear)
@@ -223,7 +223,7 @@ struct AutomationSetupView: View {
 
             if automation.isSetUp {
                 Section {
-                    Label("Automation is on. Your Lock Screen updates when you close Task on Wallpaper.", image: "refresh")
+                    Label("Automation is on. Your Lock Screen updates when you close Wallist.", image: "refresh")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color(.systemBackground))
                         .listRowBackground(Color.primary)

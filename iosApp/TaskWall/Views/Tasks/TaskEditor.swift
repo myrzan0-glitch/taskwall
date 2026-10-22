@@ -61,7 +61,7 @@ struct TaskEditor: View {
                 Section {
                     Toggle("Show on Lock Screen", isOn: $draft.showOnWallpaper)
                 } footer: {
-                    Text("Your Lock Screen updates the next time the TaskWall shortcut runs.")
+                    Text("Your Lock Screen updates the next time the Wallist shortcut runs.")
                 }
 
                 if case .edit(let task) = target {

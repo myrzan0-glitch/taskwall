@@ -140,7 +140,7 @@ final class ScreenshotTests: XCTestCase {
             XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
             snap(app, look, "30-settings")
 
-            if tap(app.buttons["tipJar"], until: app.staticTexts["Keep Task on Wallpaper free"]) {
+            if tap(app.buttons["tipJar"], until: app.staticTexts["Keep Wallist free"]) {
                 snap(app, look, "31-tip-jar")
                 app.buttons["Close"].firstMatch.tap()
             }

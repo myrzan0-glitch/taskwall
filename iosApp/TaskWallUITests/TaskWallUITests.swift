@@ -262,7 +262,7 @@ final class TaskWallUITests: XCTestCase {
 
         // Step 2 walks through the automations and is done once confirmed.
         XCTAssertTrue(tap(app.buttons["Set Up"], until: app.buttons["automationAdded"]))
-        XCTAssertTrue(app.staticTexts["When you close Task on Wallpaper"].exists)
+        XCTAssertTrue(app.staticTexts["When you close Wallist"].exists)
         app.buttons["automationAdded"].tap()
         XCTAssertTrue(app.buttons["Test"].waitForExistence(timeout: 3), "step 3 is next")
 
@@ -287,7 +287,7 @@ final class TaskWallUITests: XCTestCase {
         wait(for: [expectation(for: flipped, evaluatedWith: nil)], timeout: 3)
 
         app.buttons["tipJar"].tap()
-        XCTAssertTrue(app.staticTexts["Keep Task on Wallpaper free"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Keep Wallist free"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Espresso'")).firstMatch.exists)
         app.buttons["Close"].tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
