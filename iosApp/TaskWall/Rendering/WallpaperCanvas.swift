@@ -101,6 +101,9 @@ struct WallpaperCanvas: View {
                     .foregroundStyle(Color(argb: palette.muted))
             }
         }
+        // Text without a colour of its own takes the wallpaper's, never the system's:
+        // the rendered image draws in light mode, where that would be black.
+        .foregroundStyle(Color(argb: palette.foreground))
         .padding(isGlass ? EdgeInsets(top: 18 * s, leading: 18 * s, bottom: 20 * s, trailing: 18 * s) : EdgeInsets())
         .background {
             if isGlass, let photo {

@@ -58,6 +58,38 @@ final class RenderingTests: XCTestCase {
         }
     }
 
+    func testEveryFontDrawsTextInTheWallpaperColour() throws {
+        // Navy has no black in it, so a black pixel is text that fell back to the system colour.
+        let store = TaskWallStore(file: InMemoryTextFileStore(text: nil))
+        store.setScreen(metrics: ScreenMetrics(widthPoints: 390, heightPoints: 844, scale: 1))
+        _ = store.addQuickTask(title: "Buy milk", nowMillis: 1)
+        for font in WallpaperFont.entries {
+            store.setWallpaperStyle(style: store.settings.wallpaper.withTheme(theme: .navy).withFont(font: font))
+            let image = try XCTUnwrap(WallpaperRenderer.image(store: store, today: CalendarDay.today, photo: nil))
+            XCTAssertEqual(try nearBlackPixels(in: image), 0, "\(font)")
+        }
+    }
+
+    private func nearBlackPixels(in image: UIImage) throws -> Int {
+        let cg = try XCTUnwrap(image.cgImage)
+        let width = cg.width, height = cg.height
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let drawn = pixels.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(
+                data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { return false }
+            context.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        XCTAssertTrue(drawn)
+        var count = 0
+        for i in stride(from: 0, to: pixels.count, by: 4) where max(pixels[i], pixels[i + 1], pixels[i + 2]) < 12 {
+            count += 1
+        }
+        return count
+    }
+
     func testRendersWithAPhotoAndEveryBackdrop() throws {
         let store = TaskWallStore(file: InMemoryTextFileStore(text: nil))
         store.setScreen(metrics: ScreenMetrics(widthPoints: 100, heightPoints: 200, scale: 1))
