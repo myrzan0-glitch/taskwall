@@ -54,15 +54,39 @@ final class ProStore {
         }
     }
 
+    /// Why the App Store couldn't say which environment this is, shown if Start Pro fails.
+    @ObservationIgnored private var environmentError: String?
+
     func load() async {
-        if case .verified(let app)? = try? await AppTransaction.shared {
-            isTestBuild = app.environment == .sandbox
-        }
+        await checkEnvironment()
+        await loadProducts()
+        await refresh()
+    }
+
+    private func loadProducts() async {
         let ids = ProPlan.entries.map { $0.productId }
-        if let list = try? await Product.products(for: ids) {
+        if let list = try? await Product.products(for: ids), !list.isEmpty {
             products = Dictionary(uniqueKeysWithValues: list.map { ($0.id, $0) })
         }
-        await refresh()
+    }
+
+    /// Finds out whether this is TestFlight. The app transaction's signature can fail to
+    /// verify on TestFlight devices, so its environment is read either way: the worst a
+    /// forged one can do is unlock fonts on that one device.
+    private func checkEnvironment(refreshing: Bool = false) async {
+        guard !isTestBuild else { return }
+        do {
+            let result: VerificationResult<AppTransaction>
+            if refreshing {
+                result = try await AppTransaction.refresh()
+            } else {
+                result = try await AppTransaction.shared
+            }
+            isTestBuild = result.unsafePayloadValue.environment == .sandbox
+            environmentError = nil
+        } catch {
+            environmentError = error.localizedDescription
+        }
     }
 
     /// Reads the active subscriptions again.
@@ -80,12 +104,26 @@ final class ProStore {
         status = active || testerPro ? .pro : .free
     }
 
-    /// TestFlight only: unlocks Pro on this device without a purchase.
-    func testUnlock() {
-        guard canTestUnlock else { return }
+    /// Start Pro when no plans have loaded: asks the App Store again, and in TestFlight
+    /// unlocks Pro on this device without a purchase. Returns true once Pro is active;
+    /// false with plans now loaded means a normal purchase can go ahead.
+    func startWithoutProducts() async -> Bool {
+        phase = .purchasing
+        await loadProducts()
+        guard products.isEmpty else {
+            phase = .idle
+            return false
+        }
+        await checkEnvironment(refreshing: true)
+        guard isTestBuild else {
+            let detail = environmentError.map { " (\($0))" } ?? ""
+            phase = .failed("Pro isn't available right now. Please try again later.\(detail)")
+            return false
+        }
         UserDefaults.standard.set(true, forKey: Self.testerProKey)
         status = .pro
         phase = .idle
+        return true
     }
 
     func price(for plan: ProPlan) -> String? {
