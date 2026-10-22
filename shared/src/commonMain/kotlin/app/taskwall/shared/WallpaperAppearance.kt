@@ -9,7 +9,7 @@ data class WallpaperPalette(
     val foreground: Long,
     val muted: Long,
     val line: Long,
-    /** Colour drawn on top of [foreground] (e.g. text inside the "High" badge). */
+    /** Colour drawn on top of [foreground] (e.g. the tick inside a done task's circle on photos). */
     val onForeground: Long,
     val panelTint: Long,
     val shade: Long,
