@@ -160,13 +160,13 @@ struct WallpaperCanvas: View {
                         }
                     }
                     Spacer(minLength: 0)
-                    if line.isHighPriority && !line.isDone {
-                        Text("High")
-                            .font(.system(size: 12 * s, weight: .bold))
-                            .foregroundStyle(Color(argb: palette.onForeground))
-                            .padding(.horizontal, 8 * s)
-                            .padding(.vertical, 2 * s)
-                            .background(Capsule().fill(Color(argb: palette.foreground)))
+                    if line.isFlagged && !line.isDone {
+                        // The same red Priority flag as the app's task rows.
+                        Image("flag-02")
+                            .resizable()
+                            .renderingMode(.template)
+                            .frame(width: 18 * s, height: 18 * s)
+                            .foregroundStyle(Color.flag)
                             .padding(.top, 3 * s)
                     }
                 }

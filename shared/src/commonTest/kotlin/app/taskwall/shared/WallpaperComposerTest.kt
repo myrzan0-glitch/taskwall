@@ -23,7 +23,7 @@ class WallpaperComposerTest {
         )
         assertEquals(listOf("report", "gym", "groceries", "slides"), content.lines.map { it.id })
         assertEquals("17:00", content.lines[0].detail)
-        assertTrue(content.lines[0].isHighPriority)
+        assertTrue(content.lines[0].isFlagged)
         assertEquals("Overdue, 18 Oct", content.lines[1].detail)
         assertTrue(content.lines[1].isOverdue)
         assertNull(content.lines[2].detail)
@@ -47,6 +47,14 @@ class WallpaperComposerTest {
         val content = WallpaperComposer.compose(tasks, TODAY, maxLines = 2)
         assertEquals(listOf("a", "b"), content.lines.map { it.id })
         assertEquals(0, content.hiddenCount)
+    }
+
+    @Test
+    fun anyPriorityShowsTheFlag() {
+        // Tasks from before priority became one flag may still be Low or Medium.
+        val tasks = listOf(task("old", priority = Priority.MEDIUM), task("plain"))
+        val content = WallpaperComposer.compose(tasks, TODAY, maxLines = 6)
+        assertEquals(listOf(true, false), content.lines.sortedBy { it.id != "old" }.map { it.isFlagged })
     }
 }
 

@@ -6,7 +6,8 @@ data class WallpaperLine(
     /** "17:00", "Overdue, 18 Oct", or null when there's nothing to add. */
     val detail: String?,
     val isDone: Boolean,
-    val isHighPriority: Boolean,
+    /** Shown as the red Priority flag. Older tasks may still carry Low or Medium. */
+    val isFlagged: Boolean,
     val isOverdue: Boolean,
 )
 
@@ -56,7 +57,7 @@ object WallpaperComposer {
             title = task.title,
             detail = detail,
             isDone = task.isDone,
-            isHighPriority = task.priority == Priority.HIGH,
+            isFlagged = task.priority != Priority.NO_PRIORITY,
             isOverdue = overdue,
         )
     }
