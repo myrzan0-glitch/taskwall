@@ -46,9 +46,9 @@ extension WallpaperFont {
     func tracking(_ role: WallpaperTextRole, s: CGFloat) -> CGFloat {
         let wide = self == .orbit
         switch role {
-        case .heading: return (wide ? 2.4 : 1) * s
+        case .heading: return (wide ? 2.64 : 1) * s
         case .tableHeading: return (wide ? 2.4 : 0.6) * s
-        case .detail, .tableDetail, .more: return wide ? 1.2 * s : 0
+        case .detail, .tableDetail, .more: return wide ? 1.4 * s : 0
         case .title, .tableTitle: return 0
         }
     }
@@ -83,9 +83,10 @@ extension WallpaperFont {
 
     private func orbitSize(_ role: WallpaperTextRole) -> CGFloat {
         switch role {
-        case .heading, .tableHeading: 10
+        case .heading: 11
+        case .tableHeading: 10
         case .title: 15
-        case .detail, .more: 11
+        case .detail, .more: 10
         case .tableTitle, .tableDetail: 13
         }
     }

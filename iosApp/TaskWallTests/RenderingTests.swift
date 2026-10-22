@@ -35,6 +35,11 @@ final class RenderingTests: XCTestCase {
         XCTAssertNotNil(WallpaperRenderer.pngData(store: store, today: CalendarDay.today))
     }
 
+    func testOrbitNumbersAreTwoDigits() {
+        XCTAssertEqual(WallpaperCanvas.twoDigits(1), "01")
+        XCTAssertEqual(WallpaperCanvas.twoDigits(12), "12")
+    }
+
     func testProFontsAreBundledAndLoad() {
         WallpaperFonts.register()
         XCTAssertNotNil(UIFont(name: "DotoRounded-Black", size: 20), "Matrix font file missing from the app")

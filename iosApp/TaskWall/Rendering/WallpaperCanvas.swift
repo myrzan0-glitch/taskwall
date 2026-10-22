@@ -121,8 +121,53 @@ struct WallpaperCanvas: View {
     private func header(s: CGFloat) -> some View {
         if typeface == .matrix {
             matrixHeader(s: s)
+        } else if typeface == .orbit {
+            orbitHeader(s: s)
         } else {
             standardHeader(s: s)
+        }
+    }
+
+    /// "01", "02" … "10": Orbit counts like an instrument readout.
+    static func twoDigits(_ n: Int) -> String {
+        n < 10 ? "0\(n)" : "\(n)"
+    }
+
+    /// Orbit's accent: peach on dark backgrounds, the text colour on light ones.
+    private var orbitAccent: Color {
+        appearance.tone == TextTone.light ? Color.peach : Color(argb: palette.foreground)
+    }
+
+    /// Orbit, an instrument panel: spaced capitals, then progress as a hairline
+    /// with a dot where it ends.
+    private func orbitHeader(s: CGFloat) -> some View {
+        let done = "\(Self.twoDigits(Int(content.doneCount))) / \(Self.twoDigits(Int(content.totalCount))) DONE"
+        return VStack(alignment: .leading, spacing: 10 * s) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(content.heading.uppercased())
+                    .tracking(typeface.tracking(.heading, s: s))
+                Spacer()
+                Text(done)
+                    .tracking(1.32 * s)
+                    .accessibilityLabel(content.progressLabel)
+            }
+            .font(typeface.font(.heading, s: s))
+            .foregroundStyle(Color(argb: palette.muted))
+            if style.showProgress {
+                GeometryReader { g in
+                    let end = g.size.width * CGFloat(content.progress)
+                    ZStack(alignment: .leading) {
+                        Rectangle().fill(Color(argb: palette.line)).frame(height: 2 * s)
+                        Rectangle().fill(orbitAccent).frame(width: end, height: 2 * s)
+                        Circle().fill(orbitAccent)
+                            .frame(width: 8 * s, height: 8 * s)
+                            .offset(x: end - 4 * s)
+                    }
+                    .frame(height: 8 * s)
+                }
+                .frame(height: 8 * s)
+                .accessibilityHidden(true)
+            }
         }
     }
 
@@ -193,7 +238,60 @@ struct WallpaperCanvas: View {
         }
     }
 
+    @ViewBuilder
     private func list(s: CGFloat) -> some View {
+        if typeface == .orbit {
+            orbitList(s: s)
+        } else {
+            standardList(s: s)
+        }
+    }
+
+    /// Orbit's rows: a two-digit number instead of a circle, hairlines between
+    /// rows, and the due time in spaced capitals (red when overdue).
+    private func orbitList(s: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(content.lines.enumerated()), id: \.element.id) { index, line in
+                HStack(alignment: .top, spacing: 14 * s) {
+                    Text(Self.twoDigits(index + 1))
+                        .font(.custom("Michroma-Regular", fixedSize: 10 * s))
+                        .tracking(1 * s)
+                        .foregroundStyle(Color(argb: palette.muted).opacity(line.isDone ? 0.55 : 1))
+                        .frame(width: 22 * s, alignment: .leading)
+                        .padding(.top, 4 * s)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 5 * s) {
+                        Text(line.title)
+                            .font(typeface.font(.title, s: s))
+                            .foregroundStyle(Color(argb: line.isDone ? palette.muted : palette.foreground))
+                            .strikethrough(line.isDone, color: Color(argb: palette.muted))
+                            .lineLimit(2)
+                        if let detail = line.detail, !line.isDone {
+                            Text(detail.uppercased().replacingOccurrences(of: ", ", with: " · "))
+                                .font(typeface.font(.detail, s: s))
+                                .tracking(typeface.tracking(.detail, s: s))
+                                .foregroundStyle(Color(argb: line.isOverdue ? palette.flag : palette.muted))
+                        }
+                    }
+                    Spacer(minLength: 0)
+                    if line.isFlagged && !line.isDone {
+                        Image("flag-02")
+                            .resizable()
+                            .renderingMode(.template)
+                            .frame(width: 16 * s, height: 16 * s)
+                            .foregroundStyle(Color(argb: palette.flag))
+                            .padding(.top, 2 * s)
+                    }
+                }
+                .padding(.vertical, 13 * s)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(Color(argb: palette.line)).frame(height: 1)
+                }
+            }
+        }
+    }
+
+    private func standardList(s: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: (typeface == .matrix ? 12 : 15) * s) {
             ForEach(content.lines, id: \.id) { line in
                 HStack(alignment: .top, spacing: 12 * s) {
