@@ -4,7 +4,7 @@ import XCTest
 /// The app is launched with `-uiTesting`, which keeps test data apart from real data.
 ///
 /// The tests are split into one class per area because Xcode runs classes, not single
-/// tests, side by side on simulator clones (`scripts/test.sh` asks for two).
+/// tests, side by side on simulator clones (`TEST_WORKERS=2 scripts/test.sh`).
 class UITestCase: XCTestCase {
 
     override func setUpWithError() throws {

@@ -5,7 +5,8 @@
 #   iosApp/scripts/test.sh ui       UI tests only
 #   iosApp/scripts/test.sh screenshots   every screen (dark only) into iosApp/build/screenshots
 # Set SIMULATOR to use another device, e.g. SIMULATOR="iPhone 16" iosApp/scripts/test.sh
-# UI tests run on TEST_WORKERS simulator clones side by side (2 by default; 1 turns it off).
+# Set TEST_WORKERS=2 to run the UI test classes on two simulator clones side by side. On
+# CI's 3-core machines that was slower than one simulator (15 minutes against 11), so it's off.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -22,7 +23,7 @@ results="build/TestResults.xcresult"
 log="build/xcodebuild.log"
 case "$mode" in
   unit) only=(-only-testing:TaskWallTests) ;;
-  ui) only=(-only-testing:TaskWallUITests); workers="${TEST_WORKERS:-2}" ;;
+  ui) only=(-only-testing:TaskWallUITests); workers="${TEST_WORKERS:-1}" ;;
   screenshots)
     only=(-only-testing:TaskWallUITests/ScreenshotTests)
     results="build/Screenshots.xcresult"
@@ -30,7 +31,7 @@ case "$mode" in
     # xcodebuild hands TEST_RUNNER_* variables to the tests without the prefix.
     export TEST_RUNNER_SCREENSHOTS=1
     ;;
-  all) workers="${TEST_WORKERS:-2}" ;;
+  all) workers="${TEST_WORKERS:-1}" ;;
   *) echo "usage: $0 [unit|ui|all|screenshots]" >&2; exit 2 ;;
 esac
 
