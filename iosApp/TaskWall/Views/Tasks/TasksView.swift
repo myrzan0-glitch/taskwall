@@ -266,6 +266,10 @@ struct TaskRow: View {
     let task: TaskItem
     let today: CalendarDay
     let onToggle: () -> Void
+    // 20, 17 and 14 pt at the default text size; they grow with Dynamic Type.
+    @ScaledMetric(relativeTo: .body) private var titleSize: CGFloat = 20
+    @ScaledMetric(relativeTo: .body) private var timeSize: CGFloat = 17
+    @ScaledMetric(relativeTo: .footnote) private var overdueSize: CGFloat = 14
 
     private var isOverdue: Bool {
         !task.isDone && TaskQueries.shared.kindOf(task: task, today: today) == SectionKind.overdue
@@ -284,12 +288,12 @@ struct TaskRow: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(task.title)
-                    .font(.body)
+                    .font(.system(size: titleSize))
                     .foregroundStyle(task.isDone ? Color.muted : Color.ink)
                     .strikethrough(task.isDone, color: Color.muted)
                 if isOverdue, let due = task.dueDay {
                     Text("Overdue, \(Formatting.shared.shortDate(day: due))")
-                        .font(.footnote)
+                        .font(.system(size: overdueSize))
                         .foregroundStyle(Color.flag)
                 }
             }
@@ -309,7 +313,7 @@ struct TaskRow: View {
             }
             if !task.isDone, let minutes = task.dueMinutes {
                 Text(Formatting.shared.time(minutesAfterMidnight: minutes.int32Value))
-                    .font(.subheadline)
+                    .font(.system(size: timeSize))
                     .monospacedDigit()
                     .foregroundStyle(Color.muted)
                     .padding(.trailing, 8)
