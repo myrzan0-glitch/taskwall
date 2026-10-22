@@ -35,6 +35,12 @@ final class RenderingTests: XCTestCase {
         XCTAssertNotNil(WallpaperRenderer.pngData(store: store, today: CalendarDay.today))
     }
 
+    func testMatrixFlagIsARegularDotGrid() {
+        let rows = PriorityFlag.matrixDots
+        XCTAssertEqual(Set(rows.map(\.count)).count, 1, "every row has the same number of dots")
+        XCTAssertTrue(rows.allSatisfy { $0.first == "1" }, "the pole runs down the left")
+    }
+
     func testOrbitNumbersAreTwoDigits() {
         XCTAssertEqual(WallpaperCanvas.twoDigits(1), "01")
         XCTAssertEqual(WallpaperCanvas.twoDigits(12), "12")
@@ -50,6 +56,8 @@ final class RenderingTests: XCTestCase {
         let store = TaskWallStore(file: InMemoryTextFileStore(text: nil))
         store.setScreen(metrics: ScreenMetrics(widthPoints: 100, heightPoints: 200, scale: 1))
         _ = store.addQuickTask(title: "Buy milk", nowMillis: 1)
+        // A Priority task, so each font's own flag is drawn too.
+        _ = store.addTask(title: "Call mum", notes: "", priority: .high, dueDay: nil, dueMinutes: nil, showOnWallpaper: true, nowMillis: 2)
         for font in WallpaperFont.entries {
             for layout in [WallpaperLayout.list, WallpaperLayout.table] {
                 store.setWallpaperStyle(style: store.settings.wallpaper.withFont(font: font).withLayout(layout: layout))
