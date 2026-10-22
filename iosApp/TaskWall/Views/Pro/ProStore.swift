@@ -28,6 +28,7 @@ final class ProStore {
     var isPro: Bool { status == .pro }
 
     /// True in TestFlight (the App Store's sandbox), never for App Store downloads.
+    /// The receipt's name answers at once and offline; the app transaction backs it up.
     private(set) var isTestBuild = false
 
     /// In TestFlight, until the Pro subscriptions exist in App Store Connect the
@@ -43,6 +44,7 @@ final class ProStore {
     init(alwaysPro: Bool = false) {
         self.alwaysPro = alwaysPro
         status = alwaysPro ? .pro : .unknown
+        isTestBuild = Self.hasSandboxReceipt
         // Renewals, refunds and purchases made elsewhere arrive here.
         updates = Task { [weak self] in
             for await result in Transaction.updates {
@@ -53,9 +55,6 @@ final class ProStore {
             }
         }
     }
-
-    /// Why the App Store couldn't say which environment this is, shown if Start Pro fails.
-    @ObservationIgnored private var environmentError: String?
 
     func load() async {
         await checkEnvironment()
@@ -70,23 +69,17 @@ final class ProStore {
         }
     }
 
-    /// Finds out whether this is TestFlight. The app transaction's signature can fail to
-    /// verify on TestFlight devices, so its environment is read either way: the worst a
-    /// forged one can do is unlock fonts on that one device.
-    private func checkEnvironment(refreshing: Bool = false) async {
-        guard !isTestBuild else { return }
-        do {
-            let result: VerificationResult<AppTransaction>
-            if refreshing {
-                result = try await AppTransaction.refresh()
-            } else {
-                result = try await AppTransaction.shared
-            }
-            isTestBuild = result.unsafePayloadValue.environment == .sandbox
-            environmentError = nil
-        } catch {
-            environmentError = error.localizedDescription
-        }
+    /// The app transaction's signature can fail to verify on TestFlight devices, so its
+    /// environment is read either way: the worst a forged one can do is unlock fonts on
+    /// that one device.
+    private func checkEnvironment() async {
+        guard !isTestBuild, let result = try? await AppTransaction.shared else { return }
+        isTestBuild = result.unsafePayloadValue.environment != .production
+    }
+
+    /// TestFlight and development installs carry a sandbox receipt; App Store downloads don't.
+    private static var hasSandboxReceipt: Bool {
+        (Bundle.main as ReceiptLocating).appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
     }
 
     /// Reads the active subscriptions again.
@@ -104,20 +97,20 @@ final class ProStore {
         status = active || testerPro ? .pro : .free
     }
 
-    /// Start Pro when no plans have loaded: asks the App Store again, and in TestFlight
-    /// unlocks Pro on this device without a purchase. Returns true once Pro is active;
-    /// false with plans now loaded means a normal purchase can go ahead.
+    /// Start Pro when no plans have loaded. In TestFlight it unlocks Pro on this device
+    /// without a purchase, so testers can try the Pro wallpapers. Otherwise it asks the
+    /// App Store for the plans again. Returns true once Pro is active; false with plans
+    /// now loaded means a normal purchase can go ahead.
     func startWithoutProducts() async -> Bool {
-        phase = .purchasing
-        await loadProducts()
-        guard products.isEmpty else {
+        if !isTestBuild {
+            phase = .purchasing
+            await checkEnvironment()
+            await loadProducts()
             phase = .idle
-            return false
         }
-        await checkEnvironment(refreshing: true)
+        guard products.isEmpty else { return false }
         guard isTestBuild else {
-            let detail = environmentError.map { " (\($0))" } ?? ""
-            phase = .failed("Pro isn't available right now. Please try again later.\(detail)")
+            phase = .failed("Pro isn't available right now. Please try again later.")
             return false
         }
         UserDefaults.standard.set(true, forKey: Self.testerProKey)
@@ -175,3 +168,12 @@ final class ProStore {
         return isPro
     }
 }
+
+/// `appStoreReceiptURL` is deprecated in favour of the app transaction, but its name is
+/// still the one signal of a TestFlight install that needs no network. Reading it through
+/// a protocol keeps the deprecation warning out of the build.
+private protocol ReceiptLocating {
+    var appStoreReceiptURL: URL? { get }
+}
+
+extension Bundle: ReceiptLocating {}
