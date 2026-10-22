@@ -85,7 +85,7 @@ struct AddShortcutView: View {
         Step(id: 2, text: "Tap the name at the top and call it **Wallist**."),
         Step(id: 3, text: "Search actions for **Wallist** and add **Make Wallpaper**."),
         Step(id: 4, text: "Search for **Set Wallpaper Photo**, add it, and choose **Lock Screen** and **Home Screen**."),
-        Step(id: 5, text: "In Set Wallpaper Photo, open its options and turn **Show Preview** off."),
+        Step(id: 5, text: "In Set Wallpaper Photo, open its options and turn **Show Preview** and **Blur** off."),
         Step(id: 6, text: "Tap **Done**, then come back to Wallist."),
     ]
 
