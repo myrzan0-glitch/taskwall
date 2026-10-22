@@ -1,24 +1,26 @@
 import XCTest
 
-/// Settings and the tip jar.
+/// Settings and Wallist Pro.
 final class SettingsUITests: UITestCase {
 
-    func testSettingsAndTipJar() {
+    func testSettingsAndPro() {
         let app = launch("-skipOnboarding")
         XCTAssertTrue(tap(app.buttons["Settings"], until: app.navigationBars["Settings"]))
+        XCTAssertFalse(app.buttons["tipJar"].exists, "the tip jar is gone")
 
-        app.buttons["tipJar"].tap()
-        let size = app.buttons["tipSize"]
-        XCTAssertTrue(size.appears(within: 5))
-        XCTAssertTrue(size.label.hasPrefix("Flat White"))
-        size.tap()
-        XCTAssertTrue(size.label.hasPrefix("Coffee & Cake"), "tapping the card shows the next size")
-        XCTAssertTrue(app.buttons["tipButton"].exists)
+        app.buttons["proCard"].tap()
+        let plan = app.buttons["proPlan"]
+        XCTAssertTrue(plan.appears(within: 5))
+        XCTAssertTrue(plan.label.hasPrefix("Yearly"))
+        plan.tap()
+        XCTAssertTrue(plan.label.hasPrefix("Monthly"), "tapping the card shows the other plan")
+        XCTAssertTrue(app.buttons["startPro"].exists)
+        XCTAssertTrue(app.buttons["restorePro"].exists)
         pullDownSheet(app)
         XCTAssertTrue(app.navigationBars["Settings"].appears(within: 3))
 
         XCTAssertTrue(tap(app.buttons["automaticUpdates"], until: app.buttons["Add"]))
         app.buttons["finishSetup"].tap()
-        XCTAssertTrue(app.buttons["tipJar"].appears(within: 3), "Done goes back to Settings")
+        XCTAssertTrue(app.buttons["proCard"].appears(within: 3), "Done goes back to Settings")
     }
 }

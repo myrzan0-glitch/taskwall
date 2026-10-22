@@ -5,7 +5,6 @@ import Shared
 @main
 struct TaskWallApp: App {
     @State private var model = LaunchOptions.makeModel()
-    @State private var tips = TipStore()
     @State private var pro = ProStore(alwaysPro: LaunchOptions.isPro)
     @Environment(\.scenePhase) private var scenePhase
 
@@ -21,10 +20,8 @@ struct TaskWallApp: App {
                 // The design is dark only.
                 .preferredColorScheme(.dark)
                 .environment(model)
-                .environment(tips)
                 .environment(pro)
                 .onOpenURL { model.handle($0) }
-                .task { await tips.load() }
                 .task { await pro.load() }
                 // Pro fonts go back to Classic when Pro ends, so the Lock Screen
                 // never keeps a font the person no longer has.

@@ -4,8 +4,9 @@ import Shared
 /// The Settings sheet, from the right button on Today.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @Environment(ProStore.self) private var pro
     @Environment(\.openURL) private var openURL
-    @State private var showTips = false
+    @State private var showPro = false
     @State private var showGuide = false
     @State private var path: [Route] = []
 
@@ -22,9 +23,9 @@ struct SettingsView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 0) {
-                    Button { showTips = true } label: { tipCard }
+                    Button { showPro = true } label: { proCard }
                         .buttonStyle(.plain)
-                        .accessibilityIdentifier("tipJar")
+                        .accessibilityIdentifier("proCard")
                         .padding(.top, 8)
 
                     VStack(spacing: 0) {
@@ -106,8 +107,8 @@ struct SettingsView: View {
         .tint(.ink)
         .presentationBackground(Color.sheet)
         .presentationDragIndicator(.visible)
-        .sheet(isPresented: $showTips) {
-            TipJarView()
+        .sheet(isPresented: $showPro) {
+            ProView()
         }
         .sheet(isPresented: $showGuide) {
             AutomationGuideView {
@@ -116,21 +117,21 @@ struct SettingsView: View {
         }
     }
 
-    private var tipCard: some View {
+    /// Wallist Pro, where the tip jar used to be.
+    private var proCard: some View {
         HStack(spacing: 14) {
-            Image("coffee-02")
-                .renderingMode(.template)
-                .resizable()
-                .frame(width: 36, height: 36)
+            Text("Aa")
+                .font(.custom("DotoRounded-Black", fixedSize: 26))
+                .frame(width: 40)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Buy me a coffee")
+                Text("Wallist Pro")
                     .font(.system(size: 20, weight: .bold))
-                Text("Free forever. No ads, no tracking.")
+                Text(pro.isPro ? "Matrix and Orbit fonts are yours." : "Matrix and Orbit wallpaper fonts.")
                     .font(.subheadline)
                     .opacity(0.7)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text("Tip")
+            Text(pro.isPro ? "Active" : "Pro")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.ink)
                 .padding(.horizontal, 16)
@@ -143,7 +144,7 @@ struct SettingsView: View {
         .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.peach))
         .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Buy me a coffee. Free forever. No ads, no tracking.")
+        .accessibilityLabel(pro.isPro ? "Wallist Pro, active" : "Wallist Pro. Matrix and Orbit wallpaper fonts.")
         .accessibilityAddTraits(.isButton)
     }
 
@@ -251,6 +252,8 @@ struct AutomationSetupView: View {
         }
         .foregroundStyle(Color.ink)
         .padding(.horizontal, 24)
+        // Room between the steps and the button below them.
+        .padding(.bottom, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         .background(Color.ground.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)

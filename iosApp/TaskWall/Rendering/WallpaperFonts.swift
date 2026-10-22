@@ -5,7 +5,8 @@ import Shared
 /// The typefaces the task list can use on the wallpaper. iOS draws the clock itself.
 ///
 /// The Pro fonts ship in the app under the SIL Open Font License (see Resources/Fonts):
-/// Matrix is Doto with round dots, fixed at its Black weight; Orbit is Michroma.
+/// Matrix is Doto with softly rounded dots (roundness 70, the heaviest that still
+/// reads as dots), fixed at its Black weight; Orbit is Michroma.
 enum WallpaperFonts {
     private static let names = ["DotoRounded-Black", "Michroma-Regular"]
 
@@ -72,9 +73,9 @@ extension WallpaperFont {
 
     private func matrixSize(_ role: WallpaperTextRole) -> CGFloat {
         switch role {
-        case .heading: 14
+        case .heading: 15
         case .tableHeading: 12
-        case .title: 20
+        case .title: 22
         case .detail, .more: 15
         case .tableTitle, .tableDetail: 16
         }

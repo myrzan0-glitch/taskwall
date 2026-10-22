@@ -117,7 +117,56 @@ struct WallpaperCanvas: View {
         .shadow(color: textShadow, radius: 1.5 * s, x: 0, y: 1 * s)
     }
 
+    @ViewBuilder
     private func header(s: CGFloat) -> some View {
+        if typeface == .matrix {
+            matrixHeader(s: s)
+        } else {
+            standardHeader(s: s)
+        }
+    }
+
+    /// Matrix, after a dot-matrix watch face: the day on the left, a big
+    /// done/total count on the right, and progress as a row of dots.
+    private func matrixHeader(s: CGFloat) -> some View {
+        let muted = Color(argb: palette.muted)
+        return VStack(alignment: .leading, spacing: 16 * s) {
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 2 * s) {
+                    Text(content.heading.uppercased())
+                        .tracking(typeface.tracking(.heading, s: s))
+                    Text(Date.now.formatted(.dateTime.weekday(.abbreviated).day()).uppercased())
+                        .foregroundStyle(muted)
+                }
+                .font(typeface.font(.heading, s: s))
+                Spacer(minLength: 8 * s)
+                HStack(alignment: .firstTextBaseline, spacing: 4 * s) {
+                    Text("\(content.doneCount)")
+                        .font(.custom("DotoRounded-Black", fixedSize: 64 * s))
+                    Text("/\(content.totalCount)")
+                        .font(.custom("DotoRounded-Black", fixedSize: 22 * s))
+                        .foregroundStyle(muted)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(content.progressLabel)
+            }
+            if style.showProgress {
+                let dots = 25
+                let filled = Int((content.progress * Double(dots)).rounded())
+                HStack(spacing: 4 * s) {
+                    ForEach(0..<dots, id: \.self) { i in
+                        Circle()
+                            .fill(Color(argb: i < filled ? palette.foreground : palette.line))
+                            .aspectRatio(1, contentMode: .fit)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .accessibilityHidden(true)
+            }
+        }
+    }
+
+    private func standardHeader(s: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 8 * s) {
             HStack(alignment: .firstTextBaseline) {
                 Text(content.heading.uppercased())
@@ -145,7 +194,7 @@ struct WallpaperCanvas: View {
     }
 
     private func list(s: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 15 * s) {
+        VStack(alignment: .leading, spacing: (typeface == .matrix ? 12 : 15) * s) {
             ForEach(content.lines, id: \.id) { line in
                 HStack(alignment: .top, spacing: 12 * s) {
                     checkMark(done: line.isDone, s: s)
@@ -226,6 +275,14 @@ struct WallpaperCanvas: View {
                         .frame(width: 14 * s, height: 14 * s)
                         .foregroundStyle(Color(argb: appearance.isPhoto ? palette.onForeground : palette.background))
                 }
+                .frame(width: 21 * s, height: 21 * s)
+        } else if typeface == .matrix {
+            // A ring of dots, to match the type.
+            Circle()
+                .strokeBorder(
+                    Color(argb: palette.foreground),
+                    style: StrokeStyle(lineWidth: 2.4 * s, lineCap: .round, dash: [0, 4.2 * s])
+                )
                 .frame(width: 21 * s, height: 21 * s)
         } else {
             Circle()

@@ -452,13 +452,4 @@ class StoreFlowsTest {
         assertEquals("Old", store.tasks.single().title)
         assertEquals(WallpaperStyle(), store.settings.wallpaper)
     }
-
-    // Tips
-
-    @Test
-    fun tipsMapToTheirProducts() {
-        assertEquals(Tip.FLAT_WHITE, Tip.forProductId("app.taskwall.tip.flatwhite"))
-        assertNull(Tip.forProductId("app.taskwall.tip.gold"))
-        assertEquals(1, Tip.entries.count { it.isPopular })
-    }
 }
