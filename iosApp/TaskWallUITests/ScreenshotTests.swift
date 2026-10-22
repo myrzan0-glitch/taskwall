@@ -30,9 +30,9 @@ final class ScreenshotTests: XCTestCase {
     @discardableResult
     private func tap(_ element: XCUIElement, until result: XCUIElement) -> Bool {
         for _ in 0..<3 {
-            guard element.waitForExistence(timeout: 10) else { return false }
+            guard element.appears(within: 10) else { return false }
             element.tap()
-            if result.waitForExistence(timeout: 4) { return true }
+            if result.appears(within: 4) { return true }
         }
         return false
     }
@@ -49,12 +49,12 @@ final class ScreenshotTests: XCTestCase {
     private func closeComposer(_ app: XCUIApplication) {
         let title = app.textFields["taskTitle"]
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)).tap()
-        if !title.waitForNonExistence(timeout: 3) {
+        if !title.vanishes(within: 3) {
             let header = app.staticTexts["New task"].exists ? app.staticTexts["New task"] : app.staticTexts["Edit task"]
             header.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)),
                        withVelocity: .fast, thenHoldForDuration: 0)
-            _ = title.waitForNonExistence(timeout: 3)
+            _ = title.vanishes(within: 3)
         }
     }
 
@@ -64,7 +64,7 @@ final class ScreenshotTests: XCTestCase {
 
     func testOnboarding() {
         let app = launch()
-        XCTAssertTrue(app.buttons["Get started"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["Get started"].appears(within: 15))
         snap(app, "01-welcome")
 
         tap(app.buttons["Get started"], until: app.textFields["Add a task"])
@@ -81,12 +81,12 @@ final class ScreenshotTests: XCTestCase {
 
     func testToday() {
         let empty = launch("-skipOnboarding")
-        XCTAssertTrue(empty.buttons["New Task"].waitForExistence(timeout: 15))
+        XCTAssertTrue(empty.buttons["New Task"].appears(within: 15))
         snap(empty, "10-today-empty")
         empty.terminate()
 
         let app = launch("-skipOnboarding", "-seed")
-        XCTAssertTrue(app.buttons["New Task"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["New Task"].appears(within: 15))
         snap(app, "11-today")
 
         if tap(app.buttons["New Task"], until: app.textFields["taskTitle"]) {
@@ -108,9 +108,9 @@ final class ScreenshotTests: XCTestCase {
         }
 
         let overdue = row(app, "Renew passport")
-        if overdue.waitForExistence(timeout: 5) {
+        if overdue.appears(within: 5) {
             overdue.press(forDuration: 0.8)
-            if app.buttons["Delete"].waitForExistence(timeout: 4) {
+            if app.buttons["Delete"].appears(within: 4) {
                 snap(app, "16-task-actions")
             }
         }

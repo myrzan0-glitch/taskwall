@@ -5,6 +5,7 @@
 #   iosApp/scripts/test.sh ui       UI tests only
 #   iosApp/scripts/test.sh screenshots   every screen (dark only) into iosApp/build/screenshots
 # Set SIMULATOR to use another device, e.g. SIMULATOR="iPhone 16" iosApp/scripts/test.sh
+# UI tests run on TEST_WORKERS simulator clones side by side (2 by default; 1 turns it off).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -13,6 +14,25 @@ cd "$(dirname "$0")/.."
 if command -v xcodegen >/dev/null; then
   xcodegen generate --quiet
 fi
+
+mode="${1:-all}"
+workers=1
+only=()
+results="build/TestResults.xcresult"
+log="build/xcodebuild.log"
+case "$mode" in
+  unit) only=(-only-testing:TaskWallTests) ;;
+  ui) only=(-only-testing:TaskWallUITests); workers="${TEST_WORKERS:-2}" ;;
+  screenshots)
+    only=(-only-testing:TaskWallUITests/ScreenshotTests)
+    results="build/Screenshots.xcresult"
+    log="build/screenshots.log"
+    # xcodebuild hands TEST_RUNNER_* variables to the tests without the prefix.
+    export TEST_RUNNER_SCREENSHOTS=1
+    ;;
+  all) workers="${TEST_WORKERS:-2}" ;;
+  *) echo "usage: $0 [unit|ui|all|screenshots]" >&2; exit 2 ;;
+esac
 
 device="${SIMULATOR:-iPhone 17 Pro}"
 if ! xcrun simctl list devices available | grep -q "^ *$device ("; then
@@ -29,24 +49,11 @@ echo "Testing on $device"
 udid="$(xcrun simctl list devices available | grep -m1 "^ *$device (" | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')"
 xcrun simctl boot "$udid" 2>/dev/null || true
 xcrun simctl bootstatus "$udid" -b
-
-mode="${1:-all}"
-only=()
-results="build/TestResults.xcresult"
-log="build/xcodebuild.log"
-case "$mode" in
-  unit) only=(-only-testing:TaskWallTests) ;;
-  ui) only=(-only-testing:TaskWallUITests) ;;
-  screenshots)
-    only=(-only-testing:TaskWallUITests/ScreenshotTests)
-    results="build/Screenshots.xcresult"
-    log="build/screenshots.log"
-    # xcodebuild hands TEST_RUNNER_* variables to the tests without the prefix.
-    export TEST_RUNNER_SCREENSHOTS=1
-    ;;
-  all) ;;
-  *) echo "usage: $0 [unit|ui|all|screenshots]" >&2; exit 2 ;;
-esac
+# Xcode runs test classes side by side on clones of this simulator. Shut it down so they
+# are cloned from it with its slow first boot already done.
+if [ "$workers" -gt 1 ]; then
+  xcrun simctl shutdown "$udid"
+fi
 
 rm -rf "$results"
 mkdir -p build
@@ -58,6 +65,8 @@ run() {
     -destination "platform=iOS Simulator,id=$udid" \
     -resultBundlePath "$results" \
     CODE_SIGNING_ALLOWED=NO \
+    -parallel-testing-enabled "$([ "$workers" -gt 1 ] && echo YES || echo NO)" \
+    -parallel-testing-worker-count "$workers" \
     ${only[@]+"${only[@]}"}
 }
 
