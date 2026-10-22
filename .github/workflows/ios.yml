@@ -14,9 +14,17 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  test:
+  # The tests, the Release archive and the screenshots each take about ten
+  # minutes, so they run side by side on their own machines instead of one
+  # after another.
+  ios:
+    name: ${{ matrix.task }}
     runs-on: macos-26
-    timeout-minutes: 90
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [test, archive, screenshots]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -33,21 +41,26 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen xcbeautify
       - name: Show Xcode and simulators
+        if: matrix.task != 'archive'
         run: |
           xcodebuild -version
           xcrun simctl list devices available | grep iPhone || true
+
       - name: Run unit tests and UI tests
+        if: matrix.task == 'test'
         run: iosApp/scripts/test.sh
+
       - name: Check the committed Xcode project matches project.yml
-        if: always()
+        if: matrix.task == 'archive'
         run: |
+          (cd iosApp && xcodegen generate --quiet)
           if ! git diff --quiet -- iosApp/TaskWall.xcodeproj iosApp/TaskWall/Info.plist; then
             git diff --stat -- iosApp/TaskWall.xcodeproj iosApp/TaskWall/Info.plist
             echo "::error::iosApp/TaskWall.xcodeproj is out of date. Run 'cd iosApp && xcodegen' and commit the result."
             exit 1
           fi
       - name: Build a Release archive, as Xcode does for TestFlight
-        if: always()
+        if: matrix.task == 'archive'
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -57,25 +70,28 @@ jobs:
           app=iosApp/build/TaskWall.xcarchive/Products/Applications/TaskWall.app
           test -f "$app/PrivacyInfo.xcprivacy" || { echo "::error::The archive has no privacy manifest"; exit 1; }
           test -f "$app/Wallist.shortcut" || { echo "::error::The archive has no bundled shortcut"; exit 1; }
+
       - name: Capture screenshots
-        if: always()
+        if: matrix.task == 'screenshots'
         continue-on-error: true
         run: iosApp/scripts/test.sh screenshots
       - name: Upload screenshots
-        if: always()
+        if: matrix.task == 'screenshots' && always()
         uses: actions/upload-artifact@v4
         with:
           name: Screenshots
           path: iosApp/build/screenshots
           if-no-files-found: warn
+
+      # One job saves the toolchain; the others would only race it for the same key.
       - name: Save Kotlin/Native toolchain
-        if: always() && steps.konan.outputs.cache-hit != 'true'
+        if: always() && matrix.task == 'test' && steps.konan.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: ~/.konan
           key: ${{ steps.konan.outputs.cache-primary-key }}
       - name: Upload test results
-        if: failure()
+        if: matrix.task == 'test' && failure()
         uses: actions/upload-artifact@v4
         with:
           name: TestResults
