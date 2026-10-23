@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import Shared
 
 enum TaskEditorTarget: Identifiable {
@@ -14,13 +15,14 @@ enum TaskEditorTarget: Identifiable {
     }
 }
 
-/// The card a long press opens for one task. Holds the id so it always shows the current task.
+/// The card a tap on a task opens: Done, Edit and Delete. Holds the id so it always shows the current task.
 struct TaskActionsTarget: Identifiable {
     let id: String
 }
 
 /// Today: "My tasks", a week strip, then the chosen day's tasks. The bar at the bottom
 /// carries the day's quote above Wallpaper (left), a new task (middle) and Settings (right).
+/// Tap a task for Done, Edit and Delete; hold it to drag it to another place.
 struct TasksView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("hideCompleted") private var hideCompleted = false
@@ -30,8 +32,13 @@ struct TasksView: View {
     @State private var editor: TaskEditorTarget?
     @State private var actions: TaskActionsTarget?
     @State private var editAfterActions: TaskItem?
-    /// The task under a finger: it sinks back while held, then the card opens with a vibration.
-    @State private var pressed: String?
+    /// The task being dragged to a new place.
+    @State private var dragging: String?
+    // Each change plays its haptic.
+    @State private var taps = 0
+    @State private var lifts = 0
+    @State private var swaps = 0
+    @State private var reopened = 0
     @State private var sheet: HomeSheet?
 
     enum HomeSheet: String, Identifiable {
@@ -46,6 +53,7 @@ struct TasksView: View {
         let isToday = day == model.today
         let all = model.tasks(on: day)
         let shown = hideCompleted ? all.filter { !$0.isDone } : all
+        let open = shown.filter { !$0.isDone }.map(\.id)
 
         ScrollView {
             VStack(spacing: 0) {
@@ -77,27 +85,11 @@ struct TasksView: View {
                     }
 
                     ForEach(shown, id: \.id) { task in
-                        let held = pressed == task.id
-                        TaskRow(task: task, today: model.today) { model.toggle(task) }
-                            .background(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(Color.raised)
-                                    .padding(.horizontal, -6)
-                                    .opacity(held ? 1 : 0)
-                            )
-                            .scaleEffect(held ? 0.96 : 1)
+                        TaskRow(task: task, today: model.today) { toggle(task) }
                             .contentShape(Rectangle())
-                            .onTapGesture { editor = .edit(task) }
-                            .onLongPressGesture(minimumDuration: 0.4) {
-                                withAnimation(.snappy) { pressed = nil }
-                                actions = TaskActionsTarget(id: task.id)
-                            } onPressingChanged: { pressing in
-                                // Sink over the length of the hold, so the row shows the press is working.
-                                withAnimation(pressing ? .easeOut(duration: 0.4) : .snappy) {
-                                    pressed = pressing ? task.id : nil
-                                }
-                            }
-                            .accessibilityAction(named: "More actions") { actions = TaskActionsTarget(id: task.id) }
+                            .onTapGesture { actions = TaskActionsTarget(id: task.id) }
+                            .accessibilityAction(named: "Edit") { editor = .edit(task) }
+                            .modifier(Reorderable(task: task, open: open, dragging: $dragging, lifted: { lifts += 1 }, move: move))
                         DottedDivider()
                     }
 
@@ -128,10 +120,16 @@ struct TasksView: View {
         .foregroundStyle(Color.ink)
         .safeAreaBar(edge: .bottom) { bottomBar(day) }
         .sheet(item: $editor) { TaskEditor(target: $0) }
-        .sensoryFeedback(.impact(weight: .medium), trigger: actions?.id) { _, opened in opened != nil }
         .sheet(item: $actions, onDismiss: openEditorAfterActions) { target in
-            TaskActionsSheet(taskID: target.id) { task in editAfterActions = task }
+            TaskActionsSheet(taskID: target.id, toggle: toggle) { task in editAfterActions = task }
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: taps)
+        .sensoryFeedback(.selection, trigger: day.epochDay)
+        .sensoryFeedback(.impact(weight: .medium), trigger: lifts)
+        .sensoryFeedback(.selection, trigger: swaps)
+        .sensoryFeedback(.impact(weight: .light), trigger: reopened)
+        // Ticking a task off, here or from its card: the double tap of a success.
+        .sensoryFeedback(.success, trigger: model.state.tasks.filter(\.isDone).count) { old, new in new > old }
         .sheet(item: $sheet) { which in
             switch which {
             case .wallpaper: WallpaperView()
@@ -153,6 +151,17 @@ struct TasksView: View {
         }
     }
 
+    private func toggle(_ task: TaskItem) {
+        if task.isDone { reopened += 1 }
+        model.toggle(task)
+    }
+
+    /// Drag and drop: the open tasks on screen, in their new order.
+    private func move(_ ids: [String]) {
+        withAnimation(.snappy) { model.reorder(ids) }
+        swaps += 1
+    }
+
     private func openEditorAfterActions() {
         guard let task = editAfterActions else { return }
         editAfterActions = nil
@@ -169,9 +178,15 @@ struct TasksView: View {
     private func buttons(_ day: CalendarDay) -> some View {
         GlassEffectContainer(spacing: 24) {
             HStack {
-                barButton("wallpaper", label: "Wallpaper") { sheet = .wallpaper }
+                barButton("wallpaper", label: "Wallpaper") {
+                    taps += 1
+                    sheet = .wallpaper
+                }
                 Spacer()
-                Button { editor = .new(day) } label: {
+                Button {
+                    taps += 1
+                    editor = .new(day)
+                } label: {
                     Image("add-01")
                         .renderingMode(.template)
                         .resizable()
@@ -183,7 +198,10 @@ struct TasksView: View {
                 .glassControl(in: Capsule())
                 .accessibilityLabel("New Task")
                 Spacer()
-                barButton("settings-02", label: "Settings") { sheet = .settings }
+                barButton("settings-02", label: "Settings") {
+                    taps += 1
+                    sheet = .settings
+                }
             }
         }
         .foregroundStyle(Color.ink)
@@ -225,6 +243,67 @@ struct TasksView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, 72)
         .padding(.horizontal, 24)
+    }
+}
+
+// MARK: - Drag and drop
+
+/// Hold an open task to lift it, then drag it over another to take that task's place.
+/// Finished tasks stay where they are, after the open ones.
+private struct Reorderable: ViewModifier {
+    let task: TaskItem
+    /// The open tasks on screen, in order.
+    let open: [String]
+    @Binding var dragging: String?
+    let lifted: () -> Void
+    let move: ([String]) -> Void
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if task.isDone {
+            content
+        } else {
+            content
+                .onDrag {
+                    dragging = task.id
+                    lifted()
+                    return NSItemProvider(object: task.id as NSString)
+                }
+                .onDrop(of: [.text], delegate: TaskDropDelegate(target: task.id, open: open, dragging: $dragging, move: move))
+                .accessibilityAction(named: "Move up") { shift(-1) }
+                .accessibilityAction(named: "Move down") { shift(1) }
+        }
+    }
+
+    private func shift(_ delta: Int) {
+        guard let from = open.firstIndex(of: task.id), open.indices.contains(from + delta) else { return }
+        var ids = open
+        ids.swapAt(from, from + delta)
+        move(ids)
+    }
+}
+
+private struct TaskDropDelegate: DropDelegate {
+    let target: String
+    let open: [String]
+    @Binding var dragging: String?
+    let move: ([String]) -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let dragging, dragging != target,
+              let from = open.firstIndex(of: dragging), let to = open.firstIndex(of: target) else { return }
+        var ids = open
+        ids.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
+        move(ids)
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        dragging = nil
+        return true
     }
 }
 
@@ -401,6 +480,15 @@ struct CheckCircle: View {
             }
         }
         .frame(width: 22, height: 22)
+        // A little pop as the tick lands.
+        .keyframeAnimator(initialValue: 1.0, trigger: done) { circle, scale in
+            circle.scaleEffect(scale)
+        } keyframes: { _ in
+            KeyframeTrack {
+                SpringKeyframe(done ? 1.3 : 1.0, duration: 0.12)
+                SpringKeyframe(1.0, duration: 0.3, spring: .bouncy)
+            }
+        }
     }
 }
 

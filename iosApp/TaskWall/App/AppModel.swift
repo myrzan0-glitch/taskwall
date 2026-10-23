@@ -118,6 +118,11 @@ final class AppModel {
         store.toggleDone(id: task.id, today: today, nowMillis: Date().millis)
     }
 
+    /// Drag and drop: the open tasks on screen, in their new order.
+    func reorder(_ ids: [String]) {
+        store.reorder(orderedIds: ids)
+    }
+
     func delete(_ task: TaskItem) {
         store.deleteTask(id: task.id)
     }

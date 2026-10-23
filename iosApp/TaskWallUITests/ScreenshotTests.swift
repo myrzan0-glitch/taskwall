@@ -94,7 +94,7 @@ final class ScreenshotTests: XCTestCase {
             closeComposer(app)
         }
 
-        if tap(row(app, "Buy milk"), until: app.textFields["taskTitle"]) {
+        if tap(row(app, "Buy milk"), until: app.buttons["Edit"]), tap(app.buttons["Edit"], until: app.textFields["taskTitle"]) {
             snap(app, "13-edit-task")
             if tap(app.buttons["dateChip"], until: app.datePickers.firstMatch) {
                 snap(app, "14-date")
@@ -107,12 +107,8 @@ final class ScreenshotTests: XCTestCase {
             closeComposer(app)
         }
 
-        let overdue = row(app, "Renew passport")
-        if overdue.appears(within: 5) {
-            overdue.press(forDuration: 0.8)
-            if app.buttons["Delete"].appears(within: 4) {
-                snap(app, "16-task-actions")
-            }
+        if tap(row(app, "Renew passport"), until: app.buttons["Delete"]) {
+            snap(app, "16-task-actions")
         }
     }
 

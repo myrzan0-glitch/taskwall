@@ -34,7 +34,7 @@ class StoreFlowsTest {
     fun newTaskTrimsTextAndGoesToTheEnd() {
         val store = newStore()
         store.addQuickTask("First", 1)
-        val second = store.addTask("  Second  ", " notes ", Priority.MEDIUM, TODAY, 9 * 60, false, 2)
+        val second = store.addTask("  Second  ", " notes ", Priority.NO_PRIORITY, null, null, false, 2)
         assertEquals("Second", second.title)
         assertEquals("notes", second.notes)
         assertEquals(1, second.sortOrder)

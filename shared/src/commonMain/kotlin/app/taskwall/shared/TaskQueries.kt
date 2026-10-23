@@ -80,16 +80,25 @@ object TaskQueries {
     }
 
     /**
-     * Open tasks first: higher priority, then overdue, then earlier due time,
-     * then manual order. Finished tasks follow in the order they were done.
+     * Where a task lands until someone drags it: higher priority first (flagged
+     * tasks on top), then the earlier due date and time; undated tasks after dated ones.
+     */
+    val placement: Comparator<TaskItem> = compareByDescending<TaskItem> { it.priority.rank }
+        .thenBy { it.dueDay?.epochDay ?: Long.MAX_VALUE }
+        .thenBy { it.dueMinutes ?: Int.MAX_VALUE }
+
+    /**
+     * Open tasks first, in the person's order. The store gives each new or re-flagged
+     * task its place by [placement]; ties fall back to the same rule. Finished tasks
+     * follow in the order they were done.
      */
     fun sorted(tasks: List<TaskItem>, today: CalendarDay): List<TaskItem> {
         val open = tasks.filter { !it.isDone }.sortedWith(
-            compareByDescending<TaskItem> { it.priority.rank }
+            compareBy<TaskItem> { it.sortOrder }
+                .thenByDescending { it.priority.rank }
                 .thenByDescending { kindOf(it, today) == SectionKind.OVERDUE }
                 .thenBy { it.dueDay?.epochDay ?: Long.MAX_VALUE }
                 .thenBy { it.dueMinutes ?: Int.MAX_VALUE }
-                .thenBy { it.sortOrder }
         )
         val done = tasks.filter { it.isDone }.sortedBy { it.completedAtMillis ?: 0L }
         return open + done

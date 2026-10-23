@@ -82,8 +82,9 @@ class TaskWallStore(private val file: TextFileStore) {
         )
         var task = draft
         update { s ->
-            task = draft.copy(sortOrder = (s.tasks.maxOfOrNull { it.sortOrder } ?: -1) + 1)
-            s.copy(tasks = s.tasks + task)
+            val tasks = placed(s.tasks, draft)
+            task = tasks.first { it.id == draft.id }
+            s.copy(tasks = tasks)
         }
         return task
     }
@@ -92,8 +93,13 @@ class TaskWallStore(private val file: TextFileStore) {
     fun addQuickTask(title: String, nowMillis: Long): TaskItem =
         addTask(title, "", Priority.NO_PRIORITY, null, null, true, nowMillis)
 
+    /** Saves an edit. A new priority, date or time gives the task a new place, as if just added. */
     fun updateTask(task: TaskItem) {
-        update { s -> s.copy(tasks = s.tasks.map { if (it.id == task.id) task else it }) }
+        update { s ->
+            val old = s.tasks.firstOrNull { it.id == task.id } ?: return@update s
+            val moves = old.priority != task.priority || old.dueDay != task.dueDay || old.dueMinutes != task.dueMinutes
+            s.copy(tasks = if (moves) placed(s.tasks, task) else s.tasks.map { if (it.id == task.id) task else it })
+        }
     }
 
     fun setDone(id: String, done: Boolean, today: CalendarDay, nowMillis: Long) {
@@ -118,12 +124,18 @@ class TaskWallStore(private val file: TextFileStore) {
         update { s -> s.copy(tasks = s.tasks.filterNot { it.id == id }) }
     }
 
-    /** Applies a manual order; ids not listed keep their relative order after these. */
+    /**
+     * Drag and drop: puts the listed tasks in this order, in the places they already
+     * hold, so tasks not listed (other days, finished ones) stay where they are.
+     */
     fun reorder(orderedIds: List<String>) {
-        val position = orderedIds.withIndex().associate { (i, id) -> id to i }
         update { s ->
-            val reordered = s.tasks.sortedWith(compareBy({ position[it.id] ?: Int.MAX_VALUE }, { it.sortOrder }))
-            s.copy(tasks = reordered.mapIndexed { i, t -> t.copy(sortOrder = i) })
+            val byId = s.tasks.associateBy { it.id }
+            val moving = orderedIds.distinct().mapNotNull { byId[it] }
+            val ids = moving.map { it.id }.toSet()
+            val next = moving.iterator()
+            val arranged = s.tasks.sortedBy { it.sortOrder }.map { if (it.id in ids) next.next() else it }
+            s.copy(tasks = numbered(arranged))
         }
     }
 
@@ -305,11 +317,26 @@ class TaskWallStore(private val file: TextFileStore) {
     private fun loadSaved(): AppState? {
         val text = file.read() ?: return null
         return try {
-            json.decodeFromString(AppState.serializer(), text)
+            json.decodeFromString(AppState.serializer(), text).upgraded()
         } catch (e: Exception) {
             null
         }
     }
+
+    /** [task] goes ahead of the first open task it comes before by [TaskQueries.placement]. */
+    private fun placed(tasks: List<TaskItem>, task: TaskItem): List<TaskItem> {
+        val others = tasks.filterNot { it.id == task.id }.sortedBy { it.sortOrder }
+        val at = others.indexOfFirst { !it.isDone && TaskQueries.placement.compare(task, it) < 0 }
+        val arranged = if (at < 0) others + task else others.take(at) + task + others.drop(at)
+        return numbered(arranged)
+    }
+
+    private fun numbered(tasks: List<TaskItem>) = tasks.mapIndexed { i, t -> t.copy(sortOrder = i) }
+
+    /** Version 1 always listed by priority and time: start people's order from what they saw. */
+    private fun AppState.upgraded(): AppState =
+        if (version >= 2) this
+        else copy(version = AppState.CURRENT_VERSION, tasks = numbered(tasks.sortedWith(TaskQueries.placement.thenBy { it.sortOrder })))
 
     private fun newId(): String {
         val chars = "0123456789abcdef"
