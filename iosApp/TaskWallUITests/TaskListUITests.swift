@@ -21,6 +21,14 @@ final class TaskListUITests: UITestCase {
         XCTAssertTrue(day.isSelected)
     }
 
+    func testMyTasksAndTheDailyQuote() {
+        let app = launch("-skipOnboarding")
+        XCTAssertTrue(app.staticTexts["My tasks"].appears(within: 10))
+        let quote = app.descendants(matching: .any)["dailyQuote"]
+        XCTAssertTrue(quote.exists, "the day's quote sits above the add button")
+        XCTAssertLessThan(quote.frame.maxY, app.buttons["New Task"].frame.minY)
+    }
+
     func testHideCompleted() {
         let app = launch("-skipOnboarding", "-seed")
         XCTAssertTrue(task(app, "Pay rent").appears(within: 10))
