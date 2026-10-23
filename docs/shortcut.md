@@ -28,6 +28,8 @@ In both Set Wallpaper Photo actions, open the options and turn off:
 
 Keep the name exactly **Wallist**. The app runs it by name (`ShortcutLinks.shortcutName`).
 
+The bundled file (October 2026) has every step, with Crop to Subject, Show Preview and Blur saved as off, but its `lock` branch has no screens chosen, so it sets both screens like the other branch. That's fine while the app only returns `both`; before it returns `lock`, export the shortcut again with that branch set to Lock Screen only.
+
 Older shortcuts without the first and last steps still work: until a shortcut has run Confirm Wallpaper Set, the app counts a wallpaper as set when Make Wallpaper hands it over.
 
 ## Add the automation
