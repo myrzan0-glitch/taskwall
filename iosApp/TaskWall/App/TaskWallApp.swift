@@ -57,6 +57,7 @@ struct RootView: View {
 /// - `-reset`: start with no tasks and no settings.
 /// - `-skipOnboarding`: open straight on Today.
 /// - `-seed`: start with a few example tasks.
+/// - `-seedCyrillic`: add a task written in Russian.
 /// - `-pro`: act as if Pro is active, without the App Store.
 enum LaunchOptions {
     private static let arguments = Set(CommandLine.arguments)
@@ -76,6 +77,9 @@ enum LaunchOptions {
         let model = AppModel(store: TaskWallStore(file: file))
         if arguments.contains("-skipOnboarding") { model.completeOnboarding() }
         if arguments.contains("-seed") { seed(model) }
+        if arguments.contains("-seedCyrillic") {
+            _ = model.store.addTask(title: "Закончить приложение", notes: "", priority: .high, dueDay: nil, dueMinutes: nil, showOnWallpaper: true, nowMillis: Date().millis)
+        }
         return model
     }
 

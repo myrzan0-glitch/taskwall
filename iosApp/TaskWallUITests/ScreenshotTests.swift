@@ -117,7 +117,7 @@ final class ScreenshotTests: XCTestCase {
     }
 
     func testWallpaper() {
-        let app = launch("-skipOnboarding", "-seed")
+        let app = launch("-skipOnboarding", "-seed", "-seedCyrillic")
         XCTAssertTrue(tap(app.buttons["Wallpaper"], until: app.navigationBars["Wallpaper"]))
         snap(app, "20-wallpaper")
 

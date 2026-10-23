@@ -6,9 +6,11 @@ import Shared
 ///
 /// The Pro fonts ship in the app under the SIL Open Font License (see Resources/Fonts):
 /// Matrix is Doto with softly rounded dots (roundness 70, the heaviest that still
-/// reads as dots), fixed at its Black weight; Orbit is Michroma.
+/// reads as dots), fixed at its Black weight, with Cyrillic added on the same dot
+/// grid (iosApp/scripts/doto_cyrillic.py). Orbit is Michroma, which has no Cyrillic,
+/// so its Cyrillic comes from Unbounded Light: as wide and as tall, at the same weight.
 enum WallpaperFonts {
-    private static let names = ["DotoRounded-Black", "Michroma-Regular"]
+    private static let names = ["DotoRounded-Black", "Michroma-Regular", "Unbounded-Light"]
 
     private static let registered: Bool = {
         for name in names {
@@ -37,7 +39,7 @@ extension WallpaperFont {
             return .custom("DotoRounded-Black", fixedSize: matrixSize(role) * s)
         }
         if self == .orbit {
-            return .custom("Michroma-Regular", fixedSize: orbitSize(role) * s)
+            return Font(WallpaperFont.orbit(size: orbitSize(role) * s))
         }
         return .system(size: classicSize(role) * s, weight: classicWeight(role))
     }
@@ -51,6 +53,14 @@ extension WallpaperFont {
         case .detail, .tableDetail, .more: return wide ? 1.4 * s : 0
         case .title, .tableTitle: return 0
         }
+    }
+
+    /// Michroma, with Unbounded Light for the letters Michroma doesn't have.
+    static func orbit(size: CGFloat) -> CTFont {
+        let cyrillic = UIFontDescriptor(fontAttributes: [.name: "Unbounded-Light"])
+        let descriptor = UIFontDescriptor(fontAttributes: [.name: "Michroma-Regular"])
+            .addingAttributes([.cascadeList: [cyrillic]])
+        return UIFont(descriptor: descriptor, size: size) as CTFont
     }
 
     private func classicSize(_ role: WallpaperTextRole) -> CGFloat {

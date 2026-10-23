@@ -50,6 +50,71 @@ final class RenderingTests: XCTestCase {
         WallpaperFonts.register()
         XCTAssertNotNil(UIFont(name: "DotoRounded-Black", size: 20), "Matrix font file missing from the app")
         XCTAssertNotNil(UIFont(name: "Michroma-Regular", size: 20), "Orbit font file missing from the app")
+        XCTAssertNotNil(UIFont(name: "Unbounded-Light", size: 20), "Orbit's Cyrillic font file missing from the app")
+    }
+
+    private let cyrillic = "Закончить приложение. Съешь же ещё этих мягких булок. Ўзбек қўғҳ"
+
+    private func hasEveryGlyph(_ font: CTFont, _ text: String) -> Bool {
+        let units = Array(text.filter(\.isLetter).utf16)
+        var glyphs = [CGGlyph](repeating: 0, count: units.count)
+        return CTFontGetGlyphsForCharacters(font, units, &glyphs, units.count)
+    }
+
+    func testMatrixDrawsCyrillicInItsOwnDots() throws {
+        WallpaperFonts.register()
+        let matrix = try XCTUnwrap(UIFont(name: "DotoRounded-Black", size: 20))
+        XCTAssertTrue(hasEveryGlyph(matrix as CTFont, cyrillic))
+    }
+
+    func testOrbitFallsBackToUnboundedForCyrillic() throws {
+        WallpaperFonts.register()
+        let orbit = WallpaperFont.orbit(size: 20)
+        XCTAssertTrue(hasEveryGlyph(orbit, "Renew passport"), "Latin stays in Michroma")
+        let text = "Закончить" as CFString
+        let used = CTFontCreateForString(orbit, text, CFRange(location: 0, length: CFStringGetLength(text)))
+        XCTAssertEqual(CTFontCopyPostScriptName(used) as String, "Unbounded-Light")
+        XCTAssertTrue(hasEveryGlyph(used, cyrillic))
+    }
+
+    func testLongTasksStayInsideTheWallpaper() throws {
+        // A long Russian title must shorten with an ellipsis, not run past the edge.
+        let store = TaskWallStore(file: InMemoryTextFileStore(text: nil))
+        store.setScreen(metrics: ScreenMetrics(widthPoints: 390, heightPoints: 844, scale: 1))
+        _ = store.addTask(title: "Закончить приложение и отправить его в App Store сегодня вечером", notes: "", priority: .high, dueDay: nil, dueMinutes: nil, showOnWallpaper: true, nowMillis: 1)
+        _ = store.addQuickTask(title: "juma namaz", nowMillis: 2)
+        for font in WallpaperFont.entries {
+            for layout in [WallpaperLayout.list, WallpaperLayout.table] {
+                let style = store.settings.wallpaper.withTheme(theme: .navy).withFont(font: font).withLayout(layout: layout)
+                store.setWallpaperStyle(style: style)
+                let image = try XCTUnwrap(WallpaperRenderer.image(store: store, today: CalendarDay.today, photo: nil))
+                XCTAssertEqual(image.size, CGSize(width: 390, height: 844), "\(font) \(layout)")
+                XCTAssertEqual(try brightPixels(in: image, fromX: 390 - 16), 0, "\(font) \(layout) draws into the right margin")
+            }
+        }
+    }
+
+    /// Text-coloured pixels at or right of `fromX`; Navy's own background is dark.
+    private func brightPixels(in image: UIImage, fromX: Int) throws -> Int {
+        try pixels(in: image).filter { $0.x >= fromX && max($0.r, $0.g, $0.b) > 120 }.count
+    }
+
+    private func pixels(in image: UIImage) throws -> [(x: Int, r: UInt8, g: UInt8, b: UInt8)] {
+        let cg = try XCTUnwrap(image.cgImage)
+        let width = cg.width, height = cg.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let drawn = bytes.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(
+                data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { return false }
+            context.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        XCTAssertTrue(drawn)
+        return stride(from: 0, to: bytes.count, by: 4).map { i in
+            (x: (i / 4) % width, r: bytes[i], g: bytes[i + 1], b: bytes[i + 2])
+        }
     }
 
     func testRendersInEveryFontAndLayout() throws {
@@ -79,23 +144,7 @@ final class RenderingTests: XCTestCase {
     }
 
     private func nearBlackPixels(in image: UIImage) throws -> Int {
-        let cg = try XCTUnwrap(image.cgImage)
-        let width = cg.width, height = cg.height
-        var pixels = [UInt8](repeating: 0, count: width * height * 4)
-        let drawn = pixels.withUnsafeMutableBytes { buffer -> Bool in
-            guard let context = CGContext(
-                data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
-                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-            ) else { return false }
-            context.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
-            return true
-        }
-        XCTAssertTrue(drawn)
-        var count = 0
-        for i in stride(from: 0, to: pixels.count, by: 4) where max(pixels[i], pixels[i + 1], pixels[i + 2]) < 12 {
-            count += 1
-        }
-        return count
+        try pixels(in: image).filter { max($0.r, $0.g, $0.b) < 12 }.count
     }
 
     func testRendersWithAPhotoAndEveryBackdrop() throws {
