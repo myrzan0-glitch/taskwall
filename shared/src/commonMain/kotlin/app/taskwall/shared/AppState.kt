@@ -40,12 +40,29 @@ data class AutomationSettings(
     val updatesWhenClosed: Boolean = false,
     /** Fingerprint of what the last wallpaper showed; see [TaskWallStore.isWallpaperCurrent]. */
     val lastWallpaperSignature: String? = null,
+    /**
+     * True once the shortcut has run "Confirm Wallpaper Set". From then on a wallpaper
+     * only counts once iOS has set it, not when Wallist hands it over.
+     */
+    val shortcutConfirms: Boolean = false,
+    /** What the wallpaper handed over but not yet confirmed shows. */
+    val pendingWallpaperSignature: String? = null,
 ) {
     val isSetUp: Boolean get() = shortcutAdded && automationAdded && lastUpdateMillis != null
 
     // Swift sees Kotlin's copy() with every argument required; these read better there.
     fun withShortcutAdded(added: Boolean) = copy(shortcutAdded = added)
     fun withAutomationAdded(added: Boolean) = copy(automationAdded = added)
+}
+
+/**
+ * Which screens the Wallist shortcut sets, read by its "Get Wallpaper Mode" step on
+ * every run. The shortcut handles each mode, so the app can switch between them
+ * without anyone adding the shortcut again.
+ */
+enum class ShortcutMode(val value: String) {
+    LOCK_AND_HOME("both"),
+    LOCK_ONLY("lock"),
 }
 
 @Serializable

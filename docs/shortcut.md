@@ -10,17 +10,25 @@ The file names the app's development team in its App Intent action. If the app i
 
 ## Build it
 
-On an iPhone with Wallist installed, create a shortcut named **Wallist** with two actions:
+On an iPhone with Wallist installed, create a shortcut named **Wallist**:
 
-1. **Make Wallpaper** (from the Wallist app). It returns today's wallpaper as a PNG and runs without opening the app.
-2. **Set Wallpaper Photo**
-   - Photo: *Wallpaper* (the output of step 1)
-   - Wallpaper: **Lock Screen** and **Home Screen**
-   - Show Preview: **off**
-   - Blur: **off** (otherwise the Home Screen shows a blurred copy)
-   - Crop to Subject: **off**
+1. **Get Wallpaper Mode** (Wallist). Returns `both` (Lock Screen and Home Screen) or `lock` (Lock Screen only), so the app can change which screens are set without anyone adding the shortcut again.
+2. **Make Wallpaper** (Wallist). Returns today's wallpaper as a PNG and runs without opening the app.
+3. **If** *Wallpaper Mode* **is** `lock`:
+   - **Set Wallpaper Photo**: Photo *Wallpaper*, Wallpaper **Lock Screen** only.
+4. **Otherwise**:
+   - **Set Wallpaper Photo**: Photo *Wallpaper*, Wallpaper **Lock Screen** and **Home Screen**.
+5. **End If**
+6. **Confirm Wallpaper Set** (Wallist). It only runs if Set Wallpaper worked, so the app shows the Lock Screen as up to date only once it is.
+
+In both Set Wallpaper Photo actions, open the options and turn off:
+- **Show Preview**
+- **Blur** (otherwise the Home Screen shows a blurred copy)
+- **Crop to Subject**. Leaving it on makes iOS zoom in on the task list. If it already looks off, turn it on and off again, so the shortcut saves the setting: the earlier shipped file left it out, and iOS then cropped.
 
 Keep the name exactly **Wallist**. The app runs it by name (`ShortcutLinks.shortcutName`).
+
+Older shortcuts without the first and last steps still work: until a shortcut has run Confirm Wallpaper Set, the app counts a wallpaper as set when Make Wallpaper hands it over.
 
 ## Add the automation
 

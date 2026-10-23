@@ -25,6 +25,41 @@ struct MakeWallpaperIntent: AppIntent {
     }
 }
 
+/// The Wallist shortcut's first step: which screens to set this run. The shortcut
+/// handles every mode, so the app can change it without the shortcut being added again.
+struct WallpaperModeIntent: AppIntent {
+    static let title: LocalizedStringResource = "Get Wallpaper Mode"
+    static let description = IntentDescription(
+        "Tells the Wallist shortcut which screens to set: “both” for the Lock Screen and Home Screen, or “lock” for the Lock Screen only.",
+        categoryName: "Wallpaper"
+    )
+    static let supportedModes: IntentModes = .background
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        let store = TaskWallStore(file: AppGroupFileStore.shared)
+        return .result(value: store.shortcutMode.value)
+    }
+}
+
+/// The Wallist shortcut's last step. It only runs if Set Wallpaper worked, so
+/// Wallist shows the Lock Screen as up to date only once it really is.
+struct ConfirmWallpaperIntent: AppIntent {
+    static let title: LocalizedStringResource = "Confirm Wallpaper Set"
+    static let description = IntentDescription(
+        "Tells Wallist the wallpaper was set. Put it after Set Wallpaper.",
+        categoryName: "Wallpaper"
+    )
+    static let supportedModes: IntentModes = .background
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        let store = TaskWallStore(file: AppGroupFileStore.shared)
+        store.confirmWallpaperSet(nowMillis: Date().millis)
+        return .result()
+    }
+}
+
 /// "Add a task to Wallist" from Siri, Spotlight or a shortcut.
 struct AddTaskIntent: AppIntent {
     static let title: LocalizedStringResource = "Add Task"
