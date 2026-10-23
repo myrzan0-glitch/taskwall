@@ -161,6 +161,7 @@ struct ReadArticleView: View {
                 .padding(EdgeInsets(top: 30, leading: 28, bottom: 72, trailing: 28))
             }
         }
+        .accessibilityIdentifier("readArticle")
         .ignoresSafeArea(edges: .top)
         .background(Color.ground.ignoresSafeArea())
         .foregroundStyle(Color.ink)
@@ -192,7 +193,6 @@ struct ReadArticleView: View {
             .foregroundStyle(Color.ink)
             .padding(.horizontal, 16)
         }
-        .accessibilityIdentifier("readArticle")
     }
 
     private func paragraph(_ text: String) -> some View {
