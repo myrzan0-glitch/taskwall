@@ -126,6 +126,8 @@ struct WallpaperCanvas: View {
             matrixHeader(s: s)
         } else if typeface == .orbit {
             orbitHeader(s: s)
+        } else if typeface == .grace {
+            graceHeader(s: s)
         } else {
             standardHeader(s: s)
         }
@@ -136,7 +138,7 @@ struct WallpaperCanvas: View {
         n < 10 ? "0\(n)" : "\(n)"
     }
 
-    /// Orbit's accent: peach on dark backgrounds, the text colour on light ones.
+    /// Orbit's and Grace's accent: peach on dark backgrounds, the text colour on light ones.
     private var orbitAccent: Color {
         appearance.tone == TextTone.light ? Color.peach : Color(argb: palette.foreground)
     }
@@ -210,6 +212,35 @@ struct WallpaperCanvas: View {
                     }
                 }
                 .accessibilityHidden(true)
+            }
+        }
+    }
+
+    /// Grace, like a handwritten page: the heading as written, not in capitals,
+    /// and progress as a single hairline.
+    private func graceHeader(s: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 10 * s) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(content.heading)
+                    .font(typeface.font(.heading, s: s))
+                    .foregroundStyle(Color(argb: palette.foreground))
+                Spacer()
+                Text(content.progressLabel)
+                    .font(typeface.font(.detail, s: s))
+                    .foregroundStyle(Color(argb: palette.muted))
+            }
+            if style.showProgress {
+                Rectangle()
+                    .fill(Color(argb: palette.line))
+                    .overlay(alignment: .leading) {
+                        GeometryReader { g in
+                            Rectangle()
+                                .fill(orbitAccent)
+                                .frame(width: g.size.width * CGFloat(content.progress))
+                        }
+                    }
+                    .frame(height: 1.5 * s)
+                    .accessibilityHidden(true)
             }
         }
     }
@@ -291,7 +322,7 @@ struct WallpaperCanvas: View {
     }
 
     private func standardList(s: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: (typeface == .matrix ? 12 : 15) * s) {
+        VStack(alignment: .leading, spacing: (typeface == .matrix || typeface == .grace ? 11 : 15) * s) {
             ForEach(content.lines, id: \.id) { line in
                 HStack(alignment: .top, spacing: 12 * s) {
                     checkMark(done: line.isDone, s: s)
@@ -359,7 +390,8 @@ struct WallpaperCanvas: View {
     }
 
     /// The Priority flag, drawn in the typeface's style: Classic uses the app's own
-    /// flag, Matrix builds it from dots and Orbit draws it as a line pennant.
+    /// flag, Matrix builds it from dots, Orbit draws it as a line pennant and Grace
+    /// as a fine pen flag with a waving cloth.
     private func priorityFlag(size: CGFloat) -> some View {
         PriorityFlag(typeface: typeface, color: Color(argb: palette.flag))
             .frame(width: size, height: size)
@@ -378,6 +410,11 @@ struct WallpaperCanvas: View {
                         .frame(width: 14 * s, height: 14 * s)
                         .foregroundStyle(Color(argb: appearance.isPhoto ? palette.onForeground : palette.background))
                 }
+                .frame(width: 21 * s, height: 21 * s)
+        } else if typeface == .grace {
+            // A fine pen ring, as light as the italic.
+            Circle()
+                .strokeBorder(Color(argb: palette.foreground), lineWidth: 1.25 * s)
                 .frame(width: 21 * s, height: 21 * s)
         } else if typeface == .matrix {
             // A ring of dots, to match the type.
@@ -444,6 +481,24 @@ struct PriorityFlag: View {
                 let line = StrokeStyle(lineWidth: 2 * u, lineCap: .round, lineJoin: .round)
                 context.stroke(pole, with: .color(color), style: line)
                 context.stroke(pennant, with: .color(color), style: line)
+            }
+        } else if typeface == .grace {
+            Canvas { context, size in
+                let u = size.width / 24
+                func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * u, y: y * u) }
+                var pole = Path()
+                pole.move(to: p(5, 21))
+                pole.addLine(to: p(5, 3.5))
+                var cloth = Path()
+                cloth.move(to: p(5, 4))
+                cloth.addCurve(to: p(13, 4), control1: p(8, 2.5), control2: p(10.5, 2.5))
+                cloth.addCurve(to: p(20, 4.5), control1: p(15.5, 5.5), control2: p(17.5, 5.5))
+                cloth.addLine(to: p(20, 12.5))
+                cloth.addCurve(to: p(13, 12), control1: p(17.5, 13.5), control2: p(15.5, 13.5))
+                cloth.addCurve(to: p(5, 12), control1: p(10.5, 10.5), control2: p(8, 10.5))
+                let line = StrokeStyle(lineWidth: 1.5 * u, lineCap: .round, lineJoin: .round)
+                context.stroke(pole, with: .color(color), style: line)
+                context.stroke(cloth, with: .color(color), style: line)
             }
         } else {
             // The same red Priority flag as the app's task rows.

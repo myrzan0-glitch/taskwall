@@ -124,6 +124,9 @@ final class ScreenshotTests: XCTestCase {
             app.buttons["Ink theme"].tap()
             app.buttons["font-orbit"].tap()
             snap(app, "22-font-orbit")
+            app.buttons["Clay theme"].tap()
+            app.buttons["font-grace"].tap()
+            snap(app, "22-font-grace")
             if tap(app.buttons["unlockPro"], until: app.buttons["startPro"]) {
                 snap(app, "23-pro")
             }

@@ -16,8 +16,7 @@ struct ProView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Aa")
-                .font(.custom("DotoRounded-Black", fixedSize: 46))
+            ProFontsIcon()
                 .foregroundStyle(Color.ground)
                 .frame(width: 96, height: 96)
                 .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color(argb: WallpaperTheme.signal.palette.background)))
@@ -38,11 +37,13 @@ struct ProView: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
 
-            VStack(spacing: 20) {
+            VStack(spacing: 16) {
                 Text("Matrix font")
                     .font(.custom("DotoRounded-Black", fixedSize: 34))
                 Text("Orbit font")
                     .font(.custom("Michroma-Regular", fixedSize: 22))
+                Text("Grace font")
+                    .font(.custom(WallpaperFonts.grace, fixedSize: 36))
                 Text("New fonts as they land")
                     .font(.system(size: 26, weight: .semibold))
                 Text("Tasks stay free")
@@ -165,5 +166,38 @@ struct ProView: View {
     private func unlocked() {
         onUnlocked()
         dismiss()
+    }
+}
+
+/// "Aa" that blinks through each Pro font in turn, so the icon shows them all.
+struct ProFontsIcon: View {
+    /// 1 fills the paywall's 96-pt tile.
+    var scale: CGFloat = 1
+    @State private var index = 0
+    @State private var visible = true
+
+    private let fonts = WallpaperFont.entries.filter(\.isPro)
+
+    var body: some View {
+        Text("Aa")
+            .font(sample(fonts[index]))
+            .opacity(visible ? 1 : 0)
+            .accessibilityHidden(true)
+            .task {
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(1.4))
+                    withAnimation(.easeIn(duration: 0.12)) { visible = false }
+                    try? await Task.sleep(for: .seconds(0.14))
+                    index = (index + 1) % fonts.count
+                    withAnimation(.easeOut(duration: 0.18)) { visible = true }
+                }
+            }
+    }
+
+    /// Each face at the size where its "Aa" looks the same height.
+    private func sample(_ font: WallpaperFont) -> Font {
+        if font == .orbit { return Font(WallpaperFont.orbit(size: 30 * scale)) }
+        if font == .grace { return .custom(WallpaperFonts.grace, fixedSize: 60 * scale) }
+        return .custom("DotoRounded-Black", fixedSize: 46 * scale)
     }
 }

@@ -30,6 +30,7 @@ class WallpaperFontTest {
         assertFalse(WallpaperFont.CLASSIC.isPro)
         assertTrue(WallpaperFont.MATRIX.isPro)
         assertTrue(WallpaperFont.ORBIT.isPro)
+        assertTrue(WallpaperFont.GRACE.isPro)
     }
 
     @Test

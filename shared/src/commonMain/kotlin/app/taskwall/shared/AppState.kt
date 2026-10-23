@@ -90,7 +90,7 @@ data class WallpaperStyle(
     val position: TaskPosition = TaskPosition.BELOW_CLOCK,
     /** Result of measuring the current photo; null until a photo is analysed. */
     val photoAnalysis: LegibilityResult? = null,
-    /** The typeface of the task list. Matrix and Orbit need Pro. */
+    /** The typeface of the task list. Matrix, Orbit and Grace need Pro. */
     val font: WallpaperFont = WallpaperFont.CLASSIC,
 ) {
     val hasPhoto: Boolean get() = photoFileName != null
@@ -140,6 +140,8 @@ enum class WallpaperFont(val displayName: String, val isPro: Boolean) {
     MATRIX("Matrix", true),
     /** Michroma, a wide geometric face (SIL Open Font License). */
     ORBIT("Orbit", true),
+    /** Cormorant Garamond Medium Italic, a calligraphic serif (SIL Open Font License). */
+    GRACE("Grace", true),
 }
 
 /** Named so it doesn't clash with SwiftUI's `Layout` protocol. */
