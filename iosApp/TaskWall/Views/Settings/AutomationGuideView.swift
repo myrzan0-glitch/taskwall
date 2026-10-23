@@ -46,6 +46,7 @@ struct AutomationGuideView: View {
                         onAdded()
                         dismiss()
                     }
+                    .hapticButtonStyle(.automatic)
                     .accessibilityIdentifier("automationAdded")
                 }
                 .controlSize(.large)

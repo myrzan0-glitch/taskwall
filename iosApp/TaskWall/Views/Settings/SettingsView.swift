@@ -24,7 +24,7 @@ struct SettingsView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     Button { showPro = true } label: { proCard }
-                        .buttonStyle(.plain)
+                        .hapticButtonStyle(.plain)
                         .accessibilityIdentifier("proCard")
                         .padding(.top, 8)
 
@@ -35,7 +35,7 @@ struct SettingsView: View {
                                 chevron
                             }
                         }
-                        .buttonStyle(.plain)
+                        .hapticButtonStyle(.plain)
                         .accessibilityIdentifier("automaticUpdates")
                         DottedDivider()
 
@@ -63,7 +63,7 @@ struct SettingsView: View {
                             } else {
                                 Button("Set up") { showGuide = true }
                                     .font(.subheadline.weight(.semibold))
-                                    .buttonStyle(.glass)
+                                    .hapticButtonStyle(.glass)
                                     .buttonBorderShape(.capsule)
                                     .accessibilityIdentifier("setUpCloseAutomation")
                             }
@@ -74,7 +74,7 @@ struct SettingsView: View {
                             Link(destination: reviewURL) {
                                 row("Rate on the App Store", icon: "star") { chevron }
                             }
-                            .buttonStyle(.plain)
+                            .hapticButtonStyle(.plain)
                             .accessibilityIdentifier("rateApp")
                             DottedDivider()
                         }
@@ -82,7 +82,7 @@ struct SettingsView: View {
                         Link(destination: feedbackURL) {
                             row("Send feedback", icon: "message-01") { chevron }
                         }
-                        .buttonStyle(.plain)
+                        .hapticButtonStyle(.plain)
                         .accessibilityIdentifier("sendFeedback")
                         DottedDivider()
 

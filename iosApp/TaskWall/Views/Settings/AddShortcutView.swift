@@ -53,6 +53,7 @@ struct AddShortcutView: View {
             }
             Section {
                 Button("Build It Myself Instead") { buildByHand = true }
+                    .hapticButtonStyle(.automatic)
                     .accessibilityIdentifier("buildShortcutByHand")
             } footer: {
                 Text("If Shortcuts isn't in the list, scroll the row of apps or tap More.")
@@ -66,6 +67,7 @@ struct AddShortcutView: View {
                 .prominentButton()
                 .accessibilityIdentifier("shareShortcut")
                 Button("I've Added It", action: finish)
+                    .hapticButtonStyle(.automatic)
                     .accessibilityIdentifier("shortcutAdded")
             }
             .controlSize(.large)
@@ -122,6 +124,7 @@ struct AddShortcutView: View {
                 .prominentButton()
                 .accessibilityIdentifier("openShortcutsEditor")
                 Button("I've Added It", action: finish)
+                    .hapticButtonStyle(.automatic)
                     .accessibilityIdentifier("shortcutAdded")
             }
             .controlSize(.large)

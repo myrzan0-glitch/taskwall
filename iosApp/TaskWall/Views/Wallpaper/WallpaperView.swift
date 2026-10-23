@@ -68,19 +68,21 @@ struct WallpaperView: View {
                             Button { showAdjust = true } label: {
                                 linkRow("Adjust photo", value: readabilitySummary(style))
                             }
-                            .buttonStyle(.plain)
+                            .hapticButtonStyle(.plain)
                             .accessibilityIdentifier("adjustPhoto")
                         } else {
                             Button { showPhotoPicker = true } label: {
                                 linkRow("Use a photo", icon: "image-01")
                             }
-                            .buttonStyle(.plain)
+                            .hapticButtonStyle(.plain)
                             .accessibilityIdentifier("usePhoto")
                         }
                         DottedDivider()
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 14)
+                    .sensoryFeedback(.selection, trigger: style.layout)
+                    .sensoryFeedback(.selection, trigger: style.position)
                 }
                 .padding(.bottom, 24)
             }
@@ -90,6 +92,7 @@ struct WallpaperView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
+                        Haptic.tap.play()
                         Task { await saveImage() }
                     } label: {
                         Image("download-01").renderingMode(.template)
@@ -110,7 +113,7 @@ struct WallpaperView: View {
                                 .font(.headline)
                                 .frame(maxWidth: .infinity)
                             }
-                            .buttonStyle(.glassProminent)
+                            .hapticButtonStyle(.glassProminent)
                             .buttonBorderShape(.capsule)
                             .controlSize(.large)
                             .tint(Color.peach)
@@ -269,7 +272,7 @@ struct ThemeSwatches: View {
                         .background(Circle().fill(Color(argb: theme.palette.background)))
                         .modifier(SwatchRing(on: theme == selected))
                 }
-                .buttonStyle(.plain)
+                .hapticButtonStyle(.plain)
                 .accessibilityLabel("\(theme.displayName) theme")
                 .accessibilityAddTraits(theme == selected ? .isSelected : [])
             }
@@ -287,7 +290,7 @@ struct ThemeSwatches: View {
                 .clipShape(Circle())
                 .modifier(SwatchRing(on: photoSelected))
             }
-            .buttonStyle(.plain)
+            .hapticButtonStyle(.plain)
             .accessibilityLabel(model.photo == nil ? "Choose a photo" : "Your photo")
             .accessibilityAddTraits(photoSelected ? .isSelected : [])
         }
@@ -311,7 +314,7 @@ struct FontPicker: View {
             HStack(spacing: 8) {
                 ForEach(WallpaperFont.entries, id: \.self) { font in
                     Button { onSelect(font) } label: { card(font) }
-                        .buttonStyle(.plain)
+                        .hapticButtonStyle(.plain)
                         .accessibilityLabel("\(font.displayName) font")
                         .accessibilityValue(font.isPro && !isPro ? String(localized: "Pro") : String())
                         .accessibilityAddTraits(font == selected ? .isSelected : [])

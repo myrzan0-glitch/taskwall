@@ -22,7 +22,10 @@ struct OnboardingView: View {
             .toolbar {
                 if step > 0 {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button { step -= 1 } label: {
+                        Button {
+                            Haptic.tap.play()
+                            step -= 1
+                        } label: {
                             Image("arrow-left-01").renderingMode(.template)
                         }
                         .accessibilityLabel("Back")
@@ -33,6 +36,7 @@ struct OnboardingView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Skip") {
+                        Haptic.tap.play()
                         if step == 0 || step == 3 { model.completeOnboarding() } else { step += 1 }
                     }
                 }
@@ -150,7 +154,7 @@ private struct FirstTasksStep: View {
                                     .frame(width: 36, height: 36)
                                     .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain)
+                            .hapticButtonStyle(.plain)
                             .foregroundStyle(Color.muted)
                             .accessibilityLabel("Remove \(task.title)")
                         }
@@ -177,7 +181,7 @@ private struct FirstTasksStep: View {
                         Button { model.addQuickTask(idea) } label: {
                             ChipLabel(title: idea)
                         }
-                        .buttonStyle(.plain)
+                        .hapticButtonStyle(.plain)
                         .accessibilityLabel("Add \(idea)")
                     }
                 }

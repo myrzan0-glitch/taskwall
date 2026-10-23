@@ -34,8 +34,7 @@ struct TasksView: View {
     @State private var editAfterActions: TaskItem?
     /// The task being dragged to a new place.
     @State private var dragging: String?
-    // Each change plays its haptic.
-    @State private var taps = 0
+    // Each change plays its haptic; buttons play theirs through `hapticButtonStyle`.
     @State private var lifts = 0
     @State private var swaps = 0
     @State private var reopened = 0
@@ -102,7 +101,7 @@ struct TasksView: View {
                         .padding(.horizontal, 14)
                         .frame(height: 34)
                         .background(Capsule().fill(Color(hex: 0x19191B)))
-                        .buttonStyle(.plain)
+                        .hapticButtonStyle(.plain)
                         .padding(.top, 14)
                     }
 
@@ -123,7 +122,6 @@ struct TasksView: View {
         .sheet(item: $actions, onDismiss: openEditorAfterActions) { target in
             TaskActionsSheet(taskID: target.id, toggle: toggle) { task in editAfterActions = task }
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: taps)
         .sensoryFeedback(.selection, trigger: day.epochDay)
         .sensoryFeedback(.impact(weight: .medium), trigger: lifts)
         .sensoryFeedback(.selection, trigger: swaps)
@@ -178,15 +176,9 @@ struct TasksView: View {
     private func buttons(_ day: CalendarDay) -> some View {
         GlassEffectContainer(spacing: 24) {
             HStack {
-                barButton("wallpaper", label: "Wallpaper") {
-                    taps += 1
-                    sheet = .wallpaper
-                }
+                barButton("wallpaper", label: "Wallpaper") { sheet = .wallpaper }
                 Spacer()
-                Button {
-                    taps += 1
-                    editor = .new(day)
-                } label: {
+                Button { editor = .new(day) } label: {
                     Image("add-01")
                         .renderingMode(.template)
                         .resizable()
@@ -194,14 +186,11 @@ struct TasksView: View {
                         .frame(width: 104, height: 48)
                         .contentShape(Capsule())
                 }
-                .buttonStyle(.plain)
+                .hapticButtonStyle(.plain)
                 .glassControl(in: Capsule())
                 .accessibilityLabel("New Task")
                 Spacer()
-                barButton("settings-02", label: "Settings") {
-                    taps += 1
-                    sheet = .settings
-                }
+                barButton("settings-02", label: "Settings") { sheet = .settings }
             }
         }
         .foregroundStyle(Color.ink)
@@ -218,7 +207,7 @@ struct TasksView: View {
                 .frame(width: 48, height: 48)
                 .contentShape(Circle())
         }
-        .buttonStyle(.plain)
+        .hapticButtonStyle(.plain)
         .glassControl(in: Circle())
         .accessibilityLabel(label)
     }
@@ -257,6 +246,7 @@ private struct Reorderable: ViewModifier {
     @Binding var dragging: String?
     let lifted: () -> Void
     let move: ([String]) -> Void
+    @State private var width: CGFloat = 340
 
     @ViewBuilder
     func body(content: Content) -> some View {
@@ -264,10 +254,19 @@ private struct Reorderable: ViewModifier {
             content
         } else {
             content
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+                .contentShape(.dragPreview, RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .onDrag {
                     dragging = task.id
                     lifted()
                     return NSItemProvider(object: task.id as NSString)
+                } preview: {
+                    // The row itself on a card, full size, rather than the system's shrunken snapshot.
+                    content
+                        .padding(.horizontal, 12)
+                        .frame(width: width + 24)
+                        .background(Color.raised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .environment(\.colorScheme, .dark)
                 }
                 .onDrop(of: [.text], delegate: TaskDropDelegate(target: task.id, open: open, dragging: $dragging, move: move))
                 .accessibilityAction(named: "Move up") { shift(-1) }
@@ -543,7 +542,7 @@ struct LockScreenStatusRow: View {
             .frame(minHeight: 56)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .hapticButtonStyle(.plain)
         .accessibilityIdentifier(identifier(status))
     }
 

@@ -24,10 +24,14 @@ struct PhotoAdjustView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .close) { dismiss() }
+                    Button(role: .close) {
+                        Haptic.tap.play()
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm) {
+                        Haptic.tap.play()
                         if let draft { model.setStyle(draft) }
                         dismiss()
                     }
@@ -101,7 +105,7 @@ struct PhotoAdjustView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.glass)
+                    .hapticButtonStyle(.glass)
                     .buttonBorderShape(.capsule)
                     Button {
                         guard let style = draft else { return }
@@ -114,7 +118,7 @@ struct PhotoAdjustView: View {
                     } label: {
                         Text("Reset").font(.headline).frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.glass)
+                    .hapticButtonStyle(.glass)
                     .buttonBorderShape(.capsule)
                 }
                 .controlSize(.large)
@@ -225,7 +229,7 @@ struct PhotoAdjustView: View {
                     Button { pick(option.0) } label: {
                         ChipLabel(title: option.1, selected: option.0 == selected)
                     }
-                    .buttonStyle(.plain)
+                    .hapticButtonStyle(.plain)
                     .accessibilityAddTraits(option.0 == selected ? .isSelected : [])
                 }
             }

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // Wallist's look: iOS 27, dark. Warm white type on a near-black ground,
 // one peach marker for today and one red flag for priority. Liquid Glass stays on
@@ -69,7 +70,11 @@ private struct BrandSwitch: View {
         }
         .opacity(isEnabled ? 1 : 0.4)
         .contentShape(Rectangle())
-        .onTapGesture { if isEnabled { configuration.isOn.toggle() } }
+        .onTapGesture {
+            guard isEnabled else { return }
+            Haptic.tap.play()
+            configuration.isOn.toggle()
+        }
         .accessibilityRepresentation {
             Toggle(isOn: configuration.$isOn) { configuration.label }
         }
@@ -78,11 +83,16 @@ private struct BrandSwitch: View {
 
 extension View {
     /// The one main action on a screen: warm white glass with dark text, as a capsule.
-    func prominentButton() -> some View {
-        buttonStyle(.glassProminent)
+    func prominentButton(_ haptic: Haptic = .tap) -> some View {
+        hapticButtonStyle(.glassProminent, haptic)
             .buttonBorderShape(.capsule)
             .tint(Color.ink)
             .foregroundStyle(Color.ground)
+    }
+
+    /// `style`, plus a haptic each time the button fires: a light tap unless told otherwise.
+    func hapticButtonStyle<S: PrimitiveButtonStyle>(_ style: S, _ haptic: Haptic? = .tap) -> some View {
+        buttonStyle(HapticButtonStyle(base: style, haptic: haptic))
     }
 
     /// Regular Liquid Glass around a round or capsule control that floats over content.
@@ -116,11 +126,13 @@ extension View {
 struct PrimaryButton: View {
     let title: LocalizedStringKey
     var isEnabled = true
+    var haptic: Haptic = .tap
     let action: () -> Void
 
-    init(_ title: LocalizedStringKey, isEnabled: Bool = true, action: @escaping () -> Void) {
+    init(_ title: LocalizedStringKey, isEnabled: Bool = true, haptic: Haptic = .tap, action: @escaping () -> Void) {
         self.title = title
         self.isEnabled = isEnabled
+        self.haptic = haptic
         self.action = action
     }
 
@@ -130,7 +142,7 @@ struct PrimaryButton: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity)
         }
-        .prominentButton()
+        .prominentButton(haptic)
         .controlSize(.large)
         .disabled(!isEnabled)
     }
@@ -231,5 +243,36 @@ struct FlowLayout: Layout {
         }
         if !current.indices.isEmpty { rows.append(current) }
         return rows
+    }
+}
+
+// MARK: - Haptics
+
+/// The feel of a press: a light tap for most buttons, the double tap of a success
+/// for finishing something (ticking a task off, adding one).
+enum Haptic {
+    case tap, success
+
+    @MainActor func play() {
+        switch self {
+        case .tap: UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        case .success: UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+    }
+}
+
+/// Wraps any button style so the button plays a haptic as it fires, looking just as before.
+struct HapticButtonStyle<Base: PrimitiveButtonStyle>: PrimitiveButtonStyle {
+    let base: Base
+    let haptic: Haptic?
+
+    func makeBody(configuration: Configuration) -> some View {
+        Button(role: configuration.role) {
+            haptic?.play()
+            configuration.trigger()
+        } label: {
+            configuration.label
+        }
+        .buttonStyle(base)
     }
 }
