@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
 
 class TaskWallStoreTest {
 
@@ -97,13 +98,55 @@ class TaskWallStoreTest {
     }
 
     @Test
-    fun reorderSetsSortOrder() {
+    fun reorderKeepsUnlistedTasksInTheirPlaces() {
         val store = TaskWallStore(InMemoryTextFileStore())
         val a = store.addQuickTask("A", 1)
         val b = store.addQuickTask("B", 2)
         val c = store.addQuickTask("C", 3)
         store.reorder(listOf(c.id, a.id))
-        assertEquals(listOf(c.id, a.id, b.id), store.tasks.map { it.id })
+        assertEquals(listOf(c.id, b.id, a.id), store.tasks.map { it.id })
+        assertEquals(listOf(0, 1, 2), store.tasks.map { it.sortOrder })
+    }
+
+    @Test
+    fun aFlaggedTaskLandsOnTopUntilItIsDragged() {
+        val store = TaskWallStore(InMemoryTextFileStore())
+        val plain = store.addQuickTask("Plain", 1)
+        val flagged = store.addTask("Flagged", "", Priority.HIGH, null, null, true, 2)
+        assertEquals(listOf("Flagged", "Plain"), store.sections(TODAY, TaskFilter.TODAY).flatMap { it.tasks }.map { it.title })
+
+        store.reorder(listOf(plain.id, flagged.id))
+        assertEquals(listOf("Plain", "Flagged"), TaskQueries.forDay(store.tasks, TODAY, TODAY).map { it.title })
+        // A later flagged task still goes on top.
+        store.addTask("Urgent", "", Priority.HIGH, null, null, true, 3)
+        assertEquals(listOf("Urgent", "Plain", "Flagged"), TaskQueries.forDay(store.tasks, TODAY, TODAY).map { it.title })
+    }
+
+    @Test
+    fun flaggingATaskMovesItUpButRenamingKeepsItsPlace() {
+        val store = TaskWallStore(InMemoryTextFileStore())
+        store.addQuickTask("First", 1)
+        val second = store.addQuickTask("Second", 2)
+        store.updateTask(second.copy(title = "Second, renamed"))
+        assertEquals(listOf("First", "Second, renamed"), TaskQueries.forDay(store.tasks, TODAY, TODAY).map { it.title })
+        store.updateTask(store.tasks.first { it.id == second.id }.copy(priority = Priority.HIGH))
+        assertEquals(listOf("Second, renamed", "First"), TaskQueries.forDay(store.tasks, TODAY, TODAY).map { it.title })
+    }
+
+    @Test
+    fun aVersion1FileStartsFromTheOrderItShowed() {
+        val old = AppState(
+            version = 1,
+            tasks = listOf(
+                task("plain", due = null, order = 0),
+                task("late", minutes = 18 * 60, order = 1),
+                task("flagged", due = null, priority = Priority.HIGH, order = 2),
+            ),
+        )
+        val file = InMemoryTextFileStore(Json.encodeToString(AppState.serializer(), old))
+        val store = TaskWallStore(file)
+        assertEquals(AppState.CURRENT_VERSION, store.state.version)
+        assertEquals(listOf("flagged", "late", "plain"), store.tasks.map { it.id })
         assertEquals(listOf(0, 1, 2), store.tasks.map { it.sortOrder })
     }
 

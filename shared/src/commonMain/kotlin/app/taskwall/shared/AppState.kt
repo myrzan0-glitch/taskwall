@@ -10,7 +10,8 @@ data class AppState(
     val settings: AppSettings = AppSettings(),
 ) {
     companion object {
-        const val CURRENT_VERSION = 1
+        /** 2: open tasks keep the order people drag them into (1 always sorted by priority and time). */
+        const val CURRENT_VERSION = 2
     }
 }
 

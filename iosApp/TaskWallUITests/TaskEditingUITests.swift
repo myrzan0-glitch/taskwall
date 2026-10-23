@@ -20,16 +20,16 @@ final class TaskEditingUITests: UITestCase {
         app.buttons["Mark done"].firstMatch.tap()
         XCTAssertTrue(app.buttons["Mark not done"].appears(within: 3))
 
-        task(app, "Buy milk").tap()
+        // A tap opens Done, Edit and Delete.
+        XCTAssertTrue(tap(task(app, "Buy milk"), until: app.buttons["Edit"]))
+        app.buttons["Edit"].tap()
         XCTAssertTrue(title.appears(within: 3))
         title.tap()
         title.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: "milk".count) + "oat milk")
         app.buttons["saveTask"].tap()
         XCTAssertTrue(task(app, "Buy oat milk").appears(within: 3))
 
-        // A long press opens Done, Edit and Delete.
-        task(app, "Buy oat milk").press(forDuration: 1.2)
-        XCTAssertTrue(app.buttons["Delete"].appears(within: 3))
+        XCTAssertTrue(tap(task(app, "Buy oat milk"), until: app.buttons["Delete"]))
         app.buttons["Delete"].tap()
         XCTAssertTrue(app.staticTexts["Nothing here yet"].appears(within: 3))
     }

@@ -190,11 +190,13 @@ private struct DueTimeSheet: View {
     }
 }
 
-/// The long-press card: Done, Edit and Delete for one task.
+/// The card a tap on a task opens: Done, Edit and Delete.
 struct TaskActionsSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     let taskID: String
+    /// Done or Undo, through Today so it plays the same haptic as the tick.
+    let toggle: (TaskItem) -> Void
     /// Called with the task when the person picks Edit; the editor opens once this closes.
     let onEdit: (TaskItem) -> Void
 
@@ -240,7 +242,7 @@ struct TaskActionsSheet: View {
 
             HStack(spacing: 8) {
                 tile(task.isDone ? "Undo" : "Done", icon: "checkmark-circle-02") {
-                    model.toggle(task)
+                    toggle(task)
                     dismiss()
                 }
                 tile("Edit", icon: "pencil-edit-02") {
