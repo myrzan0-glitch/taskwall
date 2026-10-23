@@ -112,6 +112,23 @@ final class ScreenshotTests: XCTestCase {
         }
     }
 
+    func testReads() {
+        let app = launch("-skipOnboarding", "-seed")
+        XCTAssertTrue(app.buttons["New Task"].appears(within: 15))
+        app.swipeUp()
+        if app.buttons["backToTasks"].appears(within: 4) {
+            snap(app, "17-reads-first")
+            app.swipeUp()
+            snap(app, "18-reads-second")
+            app.swipeUp()
+            snap(app, "19-reads-third")
+            let reads = app.buttons.matching(identifier: "readStory")
+            if tap(reads.element(boundBy: reads.count - 1), until: app.buttons["closeStory"]) {
+                snap(app, "19-read-story")
+            }
+        }
+    }
+
     func testWallpaper() {
         let app = launch("-skipOnboarding", "-seed", "-seedCyrillic")
         XCTAssertTrue(tap(app.buttons["Wallpaper"], until: app.navigationBars["Wallpaper"]))

@@ -25,8 +25,27 @@ final class TaskListUITests: UITestCase {
         let app = launch("-skipOnboarding")
         XCTAssertTrue(app.staticTexts["My tasks"].appears(within: 10))
         let quote = app.descendants(matching: .any)["dailyQuote"]
-        XCTAssertTrue(quote.exists, "the day's quote sits above the add button")
+        XCTAssertTrue(quote.exists, "the day's quote sits under the tasks, above the bar")
         XCTAssertLessThan(quote.frame.maxY, app.buttons["New Task"].frame.minY)
+    }
+
+    func testReadsComeOneAtATimeUnderTheTasks() {
+        let app = launch("-skipOnboarding", "-seed")
+        XCTAssertTrue(task(app, "Buy milk").appears(within: 10))
+        app.swipeUp()
+        let back = app.buttons["backToTasks"]
+        XCTAssertTrue(back.appears(within: 3), "in Reads the bar gives way to a button back up")
+        let read = app.buttons["readStory"].firstMatch
+        XCTAssertTrue(read.isHittable, "the first story settles in view")
+
+        read.tap()
+        let close = app.buttons["closeStory"]
+        XCTAssertTrue(close.appears(within: 3))
+        close.tap()
+        XCTAssertTrue(close.vanishes(within: 3))
+
+        back.tap()
+        XCTAssertTrue(app.buttons["New Task"].appears(within: 3))
     }
 
     func testHideCompleted() {
