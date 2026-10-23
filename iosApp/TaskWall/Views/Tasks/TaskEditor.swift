@@ -34,7 +34,11 @@ struct TaskEditor: View {
                     .font(.system(size: 24, weight: .medium))
                     .focused($titleFocused)
                     .submitLabel(.done)
-                    .onSubmit { if draft.isValid { save() } }
+                    .onSubmit {
+                        guard draft.isValid else { return }
+                        if isNew { Haptic.success.play() }
+                        save()
+                    }
                     .accessibilityIdentifier("taskTitle")
                 TextField("Notes", text: $draft.notes, axis: .vertical)
                     .font(.subheadline)
@@ -65,11 +69,11 @@ struct TaskEditor: View {
                 .accessibilityLabel(Text(timeAccessibilityLabel))
                 .accessibilityIdentifier("timeChip")
             }
-            .buttonStyle(.plain)
+            .hapticButtonStyle(.plain)
             .padding(.top, 28)
 
             if draft.isValid {
-                PrimaryButton(isNew ? LocalizedStringKey("Add") : LocalizedStringKey("Save")) { save() }
+                PrimaryButton(isNew ? LocalizedStringKey("Add") : LocalizedStringKey("Save"), haptic: isNew ? .success : .tap) { save() }
                     .accessibilityIdentifier("saveTask")
                     .padding(.top, 12)
             }
@@ -136,7 +140,7 @@ private struct DueDateSheet: View {
                 } label: {
                     Text("No date").font(.headline).frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.glass)
+                .hapticButtonStyle(.glass)
                 .buttonBorderShape(.capsule)
                 .controlSize(.large)
                 PrimaryButton("Done") {
@@ -172,7 +176,7 @@ private struct DueTimeSheet: View {
                 } label: {
                     Text("No time").font(.headline).frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.glass)
+                .hapticButtonStyle(.glass)
                 .buttonBorderShape(.capsule)
                 .controlSize(.large)
                 PrimaryButton("Set time") {
@@ -241,7 +245,8 @@ struct TaskActionsSheet: View {
             .padding(.horizontal, 4)
 
             HStack(spacing: 8) {
-                tile(task.isDone ? "Undo" : "Done", icon: "checkmark-circle-02") {
+                // Done and Undo play Today's tick haptics, so the tile adds none of its own.
+                tile(task.isDone ? "Undo" : "Done", icon: "checkmark-circle-02", haptic: nil) {
                     toggle(task)
                     dismiss()
                 }
@@ -261,7 +266,7 @@ struct TaskActionsSheet: View {
         .padding(.bottom, 12)
     }
 
-    private func tile(_ title: String, icon: String, destructive: Bool = false, action: @escaping () -> Void) -> some View {
+    private func tile(_ title: String, icon: String, destructive: Bool = false, haptic: Haptic? = .tap, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 6) {
                 Image(icon).renderingMode(.template).resizable().frame(width: 22, height: 22)
@@ -276,6 +281,6 @@ struct TaskActionsSheet: View {
             )
             .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .hapticButtonStyle(.plain, haptic)
     }
 }

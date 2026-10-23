@@ -83,7 +83,7 @@ struct ProView: View {
                     .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Color.control))
                     .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .hapticButtonStyle(.plain)
                 .accessibilityLabel("\(selected.displayName), \(pro.price(for: selected) ?? "")")
                 .accessibilityHint("Tap for the other plan.")
                 .accessibilityIdentifier("proPlan")
@@ -142,7 +142,7 @@ struct ProView: View {
                     Button("Privacy") { openURL(privacy) }
                 }
                 .font(.footnote)
-                .buttonStyle(.plain)
+                .hapticButtonStyle(.plain)
                 .foregroundStyle(Color.muted)
                 .disabled(pro.phase == .purchasing)
             }
