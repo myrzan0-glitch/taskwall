@@ -19,8 +19,8 @@ struct TaskActionsTarget: Identifiable {
     let id: String
 }
 
-/// Today: a week strip, then the chosen day's tasks. The bar at the bottom opens
-/// Wallpaper (left), a new task (middle) and Settings (right).
+/// Today: "My tasks", a week strip, then the chosen day's tasks. The bar at the bottom
+/// carries the day's quote above Wallpaper (left), a new task (middle) and Settings (right).
 struct TasksView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("hideCompleted") private var hideCompleted = false
@@ -47,6 +47,13 @@ struct TasksView: View {
 
         ScrollView {
             VStack(spacing: 0) {
+                Text("My tasks")
+                    .font(.system(size: 30, weight: .bold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+                    .accessibilityAddTraits(.isHeader)
+
                 WeekStrip(
                     days: model.week(weekOffset),
                     selected: day,
@@ -134,6 +141,13 @@ struct TasksView: View {
     }
 
     private func bottomBar(_ day: CalendarDay) -> some View {
+        VStack(spacing: 16) {
+            DailyQuoteView(quote: DailyQuotes.shared.quoteFor(day: model.today))
+            buttons(day)
+        }
+    }
+
+    private func buttons(_ day: CalendarDay) -> some View {
         GlassEffectContainer(spacing: 24) {
             HStack {
                 barButton("wallpaper", label: "Wallpaper") { sheet = .wallpaper }
@@ -192,6 +206,31 @@ struct TasksView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, 72)
         .padding(.horizontal, 24)
+    }
+}
+
+// MARK: - Daily quote
+
+/// The day's quote, centred above the add button. It changes at midnight.
+struct DailyQuoteView: View {
+    let quote: Quote
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Text(quote.text)
+                .font(.subheadline)
+                .foregroundStyle(Color(hex: 0xAEAEB2))
+            Text(quote.author.uppercased())
+                .font(.system(size: 11, weight: .semibold))
+                .tracking(1.1)
+                .foregroundStyle(Color.muted)
+        }
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 44)
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(quote.text) \(quote.author)")
+        .accessibilityIdentifier("dailyQuote")
     }
 }
 
