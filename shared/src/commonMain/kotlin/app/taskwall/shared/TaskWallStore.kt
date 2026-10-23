@@ -185,20 +185,48 @@ class TaskWallStore(private val file: TextFileStore) {
     /**
      * Called by the shortcut each time it makes a wallpaper. Remembers what the
      * wallpaper shows, and notices when the run came right after TaskWall closed.
+     * With a shortcut that confirms, the wallpaper only counts once it's confirmed.
      */
     fun recordWallpaperUpdate(nowMillis: Long, today: CalendarDay) = update { s ->
         val automation = s.settings.automation
         val afterClose = isCloseRun(closedMillis = automation.lastAppClosedMillis, runMillis = nowMillis)
+        val made = signature(s, today)
+        val updatesWhenClosed = automation.updatesWhenClosed || afterClose
+        s.copy(
+            settings = s.settings.copy(
+                automation = if (automation.shortcutConfirms) {
+                    automation.copy(pendingWallpaperSignature = made, updatesWhenClosed = updatesWhenClosed)
+                } else {
+                    automation.copy(
+                        lastUpdateMillis = nowMillis,
+                        lastWallpaperSignature = made,
+                        updatesWhenClosed = updatesWhenClosed,
+                    )
+                },
+            ),
+        )
+    }
+
+    /**
+     * Called by the shortcut's last step, which only runs once iOS has set the
+     * wallpaper: what was handed over is now on the Lock Screen.
+     */
+    fun confirmWallpaperSet(nowMillis: Long) = update { s ->
+        val automation = s.settings.automation
         s.copy(
             settings = s.settings.copy(
                 automation = automation.copy(
+                    shortcutConfirms = true,
                     lastUpdateMillis = nowMillis,
-                    lastWallpaperSignature = signature(s, today),
-                    updatesWhenClosed = automation.updatesWhenClosed || afterClose,
+                    lastWallpaperSignature = automation.pendingWallpaperSignature ?: automation.lastWallpaperSignature,
+                    pendingWallpaperSignature = null,
                 ),
             ),
         )
     }
+
+    /** Which screens the shortcut sets. Both for now; see [ShortcutMode]. */
+    val shortcutMode: ShortcutMode get() = ShortcutMode.LOCK_AND_HOME
 
     /** Whether the Lock Screen already shows today's tasks in the current style. */
     fun isWallpaperCurrent(today: CalendarDay): Boolean =
