@@ -14,7 +14,7 @@ enum TaskEditorTarget: Identifiable {
     }
 }
 
-/// The long-press card for one task. Holds the id so it always shows the current task.
+/// The card a long press opens for one task. Holds the id so it always shows the current task.
 struct TaskActionsTarget: Identifiable {
     let id: String
 }
@@ -30,6 +30,8 @@ struct TasksView: View {
     @State private var editor: TaskEditorTarget?
     @State private var actions: TaskActionsTarget?
     @State private var editAfterActions: TaskItem?
+    /// The task under a finger: it sinks back while held, then the card opens with a vibration.
+    @State private var pressed: String?
     @State private var sheet: HomeSheet?
 
     enum HomeSheet: String, Identifiable {
@@ -75,10 +77,26 @@ struct TasksView: View {
                     }
 
                     ForEach(shown, id: \.id) { task in
+                        let held = pressed == task.id
                         TaskRow(task: task, today: model.today) { model.toggle(task) }
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(Color.raised)
+                                    .padding(.horizontal, -6)
+                                    .opacity(held ? 1 : 0)
+                            )
+                            .scaleEffect(held ? 0.96 : 1)
                             .contentShape(Rectangle())
                             .onTapGesture { editor = .edit(task) }
-                            .onLongPressGesture { actions = TaskActionsTarget(id: task.id) }
+                            .onLongPressGesture(minimumDuration: 0.4) {
+                                withAnimation(.snappy) { pressed = nil }
+                                actions = TaskActionsTarget(id: task.id)
+                            } onPressingChanged: { pressing in
+                                // Sink over the length of the hold, so the row shows the press is working.
+                                withAnimation(pressing ? .easeOut(duration: 0.4) : .snappy) {
+                                    pressed = pressing ? task.id : nil
+                                }
+                            }
                             .accessibilityAction(named: "More actions") { actions = TaskActionsTarget(id: task.id) }
                         DottedDivider()
                     }
@@ -110,6 +128,7 @@ struct TasksView: View {
         .foregroundStyle(Color.ink)
         .safeAreaBar(edge: .bottom) { bottomBar(day) }
         .sheet(item: $editor) { TaskEditor(target: $0) }
+        .sensoryFeedback(.impact(weight: .medium), trigger: actions?.id) { _, opened in opened != nil }
         .sheet(item: $actions, onDismiss: openEditorAfterActions) { target in
             TaskActionsSheet(taskID: target.id) { task in editAfterActions = task }
         }
