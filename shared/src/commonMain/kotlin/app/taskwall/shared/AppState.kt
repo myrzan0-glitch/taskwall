@@ -57,8 +57,11 @@ data class AutomationSettings(
 
 /**
  * Which screens the Wallist shortcut sets, read by its "Get Wallpaper Mode" step on
- * every run. The shortcut handles each mode, so the app can switch between them
- * without anyone adding the shortcut again.
+ * every run, so the app can switch modes without anyone adding the shortcut again.
+ *
+ * The bundled shortcut's "lock" branch doesn't yet pick Lock Screen only (its
+ * Set Wallpaper Photo has no screens chosen, so it sets both). Fix that in the
+ * shortcut before the app ever returns [LOCK_ONLY].
  */
 enum class ShortcutMode(val value: String) {
     LOCK_AND_HOME("both"),
