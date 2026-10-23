@@ -2,7 +2,7 @@ package app.taskwall.shared
 
 /**
  * Wallist Pro: auto-renewable subscriptions in one App Store subscription group.
- * Pro unlocks the Matrix and Orbit wallpaper fonts; tasks stay free.
+ * Pro unlocks the Matrix, Orbit and Grace wallpaper fonts; tasks stay free.
  */
 enum class ProPlan(val productId: String, val displayName: String, val note: String) {
     YEARLY("app.taskwall.pro.yearly", "Yearly", "Billed once a year"),

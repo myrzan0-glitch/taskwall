@@ -51,6 +51,7 @@ final class RenderingTests: XCTestCase {
         XCTAssertNotNil(UIFont(name: "DotoRounded-Black", size: 20), "Matrix font file missing from the app")
         XCTAssertNotNil(UIFont(name: "Michroma-Regular", size: 20), "Orbit font file missing from the app")
         XCTAssertNotNil(UIFont(name: "Unbounded-Light", size: 20), "Orbit's Cyrillic font file missing from the app")
+        XCTAssertNotNil(UIFont(name: WallpaperFonts.grace, size: 20), "Grace font file missing from the app")
     }
 
     private let cyrillic = "Закончить приложение. Съешь же ещё этих мягких булок. Ўзбек қўғҳ"
@@ -65,6 +66,12 @@ final class RenderingTests: XCTestCase {
         WallpaperFonts.register()
         let matrix = try XCTUnwrap(UIFont(name: "DotoRounded-Black", size: 20))
         XCTAssertTrue(hasEveryGlyph(matrix as CTFont, cyrillic))
+    }
+
+    func testGraceWritesCyrillicItself() throws {
+        WallpaperFonts.register()
+        let grace = try XCTUnwrap(UIFont(name: WallpaperFonts.grace, size: 20))
+        XCTAssertTrue(hasEveryGlyph(grace as CTFont, cyrillic + " Қазақ ӘәҢңӨөҰұҮүҺһІі"))
     }
 
     func testOrbitFallsBackToUnboundedForCyrillic() throws {

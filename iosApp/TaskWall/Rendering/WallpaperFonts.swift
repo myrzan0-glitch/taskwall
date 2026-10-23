@@ -10,8 +10,11 @@ import Shared
 /// grid (iosApp/scripts/doto_cyrillic.py). Orbit is Michroma, which has no Cyrillic,
 /// so its Cyrillic comes from Unbounded Light: as tall, nearly as wide, at the same weight,
 /// with the Uzbek and Kazakh letters it lacks built in (iosApp/scripts/unbounded_cyrillic.py).
+/// Grace is Cormorant Garamond Medium Italic, which has Cyrillic, Kazakh and Uzbek of
+/// its own (iosApp/scripts/cormorant_subset.py drops the scripts tasks don't need).
 enum WallpaperFonts {
-    private static let names = ["DotoRounded-Black", "Michroma-Regular", "Unbounded-Light"]
+    static let grace = "CormorantGaramond-MediumItalic"
+    private static let names = ["DotoRounded-Black", "Michroma-Regular", "Unbounded-Light", grace]
 
     private static let registered: Bool = {
         for name in names {
@@ -41,6 +44,9 @@ extension WallpaperFont {
         }
         if self == .orbit {
             return Font(WallpaperFont.orbit(size: orbitSize(role) * s))
+        }
+        if self == .grace {
+            return .custom(WallpaperFonts.grace, fixedSize: graceSize(role) * s)
         }
         return .system(size: classicSize(role) * s, weight: classicWeight(role))
     }
@@ -89,6 +95,17 @@ extension WallpaperFont {
         case .title: 22
         case .detail, .more: 15
         case .tableTitle, .tableDetail: 16
+        }
+    }
+
+    /// Cormorant's small x-height reads best a few points up from Classic.
+    private func graceSize(_ role: WallpaperTextRole) -> CGFloat {
+        switch role {
+        case .heading: 20
+        case .tableHeading: 15
+        case .title: 23
+        case .detail, .more: 17
+        case .tableTitle, .tableDetail: 19
         }
     }
 

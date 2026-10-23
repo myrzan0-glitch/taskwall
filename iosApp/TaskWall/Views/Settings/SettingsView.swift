@@ -120,13 +120,12 @@ struct SettingsView: View {
     /// Wallist Pro, where the tip jar used to be.
     private var proCard: some View {
         HStack(spacing: 14) {
-            Text("Aa")
-                .font(.custom("DotoRounded-Black", fixedSize: 26))
+            ProFontsIcon(scale: 26 / 46)
                 .frame(width: 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Wallist Pro")
                     .font(.system(size: 20, weight: .bold))
-                Text(pro.isPro ? "Matrix and Orbit fonts are yours." : "Matrix and Orbit wallpaper fonts.")
+                Text(pro.isPro ? "Matrix, Orbit and Grace are yours." : "Matrix, Orbit and Grace wallpaper fonts.")
                     .font(.subheadline)
                     .opacity(0.7)
             }
@@ -144,7 +143,7 @@ struct SettingsView: View {
         .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.peach))
         .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(pro.isPro ? "Wallist Pro, active" : "Wallist Pro. Matrix and Orbit wallpaper fonts.")
+        .accessibilityLabel(pro.isPro ? "Wallist Pro, active" : "Wallist Pro. Matrix, Orbit and Grace wallpaper fonts.")
         .accessibilityAddTraits(.isButton)
     }
 
