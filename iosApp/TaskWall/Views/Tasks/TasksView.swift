@@ -15,14 +15,21 @@ enum TaskEditorTarget: Identifiable {
     }
 }
 
+/// The story Read opens, full screen.
+struct StoryTarget: Identifiable {
+    let read: Read
+    var id: String { read.id }
+}
+
 /// The card a tap on a task opens: Done, Edit and Delete. Holds the id so it always shows the current task.
 struct TaskActionsTarget: Identifiable {
     let id: String
 }
 
-/// Today: "My tasks", a week strip, then the chosen day's tasks. The bar at the bottom
-/// carries the day's quote above Wallpaper (left), a new task (middle) and Settings (right).
+/// Today: "My tasks", a week strip, the chosen day's tasks and the day's quote, with
+/// Wallpaper (left), a new task (middle) and Settings (right) in the bar at the bottom.
 /// Tap a task for Done, Edit and Delete; hold it to drag it to another place.
+/// Below the tasks, the first of the Reads peeks in; scroll down and they come one at a time.
 struct TasksView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("hideCompleted") private var hideCompleted = false
@@ -39,6 +46,12 @@ struct TasksView: View {
     @State private var swaps = 0
     @State private var reopened = 0
     @State private var sheet: HomeSheet?
+    @State private var story: StoryTarget?
+    @State private var todayHeight: CGFloat = 0
+    @State private var scroll = ScrollPosition(edge: .top)
+    @State private var snap = ReadsSnap.Anchor()
+    /// Scrolled past the tasks into Reads, where the bar gives way to a button back up.
+    @State private var inReads = false
 
     enum HomeSheet: String, Identifiable {
         case wallpaper, settings, setup
@@ -54,70 +67,111 @@ struct TasksView: View {
         let shown = hideCompleted ? all.filter { !$0.isDone } : all
         let open = shown.filter { !$0.isDone }.map(\.id)
 
-        ScrollView {
-            VStack(spacing: 0) {
-                Text("My tasks")
-                    .font(.system(size: 30, weight: .bold))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 24)
-                    .padding(.top, 8)
-                    .accessibilityAddTraits(.isHeader)
+        GeometryReader { proxy in
+            let insets = proxy.safeAreaInsets
+            let screen = proxy.size.height + insets.top + insets.bottom
+            let layout = ReadsLayout(screen: screen, today: max(todayHeight, screen - ReadsLayout.peek), count: Reads.shared.all.count)
 
-                WeekStrip(
-                    days: model.week(weekOffset),
-                    selected: day,
-                    today: model.today,
-                    hasDot: { model.hasOpenTasks(on: $0) },
-                    pick: { selected = $0 == model.today ? nil : $0 },
-                    move: moveWeek
-                )
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
+            ScrollView {
+                VStack(spacing: ReadsLayout.gap) {
+                    VStack(spacing: 0) {
+                        Text("My tasks")
+                            .font(.system(size: 30, weight: .bold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 8)
+                            .accessibilityAddTraits(.isHeader)
 
-                VStack(spacing: 0) {
-                    if isToday {
-                        LockScreenStatusRow(
-                            openWallpaper: { sheet = .wallpaper },
-                            setUp: { sheet = .setup }
+                        WeekStrip(
+                            days: model.week(weekOffset),
+                            selected: day,
+                            today: model.today,
+                            hasDot: { model.hasOpenTasks(on: $0) },
+                            pick: { selected = $0 == model.today ? nil : $0 },
+                            move: moveWeek
                         )
-                        DottedDivider()
-                    }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 12)
 
-                    ForEach(shown, id: \.id) { task in
-                        TaskRow(task: task, today: model.today) { toggle(task) }
-                            .contentShape(Rectangle())
-                            .onTapGesture { actions = TaskActionsTarget(id: task.id) }
-                            .accessibilityAction(named: "Edit") { editor = .edit(task) }
-                            .modifier(Reorderable(task: task, open: open, dragging: $dragging, lifted: { lifts += 1 }, move: move))
-                        DottedDivider()
-                    }
+                        VStack(spacing: 0) {
+                            if isToday {
+                                LockScreenStatusRow(
+                                    openWallpaper: { sheet = .wallpaper },
+                                    setUp: { sheet = .setup }
+                                )
+                                DottedDivider()
+                            }
 
-                    if all.contains(where: \.isDone) {
-                        Button(hideCompleted ? String(localized: "Show completed") : String(localized: "Hide completed")) {
-                            withAnimation(.snappy) { hideCompleted.toggle() }
+                            ForEach(shown, id: \.id) { task in
+                                TaskRow(task: task, today: model.today) { toggle(task) }
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { actions = TaskActionsTarget(id: task.id) }
+                                    .accessibilityAction(named: "Edit") { editor = .edit(task) }
+                                    .modifier(Reorderable(task: task, open: open, dragging: $dragging, lifted: { lifts += 1 }, move: move))
+                                DottedDivider()
+                            }
+
+                            if all.contains(where: \.isDone) {
+                                Button(hideCompleted ? String(localized: "Show completed") : String(localized: "Hide completed")) {
+                                    withAnimation(.snappy) { hideCompleted.toggle() }
+                                }
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Color.muted)
+                                .padding(.horizontal, 14)
+                                .frame(height: 34)
+                                .background(Capsule().fill(Color(hex: 0x19191B)))
+                                .hapticButtonStyle(.plain)
+                                .padding(.top, 14)
+                            }
+
+                            if all.isEmpty {
+                                emptyState(day)
+                            }
                         }
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.muted)
-                        .padding(.horizontal, 14)
-                        .frame(height: 34)
-                        .background(Capsule().fill(Color(hex: 0x19191B)))
-                        .hapticButtonStyle(.plain)
-                        .padding(.top, 14)
-                    }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 10)
 
-                    if all.isEmpty {
-                        emptyState(day)
+                        DailyQuoteView(quote: DailyQuotes.shared.quoteFor(day: model.today))
+                            .padding(.top, 28)
+                    }
+                    .padding(.top, insets.top)
+                    // Room for the bar, so the last task never sits under it.
+                    .padding(.bottom, 96)
+                    .frame(minHeight: screen - ReadsLayout.peek, alignment: .top)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { todayHeight = $0 }
+
+                    ForEach(Reads.shared.all, id: \.id) { read in
+                        ReadCard(read: read) { story = StoryTarget(read: read) }
+                            .frame(height: layout.card)
+                            .padding(.horizontal, 6)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 10)
+                .padding(.bottom, (screen - layout.card) / 2)
             }
-            .padding(.bottom, 24)
+            .ignoresSafeArea()
+            .scrollPosition($scroll)
+            .scrollTargetBehavior(ReadsSnap(layout: layout, anchor: snap))
+            .onScrollPhaseChange { _, phase, context in
+                if phase == .idle { snap.y = context.geometry.contentOffset.y }
+            }
+            .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y > layout.todayRest + 60 } action: { _, past in
+                withAnimation(.snappy) { inReads = past }
+            }
+            .scrollEdgeEffectStyle(.hard, for: .top)
+            .overlay(alignment: .bottom) {
+                Group {
+                    if inReads {
+                        backToTasks
+                    } else {
+                        buttons(day)
+                    }
+                }
+                .padding(.bottom, max(insets.bottom - 10, 8))
+            }
         }
-        .scrollEdgeEffectStyle(.hard, for: .top)
         .background(Color.ground.ignoresSafeArea())
         .foregroundStyle(Color.ink)
-        .safeAreaBar(edge: .bottom) { bottomBar(day) }
+        .fullScreenCover(item: $story) { ReadArticleView(read: $0.read) }
         .sheet(item: $editor) { TaskEditor(target: $0) }
         .sheet(item: $actions, onDismiss: openEditorAfterActions) { target in
             TaskActionsSheet(taskID: target.id, toggle: toggle) { task in editAfterActions = task }
@@ -166,11 +220,28 @@ struct TasksView: View {
         editor = .edit(task)
     }
 
-    private func bottomBar(_ day: CalendarDay) -> some View {
-        VStack(spacing: 16) {
-            DailyQuoteView(quote: DailyQuotes.shared.quoteFor(day: model.today))
-            buttons(day)
+    /// In Reads: one round button, back up to the tasks.
+    private var backToTasks: some View {
+        HStack {
+            Spacer()
+            Button {
+                withAnimation(.snappy) { scroll.scrollTo(edge: .top) }
+            } label: {
+                Image("arrow-left-01")
+                    .renderingMode(.template)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .rotationEffect(.degrees(90))
+                    .frame(width: 48, height: 48)
+                    .contentShape(Circle())
+            }
+            .hapticButtonStyle(.plain)
+            .glassControl(in: Circle())
+            .accessibilityLabel("Back to my tasks")
+            .accessibilityIdentifier("backToTasks")
         }
+        .foregroundStyle(Color.ink)
+        .padding(.horizontal, 20)
     }
 
     private func buttons(_ day: CalendarDay) -> some View {
@@ -195,7 +266,6 @@ struct TasksView: View {
         }
         .foregroundStyle(Color.ink)
         .padding(.horizontal, 28)
-        .padding(.top, 4)
     }
 
     private func barButton(_ icon: String, label: String, action: @escaping () -> Void) -> some View {
@@ -232,6 +302,53 @@ struct TasksView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, 72)
         .padding(.horizontal, 24)
+    }
+}
+
+// MARK: - Reads
+
+/// Where Today's pieces sit in the scroll: the tasks, then one card per story.
+struct ReadsLayout {
+    /// How much of the first story shows under a short list of tasks.
+    static let peek: CGFloat = 130
+    static let gap: CGFloat = 10
+
+    let screen: CGFloat
+    /// Height of the tasks part, at least `screen - peek`.
+    let today: CGFloat
+    let count: Int
+
+    /// A story nearly fills the screen; the ones either side show a sliver.
+    var card: CGFloat { (screen * 0.845).rounded() }
+
+    /// The furthest the tasks scroll on their own: the first story peeking in at the bottom.
+    var todayRest: CGFloat { max(0, today - (screen - Self.peek)) }
+
+    /// The scroll offset that centres story `i`.
+    func centred(_ i: Int) -> CGFloat {
+        today + Self.gap + CGFloat(i) * (card + Self.gap) - (screen - card) / 2
+    }
+
+    /// Where scrolling can come to rest below the tasks, top to bottom.
+    var stops: [CGFloat] { [todayRest] + (0..<count).map(centred) }
+}
+
+/// The tasks scroll freely; below them, scrolling settles one story at a time, centred.
+struct ReadsSnap: ScrollTargetBehavior {
+    /// Where scrolling last came to rest, so a flick moves one story, not several.
+    final class Anchor {
+        var y: CGFloat = 0
+    }
+
+    let layout: ReadsLayout
+    let anchor: Anchor
+
+    func updateTarget(_ target: inout ScrollTarget, context: TargetContext) {
+        let y = target.rect.minY
+        let stops = layout.stops
+        guard y > layout.todayRest, let start = stops.indices.min(by: { abs(stops[$0] - anchor.y) < abs(stops[$1] - anchor.y) }) else { return }
+        let nearest = stops.indices.min { abs(stops[$0] - y) < abs(stops[$1] - y) } ?? start
+        target.rect.origin.y = stops[min(max(nearest, start - 1), start + 1)]
     }
 }
 
@@ -308,7 +425,7 @@ private struct TaskDropDelegate: DropDelegate {
 
 // MARK: - Daily quote
 
-/// The day's quote, centred above the add button. It changes at midnight.
+/// The day's quote, centred under the tasks. It changes at midnight.
 struct DailyQuoteView: View {
     let quote: Quote
 
