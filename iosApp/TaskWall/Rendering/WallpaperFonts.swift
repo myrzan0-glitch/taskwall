@@ -8,7 +8,8 @@ import Shared
 /// Matrix is Doto with softly rounded dots (roundness 70, the heaviest that still
 /// reads as dots), fixed at its Black weight, with Cyrillic added on the same dot
 /// grid (iosApp/scripts/doto_cyrillic.py). Orbit is Michroma, which has no Cyrillic,
-/// so its Cyrillic comes from Unbounded Light: as wide and as tall, at the same weight.
+/// so its Cyrillic comes from Unbounded Light: as tall, nearly as wide, at the same weight,
+/// with the Uzbek and Kazakh letters it lacks built in (iosApp/scripts/unbounded_cyrillic.py).
 enum WallpaperFonts {
     private static let names = ["DotoRounded-Black", "Michroma-Regular", "Unbounded-Light"]
 

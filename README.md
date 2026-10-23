@@ -176,5 +176,5 @@ When you upload from Xcode, raise `CURRENT_PROJECT_VERSION` in `iosApp/project.y
 
 - Icons: [Hugeicons](https://hugeicons.com) free stroke-rounded set, MIT licence, filled for this app.
 - Matrix font: [Doto](https://github.com/oliverlalan/Doto) by Óliver Lalan, SIL Open Font License 1.1. Shipped as "Doto Rounded", a static instance at Black weight with roundness 70, with Cyrillic (Russian, Ukrainian, Uzbek, Kazakh) added on Doto's dot grid by `iosApp/scripts/doto_cyrillic.py`.
-- Orbit font: [Michroma](https://github.com/googlefonts/Michroma-font) by Vernon Adams, SIL Open Font License 1.1. Its Cyrillic comes from [Unbounded](https://github.com/googlefonts/unbounded) Light (The Unbounded Project Authors, SIL Open Font License 1.1), shipped with only its Cyrillic letters.
+- Orbit font: [Michroma](https://github.com/googlefonts/Michroma-font) by Vernon Adams, SIL Open Font License 1.1. Its Cyrillic comes from [Unbounded](https://github.com/googlefonts/unbounded) Light (The Unbounded Project Authors, SIL Open Font License 1.1), shipped with only its Cyrillic letters, plus Uzbek Ғ Қ Ҳ and Kazakh Ң built from its own strokes by `iosApp/scripts/unbounded_cyrillic.py`.
 - Both licences ship with the fonts in `iosApp/TaskWall/Resources/Fonts`.
