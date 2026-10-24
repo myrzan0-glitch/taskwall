@@ -67,16 +67,29 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(app.buttons["Get started"].appears(within: 15))
         snap(app, "01-welcome")
 
-        tap(app.buttons["Get started"], until: app.textFields["Add a task"])
+        tap(app.buttons["Get started"], until: app.buttons["Health & habits"])
+        app.buttons["Health & habits"].tap()
+        app.buttons["Home & errands"].tap()
+        snap(app, "02-keep-in-view")
+
+        tap(app.buttons["Continue"], until: app.textFields["Add a task"])
         app.buttons["Add Workout"].firstMatch.tap()
-        app.buttons["Add Call mum"].firstMatch.tap()
-        snap(app, "02-first-tasks")
+        app.buttons["Add Buy groceries"].firstMatch.tap()
+        snap(app, "03-first-tasks")
 
         tap(app.buttons["Continue"], until: app.buttons["Choose a photo"])
-        snap(app, "03-pick-look")
+        app.buttons["Clay theme"].tap()
+        app.buttons["font-grace"].tap()
+        snap(app, "04-pick-look")
 
-        tap(app.buttons["Continue"], until: app.buttons["finishSetup"])
-        snap(app, "04-automatic-updates")
+        tap(app.buttons["Continue"], until: app.staticTexts["reveal"])
+        snap(app, "05-your-lock-screen")
+
+        tap(app.buttons["Looks great"], until: app.buttons["notNow"])
+        snap(app, "06-pro-offer")
+
+        tap(app.buttons["notNow"], until: app.buttons["finishSetup"])
+        snap(app, "07-automatic-updates")
     }
 
     func testToday() {

@@ -2,9 +2,9 @@ import SwiftUI
 import StoreKit
 import Shared
 
-/// Wallist Pro through the App Store: auto-renewable subscriptions that unlock
-/// the Pro wallpaper fonts. Whether Pro is active comes from StoreKit's current
-/// entitlements, which also cover renewals, refunds and Family Sharing.
+/// Wallist Pro through the App Store: auto-renewable subscriptions, or a Lifetime
+/// purchase, that unlock the Pro wallpaper fonts. Whether Pro is active comes from
+/// StoreKit's current entitlements, which also cover renewals, refunds and Lifetime.
 @MainActor
 @Observable
 final class ProStore {
@@ -123,6 +123,24 @@ final class ProStore {
         products[plan.productId]?.displayPrice
     }
 
+    /// The plans to offer: those the App Store returned, or all of them while none have
+    /// loaded, so the paywall keeps its shape. A plan missing from App Store Connect stays hidden.
+    var plans: [ProPlan] {
+        let offered = ProPlan.companion.offered
+        guard !products.isEmpty else { return offered }
+        let loaded = offered.filter { products[$0.productId] != nil }
+        return loaded.isEmpty ? offered : loaded
+    }
+
+    /// The line under a plan's name. Yearly shows what it comes to each month.
+    func note(for plan: ProPlan) -> String {
+        if plan == .yearly, let product = products[plan.productId] {
+            let monthly = (product.price / 12).formatted(product.priceFormatStyle)
+            return String(localized: "\(monthly) a month, billed yearly")
+        }
+        return plan.note
+    }
+
     /// Returns true once Pro is active.
     @discardableResult
     func purchase(_ plan: ProPlan) async -> Bool {
@@ -164,7 +182,7 @@ final class ProStore {
             return false
         }
         await refresh()
-        phase = isPro ? .idle : .failed("No Pro subscription was found for this Apple Account.")
+        phase = isPro ? .idle : .failed("No Pro purchase was found for this Apple Account.")
         return isPro
     }
 }

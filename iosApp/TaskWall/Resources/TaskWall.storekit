@@ -1,7 +1,23 @@
 {
   "identifier" : "6F1A3D52-5C2B-4E0F-9C1B-7B1E2A0C9D01",
   "nonRenewingSubscriptions" : [],
-  "products" : [],
+  "products" : [
+    {
+      "displayPrice" : "19.99",
+      "familyShareable" : false,
+      "internalID" : "6754000013",
+      "localizations" : [
+        {
+          "description" : "Pro wallpaper fonts, paid once.",
+          "displayName" : "Wallist Pro Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "app.taskwall.pro.lifetime",
+      "referenceName" : "Pro – Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
   "settings" : {
     "_failTransactionsEnabled" : false,
     "_locale" : "en_US",
