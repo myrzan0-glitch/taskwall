@@ -12,33 +12,32 @@ struct ProView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                ProFontsTile(size: 88)
-                    .padding(.top, 36)
+                ProFontsTile(size: 72)
+                    .padding(.top, 24)
 
                 HStack(spacing: 10) {
                     Text("Wallist")
                     ProBadge()
                 }
                 .font(.system(size: 30, weight: .bold))
-                .padding(.top, 20)
+                .padding(.top, 18)
                 .accessibilityElement(children: .combine)
                 .accessibilityAddTraits(.isHeader)
 
-                VStack(spacing: 14) {
+                VStack(spacing: 10) {
                     Text("Matrix font")
                         .font(.custom("DotoRounded-Black", fixedSize: 32))
                     Text("Orbit font")
                         .font(.custom("Michroma-Regular", fixedSize: 21))
                     Text("Grace font")
                         .font(.custom(WallpaperFonts.grace, fixedSize: 34))
-                    Text("New fonts as they land")
-                        .font(.system(size: 24, weight: .semibold))
-                    Text("Tasks stay free")
-                        .font(.system(size: 24, weight: .semibold))
+                    Text("New fonts as they land. Tasks stay free.")
+                        .font(.body)
                         .foregroundStyle(Color.muted)
+                        .padding(.top, 4)
                 }
                 .multilineTextAlignment(.center)
-                .padding(.top, 28)
+                .padding(.top, 22)
                 .padding(.bottom, 16)
                 .accessibilityElement(children: .combine)
             }
@@ -161,7 +160,7 @@ struct ProPlanList: View {
     @Binding var selected: ProPlan
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             ForEach(pro.plans, id: \.self) { plan in
                 Button { selected = plan } label: { row(plan) }
                     .hapticButtonStyle(.plain)
@@ -193,7 +192,8 @@ struct ProPlanList: View {
                 .monospacedDigit()
         }
         .padding(.horizontal, 18)
-        .frame(minHeight: 64)
+        .padding(.vertical, 8)
+        .frame(minHeight: 56)
         .background(shape.fill(Color.raised))
         .overlay(shape.strokeBorder(on ? Color.ink : Color.white.opacity(0.1), lineWidth: on ? 2 : 1))
         .overlay(alignment: .topTrailing) {

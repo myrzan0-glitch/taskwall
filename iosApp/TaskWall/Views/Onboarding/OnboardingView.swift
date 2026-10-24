@@ -496,27 +496,21 @@ private struct ProOfferStep: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                ProFontsTile(size: 72)
-                    .padding(.top, 8)
+                ProFontsTile(size: 60)
                 headline
                     .font(.system(size: 30, weight: .bold))
                     .multilineTextAlignment(.center)
-                    .padding(.top, 18)
+                    .padding(.top, 16)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("proOffer")
-                Text("All Pro fonts, and every new one. Tasks stay free.")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.muted)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 8)
 
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 12) {
                     perk("paint-board", "Matrix, Orbit and Grace on your Lock Screen")
                     perk("star", "Every new font as it lands")
                     perk("checkmark-circle-02", "Tasks, colours and photos stay free")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 28)
+                .padding(.top, 20)
                 .padding(.bottom, 12)
             }
             .padding(.horizontal, 28)
