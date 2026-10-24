@@ -9,11 +9,14 @@ final class SettingsUITests: UITestCase {
         XCTAssertFalse(app.buttons["tipJar"].exists, "the tip jar is gone")
 
         app.buttons["proCard"].tap()
-        let plan = app.buttons["proPlan"]
-        XCTAssertTrue(plan.appears(within: 5))
-        XCTAssertTrue(plan.label.hasPrefix("Yearly"))
-        plan.tap()
-        XCTAssertTrue(plan.label.hasPrefix("Monthly"), "tapping the card shows the other plan")
+        let yearly = app.buttons["plan-yearly"]
+        XCTAssertTrue(yearly.appears(within: 5))
+        XCTAssertTrue(yearly.isSelected, "Yearly is chosen first")
+        XCTAssertTrue(app.buttons["plan-lifetime"].exists)
+        app.buttons["plan-monthly"].tap()
+        XCTAssertTrue(app.buttons["plan-monthly"].isSelected)
+        XCTAssertFalse(yearly.isSelected)
+        XCTAssertFalse(app.buttons["notNow"].exists, "the sheet is pulled down instead")
         XCTAssertTrue(app.buttons["startPro"].exists)
         XCTAssertTrue(app.buttons["restorePro"].exists)
         pullDownSheet(app)

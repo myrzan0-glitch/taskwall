@@ -21,4 +21,22 @@ object SampleData {
 
     /** Ideas offered on the first-tasks onboarding screen. */
     val suggestions: List<String> = listOf("Reply to emails", "Workout", "Call mum", "Buy groceries", "Pay rent", "Water plants")
+
+    /**
+     * Ideas for what the person said they want to keep in view, taking one from each
+     * pick in turn so every pick shows up early. With nothing picked, the general ones.
+     */
+    fun ideas(focus: Set<FocusArea>): List<String> {
+        val lists = FocusArea.entries.filter { it in focus }.map { it.ideas }
+        if (lists.isEmpty()) return suggestions
+        return (0 until lists.maxOf { it.size }).flatMap { i -> lists.mapNotNull { it.getOrNull(i) } }.distinct()
+    }
+}
+
+/** What someone wants their Lock Screen to keep in front of them; asked in onboarding. */
+enum class FocusArea(val displayName: String, val ideas: List<String>) {
+    WORK("Work & study", listOf("Reply to emails", "Prepare slides", "Read 20 pages", "Plan tomorrow")),
+    HOME("Home & errands", listOf("Buy groceries", "Pay rent", "Call mum", "Water plants")),
+    HEALTH("Health & habits", listOf("Workout", "Go for a walk", "Drink more water", "Sleep by 11")),
+    GOALS("Big goals", listOf("Write 500 words", "Practise guitar", "Learn 10 new words", "Save for a trip")),
 }
