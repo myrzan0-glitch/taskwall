@@ -356,7 +356,7 @@ struct ReadsLayout {
 
 /// The tasks scroll freely; below them, scrolling settles one story at a time, centred.
 struct ReadsSnap: ScrollTargetBehavior {
-    /// Where scrolling last came to rest, so a flick moves one story, not several.
+    /// Where scrolling last came to rest, so each swipe moves exactly one story.
     final class Anchor {
         var y: CGFloat = 0
         /// The story centred there, or -1 among the tasks.
@@ -366,12 +366,20 @@ struct ReadsSnap: ScrollTargetBehavior {
     let layout: ReadsLayout
     let anchor: Anchor
 
+    /// How far a swipe must carry, in points, to turn to the next story.
+    static let turn: CGFloat = 12
+
     func updateTarget(_ target: inout ScrollTarget, context: TargetContext) {
         let y = target.rect.minY
         let stops = layout.stops
-        guard y > layout.todayRest, let start = stops.indices.min(by: { abs(stops[$0] - anchor.y) < abs(stops[$1] - anchor.y) }) else { return }
-        let nearest = stops.indices.min { abs(stops[$0] - y) < abs(stops[$1] - y) } ?? start
-        target.rect.origin.y = stops[min(max(nearest, start - 1), start + 1)]
+        guard let start = stops.indices.min(by: { abs(stops[$0] - anchor.y) < abs(stops[$1] - anchor.y) }) else { return }
+        // Which way the swipe went, judged by where it would have carried the stories.
+        let carried = y - stops[start]
+        let way = abs(carried) <= Self.turn ? 0 : (carried > 0 ? 1 : -1)
+        // Up from the bottom of the tasks, or anywhere among them, scrolling is free.
+        if start == 0 && (way < 0 || y <= layout.todayRest) { return }
+        // Otherwise exactly one story on, or back, even after a light flick.
+        target.rect.origin.y = stops[min(max(start + way, 0), stops.count - 1)]
     }
 }
 
