@@ -52,6 +52,10 @@ struct TasksView: View {
     @State private var snap = ReadsSnap.Anchor()
     /// Scrolled past the tasks into Reads, where the bar gives way to a button back up.
     @State private var inReads = false
+    /// At the bottom of the tasks or further: from here scrolling settles story by story.
+    @State private var atReads = false
+    /// The story that last settled in the middle, for a tick of haptics on each new one.
+    @State private var settledStory = -1
 
     enum HomeSheet: String, Identifiable {
         case wallpaper, settings, setup
@@ -144,15 +148,29 @@ struct TasksView: View {
                         ReadCard(read: read) { story = StoryTarget(read: read) }
                             .frame(height: layout.card)
                             .padding(.horizontal, 6)
+                            // Stories either side shrink back and dim as they leave the middle.
+                            .scrollTransition(.interactive, axis: .vertical) { card, phase in
+                                card
+                                    .scaleEffect(phase.isIdentity ? 1 : 0.94)
+                                    .brightness(phase.isIdentity ? 0 : -0.3)
+                            }
                     }
                 }
                 .padding(.bottom, (screen - layout.card) / 2)
+                .background(QuickSettle(on: atReads).allowsHitTesting(false))
             }
             .ignoresSafeArea()
             .scrollPosition($scroll)
             .scrollTargetBehavior(ReadsSnap(layout: layout, anchor: snap))
             .onScrollPhaseChange { _, phase, context in
-                if phase == .idle { snap.y = context.geometry.contentOffset.y }
+                guard phase == .idle else { return }
+                let y = context.geometry.contentOffset.y
+                snap.y = y
+                settledStory = layout.stops.dropFirst().firstIndex { abs($0 - y) < 2 }.map { $0 - 1 } ?? -1
+            }
+            .sensoryFeedback(.selection, trigger: settledStory) { _, story in story >= 0 }
+            .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y >= layout.todayRest - 1 } action: { _, reached in
+                atReads = reached
             }
             .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y > layout.todayRest + 60 } action: { _, past in
                 withAnimation(.snappy) { inReads = past }
@@ -349,6 +367,46 @@ struct ReadsSnap: ScrollTargetBehavior {
         guard y > layout.todayRest, let start = stops.indices.min(by: { abs(stops[$0] - anchor.y) < abs(stops[$1] - anchor.y) }) else { return }
         let nearest = stops.indices.min { abs(stops[$0] - y) < abs(stops[$1] - y) } ?? start
         target.rect.origin.y = stops[min(max(nearest, start - 1), start + 1)]
+    }
+}
+
+/// Stories settle the way pages do: a quick snap into place rather than a long glide.
+/// SwiftUI has no setting for this, so it reaches the scroll view it sits in; the
+/// tasks above keep the normal, longer glide.
+private struct QuickSettle: UIViewRepresentable {
+    let on: Bool
+
+    func makeUIView(context: Context) -> Finder {
+        let view = Finder()
+        view.isUserInteractionEnabled = false
+        return view
+    }
+
+    func updateUIView(_ view: Finder, context: Context) {
+        view.fast = on
+    }
+
+    final class Finder: UIView {
+        var fast = false { didSet { apply() } }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            apply()
+        }
+
+        private func apply() {
+            scrollView?.decelerationRate = fast ? .fast : .normal
+        }
+
+        /// The scroll view this sits inside.
+        private var scrollView: UIScrollView? {
+            var parent = superview
+            while let view = parent {
+                if let scroll = view as? UIScrollView { return scroll }
+                parent = view.superview
+            }
+            return nil
+        }
     }
 }
 
