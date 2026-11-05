@@ -5,7 +5,7 @@ import Shared
 /// the plans, and a single button. Pro is the wallpaper fonts; tasks stay free.
 struct ProView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var selected: ProPlan = .yearly
+    @State private var selected: ProPlan = .lifetime
     /// Called once Pro is active, so the font being tried can be kept.
     var onUnlocked: () -> Void = {}
 
@@ -154,7 +154,7 @@ struct ProPurchase: View {
     }
 }
 
-/// Yearly, Lifetime and Monthly as rows to choose from, the billed price on the right.
+/// Lifetime and Monthly as rows to choose from, the price on the right.
 struct ProPlanList: View {
     @Environment(ProStore.self) private var pro
     @Binding var selected: ProPlan
@@ -197,7 +197,7 @@ struct ProPlanList: View {
         .background(shape.fill(Color.raised))
         .overlay(shape.strokeBorder(on ? Color.ink : Color.white.opacity(0.1), lineWidth: on ? 2 : 1))
         .overlay(alignment: .topTrailing) {
-            if plan == .yearly {
+            if plan == .lifetime {
                 Text("Best value")
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(Color.ground)

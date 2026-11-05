@@ -27,10 +27,10 @@ class OnboardingOfferTest {
 
     @Test
     fun theOfferListsBestValueFirstAndLifetimeIsNoSubscription() {
-        assertEquals(listOf(ProPlan.YEARLY, ProPlan.LIFETIME, ProPlan.MONTHLY), ProPlan.offered)
+        assertEquals(listOf(ProPlan.LIFETIME, ProPlan.MONTHLY), ProPlan.offered)
         assertEquals(ProPlan.entries.toSet(), ProPlan.offered.toSet())
         assertFalse(ProPlan.LIFETIME.isSubscription)
-        assertTrue(ProPlan.YEARLY.isSubscription && ProPlan.MONTHLY.isSubscription)
+        assertTrue(ProPlan.MONTHLY.isSubscription)
         assertEquals(ProPlan.LIFETIME, ProPlan.forProductId("app.taskwall.pro.lifetime"))
     }
 }

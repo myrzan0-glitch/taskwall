@@ -132,13 +132,9 @@ final class ProStore {
         return loaded.isEmpty ? offered : loaded
     }
 
-    /// The line under a plan's name. Yearly shows what it comes to each month.
+    /// The line under a plan's name.
     func note(for plan: ProPlan) -> String {
-        if plan == .yearly, let product = products[plan.productId] {
-            let monthly = (product.price / 12).formatted(product.priceFormatStyle)
-            return String(localized: "\(monthly) a month, billed yearly")
-        }
-        return plan.note
+        plan.note
     }
 
     /// Returns true once Pro is active.
