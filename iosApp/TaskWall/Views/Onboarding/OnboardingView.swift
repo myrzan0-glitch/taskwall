@@ -491,7 +491,7 @@ private struct ProOfferStep: View {
     let trying: WallpaperFont?
     let onUnlocked: () -> Void
     let onNotNow: () -> Void
-    @State private var selected: ProPlan = .yearly
+    @State private var selected: ProPlan = .lifetime
 
     var body: some View {
         ScrollView {

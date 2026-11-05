@@ -66,7 +66,8 @@ class WallpaperFontTest {
 
     @Test
     fun proPlansAreFoundByProductId() {
-        assertEquals(ProPlan.YEARLY, ProPlan.forProductId("app.taskwall.pro.yearly"))
+        assertEquals(ProPlan.LIFETIME, ProPlan.forProductId("app.taskwall.pro.lifetime"))
+        assertEquals(null, ProPlan.forProductId("app.taskwall.pro.yearly"))
         assertEquals(ProPlan.MONTHLY, ProPlan.forProductId("app.taskwall.pro.monthly"))
         assertEquals(null, ProPlan.forProductId("app.taskwall.tip.espresso"))
     }

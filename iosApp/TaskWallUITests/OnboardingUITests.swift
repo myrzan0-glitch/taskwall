@@ -30,7 +30,7 @@ final class OnboardingUITests: UITestCase {
         let notNow = app.buttons["notNow"]
         XCTAssertTrue(notNow.appears(within: 3), "Pro is offered once")
         XCTAssertEqual(app.staticTexts["proOffer"].label, "Make it yours with Pro")
-        XCTAssertTrue(app.buttons["plan-yearly"].isSelected)
+        XCTAssertTrue(app.buttons["plan-lifetime"].isSelected)
         notNow.tap()
 
         let finish = app.buttons["finishSetup"]

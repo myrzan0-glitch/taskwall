@@ -17,7 +17,7 @@ Tasks are free: no ads, no account, no tracking. Wallist Pro, a subscription or 
 - **Readable on any photo:** Auto measures the photo behind the task list and picks black or white text plus the lightest backdrop that keeps it readable (none, soft shade or frosted glass). People can reframe the photo and override Auto.
 - **Automatic updates:** a Shortcuts automation refreshes the wallpaper when you close the app. Onboarding walks through the few taps iOS requires.
 - **Siri and Shortcuts:** "Make Wallpaper" and "Add Task" work with no setup.
-- **Wallist Pro:** a yearly or monthly subscription, or Lifetime, that unlocks three wallpaper fonts for the task list: Matrix (dot-matrix), Orbit (wide, space-age) and Grace (calligraphic italic). There's no free trial; anyone can try the fonts in the preview, in onboarding and in the Wallpaper sheet. Onboarding offers Pro once, right after showing the person their own Lock Screen, and "Not now" carries on. iOS keeps drawing its own clock.
+- **Wallist Pro:** a monthly subscription ($1.99) or Lifetime ($9.99, one-time), that unlocks three wallpaper fonts for the task list: Matrix (dot-matrix), Orbit (wide, space-age) and Grace (calligraphic italic). There's no free trial; anyone can try the fonts in the preview, in onboarding and in the Wallpaper sheet. Onboarding offers Pro once, right after showing the person their own Lock Screen, and "Not now" carries on. iOS keeps drawing its own clock.
 - **Native iOS 27 design:** dark only, with a Liquid Glass bottom bar (Wallpaper, New Task, Settings), glass toolbars and fitted sheets, SF Pro and Dynamic Type. Icons are filled versions of [Hugeicons](https://hugeicons.com) (MIT).
 
 ## How it works
@@ -129,7 +129,7 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 |---|---|
 | Bundle ID `app.taskwall` and App Group `group.app.taskwall` | `iosApp/project.yml`, `TaskWall.entitlements`, `App/AppGroup.swift` |
 | App Store ID: the Rate row stays hidden until `reviewURL` is set | `Views/Settings/SettingsView.swift` |
-| Pro: one subscription group with `app.taskwall.pro.yearly` and `app.taskwall.pro.monthly`, the non-consumable `app.taskwall.pro.lifetime`, their prices and the Terms link in the App Store description | App Store Connect, matching `shared/.../ProPlan.kt` |
+| Pro: one subscription group with `app.taskwall.pro.monthly` ($1.99, 1 month), the non-consumable `app.taskwall.pro.lifetime` ($9.99), their prices and the Terms link in the App Store description | App Store Connect, matching `shared/.../ProPlan.kt` |
 | App icon | `Resources/Assets.xcassets/AppIcon.appiconset` (placeholder) |
 
 ### TestFlight
