@@ -9,10 +9,12 @@ struct WallpaperView: View {
     @State private var pickedItem: PhotosPickerItem?
     @State private var showPhotoPicker = false
     @State private var showAdjust = false
+    @State private var showPaywall = false
     @State private var message: String?
 
     var body: some View {
-        let style = model.style
+        // What the Lock Screen shows; without Pro, Pro choices read as off.
+        let style = model.effectiveStyle
         NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
@@ -23,14 +25,15 @@ struct WallpaperView: View {
                     ThemeSwatches(
                         selected: style.source == BackgroundSource.photo ? nil : style.theme,
                         photoSelected: style.source == BackgroundSource.photo,
-                        onSelect: { model.setStyle(style.withTheme(theme: $0)) },
+                        onSelect: { model.setStyle(model.style.withTheme(theme: $0)) },
                         onPhoto: {
                             if style.hasPhoto {
-                                model.setStyle(style.withSource(source: .photo))
+                                model.setStyle(model.style.withSource(source: .photo))
                             } else {
                                 showPhotoPicker = true
                             }
-                        }
+                        },
+                        onLocked: { showPaywall = true }
                     )
                     .padding(.top, 18)
 
@@ -38,7 +41,7 @@ struct WallpaperView: View {
                         row("Layout") {
                             Picker("Layout", selection: layoutBinding) {
                                 Text("List").tag(WallpaperLayout.list)
-                                Text("Table").tag(WallpaperLayout.table)
+                                Text(model.isPro ? "Table" : "Table · Pro").tag(WallpaperLayout.table)
                             }
                             .accessibilityIdentifier("layoutPicker")
                         }
@@ -51,7 +54,12 @@ struct WallpaperView: View {
                             .accessibilityIdentifier("positionPicker")
                         }
                         DottedDivider()
-                        Toggle("Progress bar", isOn: progressBinding)
+                        Toggle(isOn: progressBinding) {
+                            HStack(spacing: 8) {
+                                Text("Progress bar")
+                                if !model.isPro { ProBadge() }
+                            }
+                        }
                             .font(.body)
                             .padding(.horizontal, 8)
                             .frame(minHeight: 52)
@@ -63,8 +71,10 @@ struct WallpaperView: View {
                             .buttonStyle(.plain)
                             .accessibilityIdentifier("adjustPhoto")
                         } else {
-                            Button { showPhotoPicker = true } label: {
-                                linkRow("Use a photo", icon: "image-01")
+                            Button {
+                                if model.isPro { showPhotoPicker = true } else { showPaywall = true }
+                            } label: {
+                                linkRow("Use a photo", icon: "image-01", pro: !model.isPro)
                             }
                             .buttonStyle(.plain)
                             .accessibilityIdentifier("usePhoto")
@@ -109,6 +119,9 @@ struct WallpaperView: View {
         .fullScreenCover(isPresented: $showAdjust) {
             PhotoAdjustView()
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
         .alert(message ?? "", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("OK", role: .cancel) {}
         }
@@ -127,9 +140,10 @@ struct WallpaperView: View {
         .frame(minHeight: 52)
     }
 
-    private func linkRow(_ title: String, value: String? = nil, icon: String? = nil) -> some View {
+    private func linkRow(_ title: String, value: String? = nil, icon: String? = nil, pro: Bool = false) -> some View {
         HStack(spacing: 8) {
             Text(title).font(.body)
+            if pro { ProBadge() }
             Spacer()
             if let value {
                 Text(value).foregroundStyle(Color.muted)
@@ -145,7 +159,13 @@ struct WallpaperView: View {
     }
 
     private var layoutBinding: Binding<WallpaperLayout> {
-        Binding { model.style.layout } set: { model.setStyle(model.style.withLayout(layout: $0)) }
+        Binding { model.effectiveStyle.layout } set: {
+            if $0 == WallpaperLayout.table && !model.isPro {
+                showPaywall = true
+            } else {
+                model.setStyle(model.style.withLayout(layout: $0))
+            }
+        }
     }
 
     private var positionBinding: Binding<TaskPosition> {
@@ -156,7 +176,13 @@ struct WallpaperView: View {
     }
 
     private var progressBinding: Binding<Bool> {
-        Binding { model.style.showProgress } set: { model.setStyle(model.style.withShowProgress(show: $0)) }
+        Binding { model.effectiveStyle.showProgress } set: {
+            if model.isPro {
+                model.setStyle(model.style.withShowProgress(show: $0))
+            } else {
+                showPaywall = true
+            }
+        }
     }
 
     private func readabilitySummary(_ style: WallpaperStyle) -> String {
@@ -192,6 +218,7 @@ struct WallpaperView: View {
 }
 
 /// The five colour themes as "Aa" circles, then the photo.
+/// Without Pro, Pro themes and the photo carry a "Pro" badge and call `onLocked`.
 struct ThemeSwatches: View {
     @Environment(AppModel.self) private var model
     /// Nil when the photo is the background.
@@ -199,23 +226,26 @@ struct ThemeSwatches: View {
     let photoSelected: Bool
     let onSelect: (WallpaperTheme) -> Void
     let onPhoto: () -> Void
+    let onLocked: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
             ForEach(WallpaperTheme.entries, id: \.self) { theme in
-                Button { onSelect(theme) } label: {
+                let locked = theme.isPro && !model.isPro
+                Button { locked ? onLocked() : onSelect(theme) } label: {
                     Text("Aa")
                         .font(.footnote.weight(.bold))
                         .foregroundStyle(Color(argb: theme.palette.foreground))
                         .frame(width: 44, height: 44)
                         .background(Circle().fill(Color(argb: theme.palette.background)))
                         .modifier(SwatchRing(on: theme == selected))
+                        .overlay(alignment: .bottom) { if locked { ProBadge().offset(y: 6) } }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(theme.displayName) theme")
+                .accessibilityLabel(locked ? "\(theme.displayName) theme, Pro" : "\(theme.displayName) theme")
                 .accessibilityAddTraits(theme == selected ? .isSelected : [])
             }
-            Button(action: onPhoto) {
+            Button { model.isPro ? onPhoto() : onLocked() } label: {
                 Group {
                     if let photo = model.photo {
                         Image(uiImage: photo).resizable().scaledToFill()
@@ -228,9 +258,10 @@ struct ThemeSwatches: View {
                 .frame(width: 44, height: 44)
                 .clipShape(Circle())
                 .modifier(SwatchRing(on: photoSelected))
+                .overlay(alignment: .bottom) { if !model.isPro { ProBadge().offset(y: 6) } }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(model.photo == nil ? "Choose a photo" : "Your photo")
+            .accessibilityLabel(model.isPro ? (model.photo == nil ? "Choose a photo" : "Your photo") : "Choose a photo, Pro")
             .accessibilityAddTraits(photoSelected ? .isSelected : [])
         }
     }

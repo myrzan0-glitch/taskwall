@@ -84,9 +84,9 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Feed the cat"].waitForExistence(timeout: 3))
         app.buttons["Continue"].tap()
 
-        XCTAssertTrue(app.buttons["Sage theme"].waitForExistence(timeout: 3))
-        app.buttons["Sage theme"].tap()
-        XCTAssertTrue(app.buttons["Sage theme"].isSelected)
+        XCTAssertTrue(app.buttons["Paper theme"].waitForExistence(timeout: 3))
+        app.buttons["Paper theme"].tap()
+        XCTAssertTrue(app.buttons["Paper theme"].isSelected)
         app.buttons["Continue"].tap()
 
         let finish = app.buttons["finishSetup"]
@@ -103,7 +103,7 @@ final class TaskWallUITests: XCTestCase {
         app.buttons["Get started"].tap()
         XCTAssertTrue(app.buttons["Skip"].waitForExistence(timeout: 3))
         app.buttons["Skip"].tap()
-        XCTAssertTrue(app.buttons["Sage theme"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Paper theme"].waitForExistence(timeout: 3))
         app.buttons["Back"].tap()
         XCTAssertTrue(app.textFields["Add a task"].waitForExistence(timeout: 3))
     }
@@ -210,7 +210,7 @@ final class TaskWallUITests: XCTestCase {
     // MARK: Wallpaper
 
     func testWallpaperThemesAndLayout() {
-        let app = launch("-skipOnboarding", "-seed")
+        let app = launch("-skipOnboarding", "-seed", "-pro")
         XCTAssertTrue(tap(app.buttons["Wallpaper"], until: app.navigationBars["Wallpaper"]))
 
         app.buttons["Sage theme"].tap()
@@ -229,6 +229,29 @@ final class TaskWallUITests: XCTestCase {
         XCTAssertTrue(app.buttons["usePhoto"].exists)
         pullDownSheet(app)
         XCTAssertTrue(app.buttons["New Task"].waitForExistence(timeout: 3))
+    }
+
+    func testProChoicesOpenThePaywallWithoutPro() {
+        let app = launch("-skipOnboarding", "-seed")
+        XCTAssertTrue(tap(app.buttons["Wallpaper"], until: app.navigationBars["Wallpaper"]))
+
+        app.buttons["Paper theme"].tap()
+        XCTAssertTrue(app.buttons["Paper theme"].isSelected, "free themes just work")
+
+        app.buttons["Sage theme, Pro"].tap()
+        let lifetime = app.buttons["planLifetime"]
+        XCTAssertTrue(lifetime.waitForExistence(timeout: 5), "a Pro theme opens the paywall")
+        XCTAssertTrue(lifetime.isSelected, "Lifetime is picked first")
+        app.buttons["planMonthly"].tap()
+        XCTAssertTrue(app.buttons["planMonthly"].isSelected)
+        XCTAssertTrue(app.buttons["buyPro"].exists)
+        XCTAssertTrue(app.buttons["restorePurchases"].exists)
+        app.buttons["closePaywall"].tap()
+        XCTAssertTrue(app.navigationBars["Wallpaper"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Paper theme"].isSelected, "nothing changed")
+
+        app.buttons["usePhoto"].tap()
+        XCTAssertTrue(app.buttons["planLifetime"].waitForExistence(timeout: 5), "a photo needs Pro too")
     }
 
     // MARK: Automatic updates
@@ -266,22 +289,29 @@ final class TaskWallUITests: XCTestCase {
 
     // MARK: Settings
 
-    func testSettingsAndTipJar() {
+    func testSettingsAndPro() {
         let app = launch("-skipOnboarding")
         XCTAssertTrue(tap(app.buttons["Settings"], until: app.navigationBars["Settings"]))
+        XCTAssertTrue(app.buttons["restorePurchases"].exists)
 
-        app.buttons["tipJar"].tap()
-        let size = app.buttons["tipSize"]
-        XCTAssertTrue(size.waitForExistence(timeout: 5))
-        XCTAssertTrue(size.label.hasPrefix("Flat White"))
-        size.tap()
-        XCTAssertTrue(size.label.hasPrefix("Coffee & Cake"), "tapping the card shows the next size")
-        XCTAssertTrue(app.buttons["tipButton"].exists)
+        app.buttons["getPro"].tap()
+        XCTAssertTrue(app.buttons["planLifetime"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["buyPro"].exists)
         pullDownSheet(app)
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
 
         XCTAssertTrue(tap(app.buttons["automaticUpdates"], until: app.buttons["Add"]))
         app.buttons["finishSetup"].tap()
-        XCTAssertTrue(app.buttons["tipJar"].waitForExistence(timeout: 3), "Done goes back to Settings")
+        XCTAssertTrue(app.buttons["getPro"].waitForExistence(timeout: 3), "Done goes back to Settings")
+    }
+
+    func testSettingsWithLifetime() {
+        let app = launch("-skipOnboarding", "-pro")
+        XCTAssertTrue(tap(app.buttons["Settings"], until: app.navigationBars["Settings"]))
+        let lifetime = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Lifetime · yours forever'")).firstMatch
+        XCTAssertTrue(lifetime.waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["getPro"].exists)
+        XCTAssertFalse(app.buttons["manageSubscription"].exists, "Lifetime has nothing to manage")
+        XCTAssertFalse(app.buttons["restorePurchases"].exists)
     }
 }

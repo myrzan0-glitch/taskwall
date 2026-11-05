@@ -162,8 +162,24 @@ final class AppModelTests: XCTestCase {
         XCTAssertNil(model.photo)
     }
 
+    func testWithoutProTheLockScreenUsesFreeChoices() {
+        let model = makeModel()
+        model.setStyle(model.style.withTheme(theme: WallpaperTheme.sage).withLayout(layout: WallpaperLayout.table))
+        XCTAssertFalse(model.isPro)
+        XCTAssertEqual(model.effectiveStyle.theme, WallpaperTheme.ink)
+        XCTAssertEqual(model.effectiveStyle.layout, WallpaperLayout.list)
+        XCTAssertFalse(model.effectiveStyle.showProgress)
+        XCTAssertEqual(model.style.theme, WallpaperTheme.sage, "the choice is kept for later")
+
+        model.setPro(true)
+        XCTAssertTrue(model.isPro)
+        XCTAssertEqual(model.effectiveStyle.theme, WallpaperTheme.sage)
+        XCTAssertEqual(model.effectiveStyle.layout, WallpaperLayout.table)
+    }
+
     func testWallpaperContentFollowsTheLayout() {
         let model = makeModel()
+        model.setPro(true)
         for i in 0..<9 { model.addQuickTask("Task \(i)") }
         XCTAssertEqual(model.wallpaperContent().lines.count, 6)
         let table = model.style.withLayout(layout: WallpaperLayout.table).withShowProgress(show: false)

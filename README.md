@@ -4,7 +4,7 @@
 
 Wallist turns today's tasks into a Lock Screen wallpaper and keeps it up to date by itself. Write your tasks, pick a colour or any photo, and every time you pick up your phone you see what's left.
 
-It is free: no ads, no account, no tracking. People who want to can leave a tip.
+Tasks, the list wallpaper, two colour themes and automatic updates are free: no ads, no account, no tracking. Wallist Pro adds the rest for $1.99 a month or $9.99 once.
 
 > Design: [Wallist design canvas](https://claude.ai/artifact/QFPVzTH5F5R1ddi22NJiXs)
 
@@ -17,7 +17,7 @@ It is free: no ads, no account, no tracking. People who want to can leave a tip.
 - **Readable on any photo:** Auto measures the photo behind the task list and picks black or white text plus the lightest backdrop that keeps it readable (none, soft shade or frosted glass). People can reframe the photo and override Auto.
 - **Automatic updates:** a Shortcuts automation refreshes the wallpaper when you close the app. Onboarding walks through the few taps iOS requires.
 - **Siri and Shortcuts:** "Make Wallpaper" and "Add Task" work with no setup.
-- **Tip jar:** three one-time tips through the App Store that unlock nothing.
+- **Wallist Pro:** Monthly ($1.99, auto-renewing) or Lifetime ($9.99, one-time) through the App Store. Pro unlocks any photo, the Sage, Clay and Navy themes, the table layout and the progress bar. Without Pro, the wallpaper uses free choices but remembers the Pro ones, so they come back with Pro; the shortcut checks the App Store before drawing, so an ended subscription shows up on the Lock Screen too.
 - **Native iOS 27 design:** dark only, with a Liquid Glass bottom bar (Wallpaper, New Task, Settings), glass toolbars and fitted sheets, SF Pro and Dynamic Type. Icons are filled versions of [Hugeicons](https://hugeicons.com) (MIT).
 
 ## How it works
@@ -42,8 +42,8 @@ Wallist is a Kotlin Multiplatform project, so an Android app can reuse everythin
 
 | Part | What's in it | Language |
 |---|---|---|
-| `shared/` | Tasks and storage, the Today list, week and overdue rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes and geometry, tip product IDs | Kotlin (common) |
-| `iosApp/` | SwiftUI screens with native Liquid Glass components, wallpaper drawing and rendering, photo picking, App Intents for Shortcuts and Siri, StoreKit tips | Swift |
+| `shared/` | Tasks and storage, the Today list, week and overdue rules, what goes on the wallpaper, the photo readability rule (contrast measurement, text colour, backdrop), wallpaper themes and geometry, what Pro unlocks and its product IDs | Kotlin (common) |
+| `iosApp/` | SwiftUI screens with native Liquid Glass components, wallpaper drawing and rendering, photo picking, App Intents for Shortcuts and Siri, StoreKit for Wallist Pro | Swift |
 | `androidApp/` (later) | Jetpack Compose screens reusing `shared/` | Kotlin |
 
 Design choices:
@@ -64,8 +64,9 @@ shared/src/commonMain/kotlin/app/taskwall/shared/
   LegibilityAnalyzer.kt, Contrast.kt readability rule for photos
   WallpaperAppearance.kt             themes and resolved colours
   WallpaperGeometry.kt               Lock Screen safe areas
-  TipJar.kt, SampleData.kt, Formatting.kt
-shared/src/commonTest/               unit tests (67): dates, sorting, store, every user flow
+  Pro.kt                             Pro plans and product IDs
+  SampleData.kt, Formatting.kt
+shared/src/commonTest/               unit tests (75): dates, sorting, store, every user flow
 iosApp/
   TaskWall.xcodeproj                 the Xcode project (generated from project.yml, committed)
   project.yml                        XcodeGen spec: app, unit tests, UI tests
@@ -73,7 +74,7 @@ iosApp/
   TaskWallTests/                     unit tests: AppModel flows, rendering, photo analysis, bridge
   TaskWallUITests/                   XCUITests: onboarding, tasks, wallpaper, settings
   TaskWall/App/                      app entry, AppModel, Kotlin bridge, App Group storage
-  TaskWall/Views/                    Tasks, Wallpaper, Settings, Tips, Onboarding
+  TaskWall/Views/                    Tasks, Wallpaper, Settings, Pro (paywall, StoreKit), Onboarding
   TaskWall/Rendering/                WallpaperCanvas, renderer, photo storage and analysis
   TaskWall/Intents/                  App Intents and App Shortcuts
   TaskWall/Resources/                asset catalog (Hugeicons, colours), StoreKit test file
@@ -104,7 +105,7 @@ Everything day to day happens in Xcode, with no Terminal needed:
 
 The project uses Xcode 16+ synchronized folders, so added or removed files appear without any extra step. It's generated from `iosApp/project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen); only after editing that file, run `cd iosApp && xcodegen` and commit the result. CI fails if the committed project and `project.yml` disagree.
 
-Building the app runs `iosApp/scripts/build-shared.sh` first, which compiles the Kotlin code into the `Shared` framework with Gradle. The first build downloads the Kotlin/Native toolchain (about 1 GB). The scheme uses `Resources/TaskWall.storekit`, so tips work in the simulator without App Store Connect.
+Building the app runs `iosApp/scripts/build-shared.sh` first, which compiles the Kotlin code into the `Shared` framework with Gradle. The first build downloads the Kotlin/Native toolchain (about 1 GB). The scheme uses `Resources/TaskWall.storekit`, so Pro can be bought, cancelled and restored in the simulator without App Store Connect (Debug › StoreKit › Manage Transactions). The UI tests use `-pro` to start with Lifetime.
 
 If Xcode reports **"Command PhaseScriptExecution failed with a nonzero exit code"**, the Kotlin build failed. Open the Report navigator (⌘9), select the build and expand **Build Kotlin shared framework** to see why. The usual causes:
 
@@ -129,7 +130,7 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 |---|---|
 | Bundle ID `app.taskwall` and App Group `group.app.taskwall` | `iosApp/project.yml`, `TaskWall.entitlements`, `App/AppGroup.swift` |
 | App Store ID: the Rate row stays hidden until `reviewURL` is set | `Views/Settings/SettingsView.swift` |
-| Tip product IDs and prices | App Store Connect, matching `shared/.../TipJar.kt` |
+| Pro products: auto-renewable subscription `app.taskwall.pro.monthly` ($1.99, 1 month) in a "Wallist Pro" group, and non-consumable `app.taskwall.pro.lifetime` ($9.99) | App Store Connect, matching `shared/.../Pro.kt` |
 | App icon | `Resources/Assets.xcassets/AppIcon.appiconset` (placeholder) |
 
 ### TestFlight
@@ -147,7 +148,8 @@ Raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` before each upload: ever
 ### Before you submit
 
 - **The App Store name is Wallist.** "TaskWall" was taken; it remains the name of the code and the Xcode project.
-- **Wallpaper apps are a crowded category.** App Review guideline 4.3(b) may reject apps that look like others, so the listing should lead with what's different: a real task manager whose Lock Screen updates itself, for free.
+- **Wallpaper apps are a crowded category.** App Review guideline 4.3(b) may reject apps that look like others, so the listing should lead with what's different: a real task manager whose Lock Screen updates itself, free to start.
+- **Subscriptions need a few things in review:** the paywall already shows price, length, auto-renewal, Restore Purchases, Terms (Apple's standard EULA) and Privacy. In App Store Connect, add the Terms of Use link to the app description (or a custom EULA) and a review screenshot for each product.
 
 ## Android (planned)
 

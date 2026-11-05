@@ -127,8 +127,8 @@ final class ScreenshotTests: XCTestCase {
         XCTAssertTrue(tap(app.buttons["Settings"], until: app.navigationBars["Settings"]))
         snap(app, "30-settings")
 
-        if tap(app.buttons["tipJar"], until: app.buttons["tipButton"]) {
-            snap(app, "31-tip-jar")
+        if tap(app.buttons["getPro"], until: app.buttons["buyPro"]) {
+            snap(app, "31-pro")
             pullDownSheet(app)
         }
 

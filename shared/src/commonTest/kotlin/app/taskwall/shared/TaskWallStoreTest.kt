@@ -110,6 +110,7 @@ class TaskWallStoreTest {
     @Test
     fun resolvesPhotoAppearanceFromAnalysis() {
         val store = TaskWallStore(InMemoryTextFileStore())
+        store.setPro(true)
         val analysis = LegibilityResult(TextTone.DARK, Backdrop.SHADE, 2.0, 4.0, 0.4)
         store.setWallpaperStyle(
             WallpaperStyle(source = BackgroundSource.PHOTO, photoFileName = "p.jpg", photoAnalysis = analysis),

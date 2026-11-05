@@ -10,7 +10,7 @@ enum WallpaperRenderer {
             width: settings.screen?.widthPoints ?? 393,
             height: settings.screen?.heightPoints ?? 852
         )
-        let style = settings.wallpaper
+        let style = settings.effectiveWallpaper
         let canvas = WallpaperCanvas(
             content: store.wallpaperContent(today: today),
             style: style,
@@ -26,7 +26,8 @@ enum WallpaperRenderer {
     }
 
     static func pngData(store: TaskWallStore, today: CalendarDay) -> Data? {
-        let photo = PhotoStore.load(store.settings.wallpaper.photoFileName)
+        let style = store.settings.effectiveWallpaper
+        let photo = style.source == BackgroundSource.photo ? PhotoStore.load(style.photoFileName) : nil
         return image(store: store, today: today, photo: photo)?.pngData()
     }
 }

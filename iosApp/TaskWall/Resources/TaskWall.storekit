@@ -3,31 +3,13 @@
   "nonRenewingSubscriptions" : [ ],
   "products" : [
     {
-      "displayPrice" : "0.99",
+      "displayPrice" : "9.99",
       "familyShareable" : false,
-      "internalID" : "6754000001",
-      "localizations" : [ { "description" : "A small thank-you.", "displayName" : "Espresso", "locale" : "en_US" } ],
-      "productID" : "app.taskwall.tip.espresso",
-      "referenceName" : "Tip – Espresso",
-      "type" : "Consumable"
-    },
-    {
-      "displayPrice" : "2.99",
-      "familyShareable" : false,
-      "internalID" : "6754000002",
-      "localizations" : [ { "description" : "Keeps the updates coming.", "displayName" : "Flat White", "locale" : "en_US" } ],
-      "productID" : "app.taskwall.tip.flatwhite",
-      "referenceName" : "Tip – Flat White",
-      "type" : "Consumable"
-    },
-    {
-      "displayPrice" : "4.99",
-      "familyShareable" : false,
-      "internalID" : "6754000003",
-      "localizations" : [ { "description" : "You made my week.", "displayName" : "Coffee & Cake", "locale" : "en_US" } ],
-      "productID" : "app.taskwall.tip.coffeecake",
-      "referenceName" : "Tip – Coffee & Cake",
-      "type" : "Consumable"
+      "internalID" : "6754000010",
+      "localizations" : [ { "description" : "Wallist Pro for good: any photo, every theme, the table layout and the progress bar.", "displayName" : "Wallist Pro Lifetime", "locale" : "en_US" } ],
+      "productID" : "app.taskwall.pro.lifetime",
+      "referenceName" : "Wallist Pro – Lifetime",
+      "type" : "NonConsumable"
     }
   ],
   "settings" : {
@@ -36,6 +18,30 @@
     "_storefront" : "USA",
     "_storeKitErrors" : [ ]
   },
-  "subscriptionGroups" : [ ],
+  "subscriptionGroups" : [
+    {
+      "id" : "21500001",
+      "localizations" : [ ],
+      "name" : "Wallist Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [ ],
+          "codeOffers" : [ ],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6754000011",
+          "introductoryOffer" : null,
+          "localizations" : [ { "description" : "Any photo, every theme, the table layout and the progress bar.", "displayName" : "Wallist Pro Monthly", "locale" : "en_US" } ],
+          "productID" : "app.taskwall.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Wallist Pro – Monthly",
+          "subscriptionGroupID" : "21500001",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [ ]
+        }
+      ]
+    }
+  ],
   "version" : { "major" : 4, "minor" : 0 }
 }

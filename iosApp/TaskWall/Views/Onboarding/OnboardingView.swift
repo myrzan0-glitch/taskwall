@@ -210,10 +210,11 @@ private struct PickLookStep: View {
     @Environment(AppModel.self) private var model
     @State private var pickedItem: PhotosPickerItem?
     @State private var showPhotoPicker = false
+    @State private var showPaywall = false
     let next: () -> Void
 
     var body: some View {
-        let style = model.style
+        let style = model.effectiveStyle
         VStack(alignment: .leading, spacing: 0) {
             LockScreenPreview(width: 150)
                 .shadow(color: .black.opacity(0.5), radius: 25, y: 20)
@@ -223,14 +224,15 @@ private struct PickLookStep: View {
             Spacer(minLength: 24)
 
             VStack(alignment: .leading, spacing: 22) {
-                StepHeading(step: "Step 2", title: Text("Pick a \(inlineIcon("paint-board")) look"), subtitle: "A colour, or any photo.")
+                StepHeading(step: "Step 2", title: Text("Pick a \(inlineIcon("paint-board")) look"), subtitle: "A colour, or any photo with Pro.")
                 ThemeSwatches(
                     selected: style.source == BackgroundSource.photo ? nil : style.theme,
                     photoSelected: style.source == BackgroundSource.photo,
-                    onSelect: { model.setStyle(style.withTheme(theme: $0)) },
+                    onSelect: { model.setStyle(model.style.withTheme(theme: $0)) },
                     onPhoto: {
-                        if style.hasPhoto { model.setStyle(style.withSource(source: .photo)) } else { showPhotoPicker = true }
-                    }
+                        if style.hasPhoto { model.setStyle(model.style.withSource(source: .photo)) } else { showPhotoPicker = true }
+                    },
+                    onLocked: { showPaywall = true }
                 )
             }
             .padding(.bottom, 16)
@@ -244,6 +246,9 @@ private struct PickLookStep: View {
                 .padding(.bottom, 8)
         }
         .photosPicker(isPresented: $showPhotoPicker, selection: $pickedItem, matching: .images)
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
         .onChange(of: pickedItem) { _, item in
             guard let item else { return }
             Task {

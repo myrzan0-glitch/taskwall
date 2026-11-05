@@ -39,6 +39,7 @@ final class RenderingTests: XCTestCase {
         let store = TaskWallStore(file: InMemoryTextFileStore(text: nil))
         store.setScreen(metrics: ScreenMetrics(widthPoints: 100, heightPoints: 200, scale: 1))
         _ = store.addQuickTask(title: "Buy milk", nowMillis: 1)
+        store.setPro(isPro: true)
         let photo = solid(.gray)
         for backdrop in [BackdropSetting.clear, BackdropSetting.shade, BackdropSetting.glass] {
             store.setWallpaperStyle(style: photoStyle.withBackdrop(backdrop: backdrop))

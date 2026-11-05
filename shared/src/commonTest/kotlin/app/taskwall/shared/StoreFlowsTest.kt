@@ -158,6 +158,7 @@ class StoreFlowsTest {
     @Test
     fun wallpaperContentUsesTheChosenLayout() {
         val store = newStore()
+        store.setPro(true)
         repeat(9) { store.addQuickTask("Task $it", it.toLong()) }
         assertEquals(6, store.wallpaperContent(TODAY).lines.size)
         assertEquals(3, store.wallpaperContent(TODAY).hiddenCount)
@@ -170,6 +171,7 @@ class StoreFlowsTest {
     @Test
     fun colourThemesResolveWithoutAPhoto() {
         val store = newStore()
+        store.setPro(true)
         store.setWallpaperStyle(store.settings.wallpaper.withTheme(WallpaperTheme.PAPER))
         val paper = store.resolvedAppearance()
         assertFalse(paper.isPhoto)
@@ -183,6 +185,7 @@ class StoreFlowsTest {
     @Test
     fun choosingAPhotoThenAColourKeepsThePhotoForLater() {
         val store = newStore()
+        store.setPro(true)
         store.setWallpaperStyle(store.settings.wallpaper.withPhoto("p.jpg"))
         assertEquals(BackgroundSource.PHOTO, store.settings.wallpaper.source)
         assertTrue(store.resolvedAppearance().isPhoto)
@@ -200,6 +203,7 @@ class StoreFlowsTest {
     @Test
     fun unmeasuredPhotoFallsBackToGlassWithWhiteText() {
         val store = newStore()
+        store.setPro(true)
         store.setWallpaperStyle(store.settings.wallpaper.withPhoto("p.jpg"))
         val look = store.resolvedAppearance()
         assertEquals(Backdrop.GLASS, look.backdrop)
@@ -453,12 +457,84 @@ class StoreFlowsTest {
         assertEquals(WallpaperStyle(), store.settings.wallpaper)
     }
 
-    // Tips
+    // Wallist Pro
 
     @Test
-    fun tipsMapToTheirProducts() {
-        assertEquals(Tip.FLAT_WHITE, Tip.forProductId("app.taskwall.tip.flatwhite"))
-        assertNull(Tip.forProductId("app.taskwall.tip.gold"))
-        assertEquals(1, Tip.entries.count { it.isPopular })
+    fun proPlansMapToTheirProducts() {
+        assertEquals(ProPlan.MONTHLY, ProPlan.forProductId("app.taskwall.pro.monthly"))
+        assertEquals(ProPlan.LIFETIME, ProPlan.forProductId("app.taskwall.pro.lifetime"))
+        assertNull(ProPlan.forProductId("app.taskwall.tip.flatwhite"))
+        assertEquals(ProPlan.LIFETIME, ProPlan.best(listOf(ProPlan.MONTHLY, ProPlan.LIFETIME)))
+        assertEquals(ProPlan.MONTHLY, ProPlan.best(listOf(ProPlan.MONTHLY)))
+        assertNull(ProPlan.best(emptyList()))
+    }
+
+    @Test
+    fun onlyPaperAndInkAreFree() {
+        assertEquals(listOf(WallpaperTheme.PAPER, WallpaperTheme.INK), WallpaperTheme.entries.filterNot { it.isPro })
+    }
+
+    @Test
+    fun withoutProTheWallpaperUsesFreeChoicesAndKeepsTheChosenOnes() {
+        val file = InMemoryTextFileStore()
+        val store = newStore(file)
+        val chosen = WallpaperStyle()
+            .withPhoto("p.jpg")
+            .withLayout(WallpaperLayout.TABLE)
+            .withShowProgress(true)
+        store.setWallpaperStyle(chosen)
+
+        val free = store.settings.effectiveWallpaper
+        assertEquals(BackgroundSource.COLOR, free.source)
+        assertEquals(WallpaperLayout.LIST, free.layout)
+        assertFalse(free.showProgress)
+        assertFalse(free.usesPro)
+        assertEquals("p.jpg", free.photoFileName, "the photo stays saved for later")
+        assertEquals(chosen, store.settings.wallpaper)
+        assertFalse(store.resolvedAppearance().isPhoto)
+
+        store.setPro(true)
+        assertEquals(chosen, store.settings.effectiveWallpaper)
+        assertTrue(store.resolvedAppearance().isPhoto)
+        assertTrue(newStore(file).settings.isPro, "Pro survives a restart")
+    }
+
+    @Test
+    fun aProThemeFallsBackToInkButAFreeOneStays() {
+        assertEquals(WallpaperTheme.INK, WallpaperStyle().withTheme(WallpaperTheme.SAGE).limitedToFree().theme)
+        assertEquals(WallpaperTheme.PAPER, WallpaperStyle().withTheme(WallpaperTheme.PAPER).limitedToFree().theme)
+        assertTrue(WallpaperStyle().withTheme(WallpaperTheme.NAVY).withShowProgress(false).usesPro)
+        assertFalse(WallpaperStyle().withShowProgress(false).usesPro)
+    }
+
+    @Test
+    fun losingProMakesTheLockScreenOutOfDate() {
+        val store = newStore()
+        store.setPro(true)
+        store.addQuickTask("Buy milk", 1)
+        store.setWallpaperStyle(WallpaperStyle().withTheme(WallpaperTheme.CLAY))
+        store.recordWallpaperUpdate(nowMillis = 2, today = TODAY)
+        assertTrue(store.isWallpaperCurrent(TODAY))
+
+        store.setPro(false)
+        assertFalse(store.isWallpaperCurrent(TODAY), "the shortcut should redraw it with a free theme")
+    }
+
+    @Test
+    fun theTableLayoutNeedsProToFitMoreTasks() {
+        val store = newStore()
+        repeat(12) { store.addQuickTask("Task $it", it.toLong()) }
+        store.setWallpaperStyle(WallpaperStyle().withLayout(WallpaperLayout.TABLE).withShowProgress(false))
+        val freeLines = store.wallpaperContent(TODAY)
+        store.setPro(true)
+        val proLines = store.wallpaperContent(TODAY)
+        assertEquals(
+            WallpaperComposer.compose(store.tasks, TODAY, WallpaperGeometry.maxLines(WallpaperLayout.LIST, false)),
+            freeLines,
+        )
+        assertEquals(
+            WallpaperComposer.compose(store.tasks, TODAY, WallpaperGeometry.maxLines(WallpaperLayout.TABLE, false)),
+            proLines,
+        )
     }
 }

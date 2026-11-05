@@ -5,7 +5,7 @@ import Shared
 @main
 struct TaskWallApp: App {
     @State private var model = LaunchOptions.makeModel()
-    @State private var tips = TipStore()
+    @State private var pro = ProStore(pretendLifetime: LaunchOptions.isPro)
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
@@ -16,13 +16,19 @@ struct TaskWallApp: App {
                 // The design is dark only.
                 .preferredColorScheme(.dark)
                 .environment(model)
-                .environment(tips)
+                .environment(pro)
                 .onOpenURL { model.handle($0) }
-                .task { await tips.load() }
+                .task {
+                    // Saved in the shared store, so the shortcut draws the same wallpaper.
+                    pro.onChange = { [model] in model.setPro($0) }
+                    await pro.load()
+                }
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
-            case .active: model.becameActive()
+            case .active:
+                model.becameActive()
+                Task { await pro.refresh() }
             case .background: model.appClosed()
             default: break
             }
@@ -48,10 +54,12 @@ struct RootView: View {
 /// - `-reset`: start with no tasks and no settings.
 /// - `-skipOnboarding`: open straight on Today.
 /// - `-seed`: start with a few example tasks.
+/// - `-pro`: own Wallist Pro (Lifetime) without the App Store.
 enum LaunchOptions {
     private static let arguments = Set(CommandLine.arguments)
 
     static var isUITesting: Bool { arguments.contains("-uiTesting") }
+    static var isPro: Bool { isUITesting && arguments.contains("-pro") }
 
     @MainActor
     static func makeModel() -> AppModel {
@@ -64,6 +72,7 @@ enum LaunchOptions {
         }
         let model = AppModel(store: TaskWallStore(file: file))
         if arguments.contains("-skipOnboarding") { model.completeOnboarding() }
+        model.setPro(isPro)
         if arguments.contains("-seed") { seed(model) }
         return model
     }

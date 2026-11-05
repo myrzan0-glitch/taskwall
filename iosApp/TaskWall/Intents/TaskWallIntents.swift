@@ -16,6 +16,9 @@ struct MakeWallpaperIntent: AppIntent {
     func perform() async throws -> some IntentResult & ReturnsValue<IntentFile> {
         let store = TaskWallStore(file: AppGroupFileStore.shared)
         let today = CalendarDay.today
+        // A Monthly subscription can end while the app stays closed.
+        let ownsPro = await ProStore.ownsPro()
+        store.setPro(isPro: ownsPro)
         _ = store.clearCompletedIfDue(today: today)
         guard let data = WallpaperRenderer.pngData(store: store, today: today) else {
             throw TaskWallIntentError.renderFailed

@@ -15,12 +15,13 @@ data class WallpaperPalette(
     val shade: Long,
 )
 
-enum class WallpaperTheme(val displayName: String, val palette: WallpaperPalette) {
-    PAPER("Paper", WallpaperPalette(0xFFF5F5F7L, 0xFF000000L, 0xFF48484AL, 0x1F000000L, 0xFFFFFFFFL, 0L, 0L)),
-    INK("Ink", WallpaperPalette(0xFF000000L, 0xFFFFFFFFL, 0xFFAEAEB2L, 0x2EFFFFFFL, 0xFF000000L, 0L, 0L)),
-    SAGE("Sage", WallpaperPalette(0xFFDDE3D8L, 0xFF1D2A20L, 0xFF46564AL, 0x291D2A20L, 0xFFDDE3D8L, 0L, 0L)),
-    CLAY("Clay", WallpaperPalette(0xFFECDFD3L, 0xFF3A2618L, 0xFF6B5242L, 0x293A2618L, 0xFFECDFD3L, 0L, 0L)),
-    NAVY("Navy", WallpaperPalette(0xFF0F1C2EL, 0xFFE8EEF6L, 0xFF9FB0C6L, 0x29E8EEF6L, 0xFF0F1C2EL, 0L, 0L)),
+/** [isPro]: the theme needs Wallist Pro; Paper and Ink are free. */
+enum class WallpaperTheme(val displayName: String, val palette: WallpaperPalette, val isPro: Boolean) {
+    PAPER("Paper", WallpaperPalette(0xFFF5F5F7L, 0xFF000000L, 0xFF48484AL, 0x1F000000L, 0xFFFFFFFFL, 0L, 0L), false),
+    INK("Ink", WallpaperPalette(0xFF000000L, 0xFFFFFFFFL, 0xFFAEAEB2L, 0x2EFFFFFFL, 0xFF000000L, 0L, 0L), false),
+    SAGE("Sage", WallpaperPalette(0xFFDDE3D8L, 0xFF1D2A20L, 0xFF46564AL, 0x291D2A20L, 0xFFDDE3D8L, 0L, 0L), true),
+    CLAY("Clay", WallpaperPalette(0xFFECDFD3L, 0xFF3A2618L, 0xFF6B5242L, 0x293A2618L, 0xFFECDFD3L, 0L, 0L), true),
+    NAVY("Navy", WallpaperPalette(0xFF0F1C2EL, 0xFFE8EEF6L, 0xFF9FB0C6L, 0x29E8EEF6L, 0xFF0F1C2EL, 0L, 0L), true),
 }
 
 /** How the wallpaper will actually be drawn once Auto has been resolved. */

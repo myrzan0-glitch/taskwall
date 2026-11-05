@@ -342,7 +342,7 @@ struct LockScreenPreview: View {
     let width: CGFloat
 
     var body: some View {
-        let style = style ?? model.style
+        let style = style ?? model.effectiveStyle
         let screen = model.screenSize
         let scale = width / screen.width
         WallpaperCanvas(

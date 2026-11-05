@@ -23,7 +23,18 @@ data class AppSettings(
     val lastClearedDay: CalendarDay? = null,
     /** Saved by the app so background shortcuts render at the right size. */
     val screen: ScreenMetrics? = null,
+    /**
+     * Whether this Apple Account owns Wallist Pro, as the App Store last said.
+     * Kept here so the screens and the shortcut know without waiting for StoreKit.
+     */
+    val isPro: Boolean = false,
 ) {
+    /**
+     * The style the wallpaper is drawn with. Without Pro, Pro choices fall back
+     * to free ones; [wallpaper] keeps them, so they come back with Pro.
+     */
+    val effectiveWallpaper: WallpaperStyle get() = if (isPro) wallpaper else wallpaper.limitedToFree()
+
     fun withClearCompletedEachMorning(on: Boolean) = copy(clearCompletedEachMorning = on)
 }
 
@@ -71,6 +82,18 @@ data class WallpaperStyle(
     val photoAnalysis: LegibilityResult? = null,
 ) {
     val hasPhoto: Boolean get() = photoFileName != null
+
+    /** Whether this style shows anything that needs Wallist Pro. */
+    val usesPro: Boolean
+        get() = source == BackgroundSource.PHOTO || theme.isPro || layout == WallpaperLayout.TABLE || showProgress
+
+    /** The same style with every Pro choice replaced by its free counterpart. */
+    fun limitedToFree() = copy(
+        source = BackgroundSource.COLOR,
+        theme = if (theme.isPro) WallpaperTheme.INK else theme,
+        layout = WallpaperLayout.LIST,
+        showProgress = false,
+    )
 
     fun withTheme(theme: WallpaperTheme) = copy(theme = theme, source = BackgroundSource.COLOR)
 

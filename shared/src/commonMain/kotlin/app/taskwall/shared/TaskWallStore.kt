@@ -168,6 +168,9 @@ class TaskWallStore(private val file: TextFileStore) {
 
     fun setScreen(metrics: ScreenMetrics) = updateSettings { it.copy(screen = metrics) }
 
+    /** Records what the App Store says about Wallist Pro; see [AppSettings.effectiveWallpaper]. */
+    fun setPro(isPro: Boolean) = updateSettings { it.copy(isPro = isPro) }
+
     /**
      * Called when TaskWall goes to the background, to recognise the close automation.
      * The automation's shortcut may already have run by the time this is heard.
@@ -220,12 +223,12 @@ class TaskWallStore(private val file: TextFileStore) {
     fun wallpaperSignature(today: CalendarDay): String = signature(state, today)
 
     private fun wallpaperContent(state: AppState, today: CalendarDay): WallpaperContent {
-        val style = state.settings.wallpaper
+        val style = state.settings.effectiveWallpaper
         return WallpaperComposer.compose(state.tasks, today, WallpaperGeometry.maxLines(style.layout, style.showProgress))
     }
 
     private fun signature(state: AppState, today: CalendarDay): String {
-        val text = wallpaperContent(state, today).toString() + "|" + state.settings.wallpaper.toString()
+        val text = wallpaperContent(state, today).toString() + "|" + state.settings.effectiveWallpaper.toString()
         var hash = 0xcbf29ce484222325uL
         for (byte in text.encodeToByteArray()) {
             hash = (hash xor byte.toUByte().toULong()) * 0x100000001b3uL
@@ -233,7 +236,7 @@ class TaskWallStore(private val file: TextFileStore) {
         return hash.toString(16)
     }
 
-    fun resolvedAppearance(): ResolvedAppearance = WallpaperAppearance.resolve(state.settings.wallpaper)
+    fun resolvedAppearance(): ResolvedAppearance = WallpaperAppearance.resolve(state.settings.effectiveWallpaper)
 
     fun search(query: String, today: CalendarDay): List<TaskItem> {
         val q = query.trim()

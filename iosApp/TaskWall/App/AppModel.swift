@@ -31,7 +31,11 @@ final class AppModel {
     // MARK: Reading
 
     var settings: AppSettings { state.settings }
+    /// What the person chose; Wallpaper settings edit this.
     var style: WallpaperStyle { state.settings.wallpaper }
+    /// What the Lock Screen shows: `style` without the Pro choices when there's no Pro.
+    var effectiveStyle: WallpaperStyle { state.settings.effectiveWallpaper }
+    var isPro: Bool { state.settings.isPro }
     var automation: AutomationSettings { state.settings.automation }
     var today: CalendarDay { CalendarDay.today }
 
@@ -59,13 +63,13 @@ final class AppModel {
     }
 
     func wallpaperContent(for style: WallpaperStyle? = nil) -> WallpaperContent {
-        let style = style ?? self.style
+        let style = style ?? effectiveStyle
         let maxLines = WallpaperGeometry.shared.maxLines(layout: style.layout, showProgress: style.showProgress)
         return WallpaperComposer.shared.compose(tasks: state.tasks, today: today, maxLines: maxLines)
     }
 
     func appearance(for style: WallpaperStyle? = nil) -> ResolvedAppearance {
-        WallpaperAppearance.shared.resolve(style: style ?? self.style)
+        WallpaperAppearance.shared.resolve(style: style ?? effectiveStyle)
     }
 
     func search(_ query: String) -> [TaskItem] {
@@ -161,6 +165,11 @@ final class AppModel {
 
     func setClearCompletedEachMorning(_ on: Bool) {
         store.setClearCompletedEachMorning(on: on)
+    }
+
+    /// What the App Store says about Wallist Pro, from `ProStore`.
+    func setPro(_ isPro: Bool) {
+        store.setPro(isPro: isPro)
     }
 
     func completeOnboarding() {

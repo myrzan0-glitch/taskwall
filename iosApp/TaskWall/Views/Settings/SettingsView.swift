@@ -1,11 +1,15 @@
 import SwiftUI
+import StoreKit
 import Shared
 
 /// The Settings sheet, from the right button on Today.
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @Environment(ProStore.self) private var pro
     @Environment(\.openURL) private var openURL
-    @State private var showTips = false
+    @State private var showPaywall = false
+    @State private var showManage = false
+    @State private var restoreMessage: String?
     @State private var showGuide = false
     @State private var path: [Route] = []
 
@@ -22,10 +26,16 @@ struct SettingsView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 0) {
-                    Button { showTips = true } label: { tipCard }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("tipJar")
-                        .padding(.top, 8)
+                    Group {
+                        if model.isPro {
+                            memberCard
+                        } else {
+                            Button { showPaywall = true } label: { proCard }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("getPro")
+                        }
+                    }
+                    .padding(.top, 8)
 
                     VStack(spacing: 0) {
                         NavigationLink(value: Route.automation) {
@@ -78,6 +88,26 @@ struct SettingsView: View {
                             DottedDivider()
                         }
 
+                        if !model.isPro {
+                            Button {
+                                Task {
+                                    await pro.restore()
+                                    switch pro.phase {
+                                    case .unlocked: restoreMessage = "Wallist Pro is unlocked."
+                                    case .failed(let reason): restoreMessage = reason
+                                    default: break // Cancelled the Apple Account sign-in.
+                                    }
+                                    pro.phase = .idle
+                                }
+                            } label: {
+                                row("Restore purchases", icon: "refresh") { EmptyView() }
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(pro.phase == .purchasing)
+                            .accessibilityIdentifier("restorePurchases")
+                            DottedDivider()
+                        }
+
                         Link(destination: feedbackURL) {
                             row("Send feedback", icon: "message-01") { chevron }
                         }
@@ -106,8 +136,16 @@ struct SettingsView: View {
         .tint(.ink)
         .presentationBackground(Color.sheet)
         .presentationDragIndicator(.visible)
-        .sheet(isPresented: $showTips) {
-            TipJarView()
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
+        .manageSubscriptionsSheet(isPresented: $showManage)
+        .onChange(of: showManage) { _, showing in
+            // Cancelling or resubscribing there changes what Pro shows here.
+            if !showing { Task { await pro.refresh() } }
+        }
+        .alert(restoreMessage ?? "", isPresented: Binding(get: { restoreMessage != nil }, set: { if !$0 { restoreMessage = nil } })) {
+            Button("OK", role: .cancel) {}
         }
         .sheet(isPresented: $showGuide) {
             AutomationGuideView {
@@ -116,24 +154,25 @@ struct SettingsView: View {
         }
     }
 
-    private var tipCard: some View {
+    /// Without Pro: the peach card that opens the paywall.
+    private var proCard: some View {
         HStack(spacing: 14) {
-            Image("coffee-02")
+            Image("wallpaper")
                 .renderingMode(.template)
                 .resizable()
                 .frame(width: 36, height: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Buy me a coffee")
+                Text("Wallist Pro")
                     .font(.system(size: 20, weight: .bold))
-                Text("Free forever. No ads, no tracking.")
+                Text("Photos, all themes, table layout")
                     .font(.subheadline)
-                    .opacity(0.7)
+                    .opacity(0.72)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text("Tip")
+            Text("From \(pro.price(for: .monthly) ?? "$1.99")")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.ink)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 14)
                 .frame(height: 40)
                 .background(Capsule().fill(Color.ground.opacity(0.9)))
         }
@@ -143,8 +182,77 @@ struct SettingsView: View {
         .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.peach))
         .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Buy me a coffee. Free forever. No ads, no tracking.")
+        .accessibilityLabel("Wallist Pro. Photos, all themes and the table layout.")
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// With Pro: the plan, and for Monthly a way to manage it or switch to Lifetime.
+    private var memberCard: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 14) {
+                Image("checkmark-circle-02")
+                    .renderingMode(.template)
+                    .resizable()
+                    .frame(width: 36, height: 36)
+                    .foregroundStyle(Color.peach)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 8) {
+                        Text("Wallist").font(.system(size: 20, weight: .bold))
+                        ProBadge()
+                    }
+                    Text(planSummary)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.muted)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+                if pro.plan == .monthly {
+                    Button("Manage") { showManage = true }
+                        .font(.subheadline.weight(.semibold))
+                        .buttonStyle(.glass)
+                        .buttonBorderShape(.capsule)
+                        .accessibilityIdentifier("manageSubscription")
+                }
+            }
+            .frame(minHeight: 96)
+
+            if pro.plan == .monthly {
+                DottedDivider()
+                Button { showPaywall = true } label: {
+                    HStack(spacing: 8) {
+                        Text("Switch to Lifetime · \(pro.price(for: .lifetime) ?? "$9.99") once")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Image("arrow-right-01")
+                            .renderingMode(.template)
+                            .resizable()
+                            .frame(width: 18, height: 18)
+                    }
+                    .foregroundStyle(Color.peach)
+                    .frame(minHeight: 56)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("switchToLifetime")
+            }
+        }
+        .padding(.horizontal, 20)
+        .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.raised))
+        .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(Color.white.opacity(0.08)))
+        .accessibilityIdentifier("proMember")
+    }
+
+    private var planSummary: String {
+        if pro.plan == .lifetime { return "Lifetime · yours forever" }
+        guard pro.plan == .monthly else { return "Unlocked" }
+        var parts = ["Monthly"]
+        if let end = pro.periodEnd {
+            let day = end.formatted(.dateTime.day().month(.abbreviated))
+            parts.append(pro.willRenew ? "renews \(day)" : "ends \(day)")
+        }
+        if pro.willRenew, let price = pro.price(for: .monthly) { parts.append(price) }
+        return parts.joined(separator: " · ")
     }
 
     private var chevron: some View {
