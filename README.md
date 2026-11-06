@@ -156,7 +156,7 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 
 Until `ASC_KEY_ID` is set, CI only checks that the archive builds. To upload without pushing, open Actions → iOS app → Run workflow on `main`. Builds are numbered after the workflow run. If TestFlight already has a higher number for this version (for example from Xcode Cloud), add a repository variable `BUILD_NUMBER_OFFSET` (Settings → Secrets and variables → Actions → Variables) to add to it. The certificate and profile expire after a year; then replace those two secrets.
 
-The privacy policy is `docs/privacy.html`, served by GitHub Pages (Settings → Pages → Deploy from a branch → `main`, `/docs`) at https://myrzan0-glitch.github.io/taskwall/privacy.html.
+The privacy policy is `docs/privacy.html`, served by GitHub Pages (Settings → Pages → Deploy from a branch → `main`, `/docs`) at https://myrzan0-glitch.github.io/taskwall/privacy.html. The support page, for App Store Connect's Support URL, is `docs/support.html` at https://myrzan0-glitch.github.io/taskwall/support.html.
 
 When you upload from Xcode, raise `CURRENT_PROJECT_VERSION` in `iosApp/project.yml` above the last build in TestFlight first: every build needs a higher number. CI builds a Release archive on every push, so archive problems show up before you try. `Resources/PrivacyInfo.xcprivacy` declares no tracking and no data collection.
 
