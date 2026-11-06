@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wallist Support</title>
+<meta name="description" content="Help with Wallist: setting up automatic Lock Screen updates, Wallist Pro, restoring and cancelling purchases, and how to contact us.">
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --rule: #e5e5ea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --text: #f5f5f7;
+      --muted: #a1a1a6;
+      --rule: #2c2c2e;
+    }
+  }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 16px 64px;
+  }
+  h1 {
+    font-size: 34px;
+    line-height: 1.15;
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-size: 20px;
+    margin: 36px 0 8px;
+  }
+  p, ul { margin: 0 0 12px; }
+  li { margin-bottom: 6px; }
+  .updated { color: var(--muted); margin-bottom: 28px; }
+  .summary {
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 16px 0;
+    font-weight: 600;
+  }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Wallist Support</h1>
+  <p class="updated">Last updated 6 November 2026</p>
+
+  <p class="summary">Need help? Email <a href="mailto:izimbetov.myrzan@icloud.com">izimbetov.myrzan@icloud.com</a>. Most answers are below.</p>
+
+  <h2>How Wallist updates your Lock Screen</h2>
+  <p>iOS only lets the Shortcuts app change your wallpaper, so Wallist works with it. During setup you add the Wallist shortcut and an automation that runs it when you close Wallist. After that, every time you leave the app, your Lock Screen shows your current tasks.</p>
+  <p>To set it up again, open Wallist, go to Settings and tap Automatic updates.</p>
+
+  <h2>My Lock Screen doesn't update</h2>
+  <ul>
+    <li><strong>The automation asks before running:</strong> in Shortcuts, open the Automation tab, tap the Wallist automation and choose <strong>Run Immediately</strong>.</li>
+    <li><strong>Check the trigger:</strong> the automation should be App › Wallist › <strong>Is Closed</strong>, with Is Opened deselected.</li>
+    <li><strong>The first run asks for permission:</strong> when iOS asks whether Wallist can set your wallpaper, choose <strong>Always Allow</strong>.</li>
+    <li><strong>"Wallist couldn't make the wallpaper":</strong> open Wallist once so it saves your screen size, then try again.</li>
+    <li><strong>Run it by hand:</strong> in Wallist, open Wallpaper and tap Update Lock Screen. If that works, the automation is what needs fixing.</li>
+  </ul>
+
+  <h2>The wallpaper looks zoomed or blurred</h2>
+  <p>In the Shortcuts app, open the Wallist shortcut, then the options of <strong>Set Wallpaper Photo</strong>, and turn off <strong>Show Preview</strong>, <strong>Crop to Subject</strong> and <strong>Blur</strong>. If it still looks zoomed, turn Crop to Subject on and off again so the setting is saved.</p>
+
+  <h2>Wallist Pro</h2>
+  <p>Wallist Pro adds wallpaper fonts for your task list: Matrix, Orbit and Grace, plus new fonts as they arrive. Tasks, colours, photos and automatic updates stay free. You can try every font in the preview before you buy.</p>
+  <ul>
+    <li><strong>Monthly:</strong> $1.99 a month, renews automatically until you cancel.</li>
+    <li><strong>Lifetime:</strong> $9.99, paid once.</li>
+  </ul>
+  <p>Prices may differ in your country; the App Store shows the price in your currency before you buy.</p>
+
+  <h2>Restore a purchase</h2>
+  <p>On a new iPhone or after reinstalling, open Wallist Pro (Settings › Wallist Pro) and tap <strong>Restore</strong>. Use the same Apple Account you bought Pro with.</p>
+
+  <h2>Cancel Monthly</h2>
+  <p>Open the iPhone's Settings app, tap your name, then <strong>Subscriptions</strong>, choose Wallist Pro and tap Cancel Subscription. Pro stays on until the end of the month you've paid for. Cancel at least 24 hours before it renews to avoid the next charge.</p>
+
+  <h2>Refunds</h2>
+  <p>Apple handles all payments, so refunds are requested from Apple at <a href="https://reportaproblem.apple.com">reportaproblem.apple.com</a>.</p>
+
+  <h2>Your data</h2>
+  <p>Your tasks stay on your iPhone. Wallist has no accounts and collects no data. Deleting the app deletes your tasks. Read the <a href="privacy.html">privacy policy</a>.</p>
+
+  <h2>Contact</h2>
+  <p>Email <a href="mailto:izimbetov.myrzan@icloud.com">izimbetov.myrzan@icloud.com</a>, or tap Send feedback in Wallist's Settings. Please include your iPhone model and iOS version if something isn't working.</p>
+</main>
+</body>
+</html>
