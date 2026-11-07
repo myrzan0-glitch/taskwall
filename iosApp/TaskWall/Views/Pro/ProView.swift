@@ -77,6 +77,22 @@ struct ProPurchase: View {
             ProPlanList(selected: $selected)
                 .padding(.top, 10)
 
+            if pro.prices == .unavailable && !pro.isTestBuild {
+                HStack(spacing: 12) {
+                    Text("Couldn't reach the App Store.")
+                        .font(.footnote)
+                        .foregroundStyle(Color.muted)
+                    Button("Try again") {
+                        Task { await pro.reloadProductsIfNeeded() }
+                    }
+                    .font(.footnote.weight(.semibold))
+                    .buttonStyle(.glass)
+                    .buttonBorderShape(.capsule)
+                    .accessibilityIdentifier("retryPrices")
+                }
+                .frame(maxWidth: .infinity)
+            }
+
             Button(action: buy) {
                 Group {
                     if pro.phase == .purchasing {
@@ -137,6 +153,8 @@ struct ProPurchase: View {
         .onAppear {
             if !pro.plans.contains(selected), let first = pro.plans.first { selected = first }
         }
+        // Prices may have reached the App Store since launch.
+        .task { await pro.reloadProductsIfNeeded() }
         .onDisappear { if pro.phase != .purchasing { pro.phase = .idle } }
     }
 
@@ -187,9 +205,19 @@ struct ProPlanList: View {
                     .foregroundStyle(Color.muted)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text(pro.price(for: plan) ?? "–")
-                .font(.title3.weight(.semibold))
-                .monospacedDigit()
+            if let price = pro.price(for: plan) {
+                Text(price)
+                    .font(.title3.weight(.semibold))
+                    .monospacedDigit()
+            } else if pro.prices == .loading {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(Color.muted)
+            } else {
+                Text("–")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Color.muted)
+            }
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 8)

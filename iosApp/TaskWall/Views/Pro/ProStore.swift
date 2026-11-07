@@ -21,7 +21,16 @@ final class ProStore {
         case failed(String)
     }
 
+    /// Whether the plans' prices have come from the App Store.
+    enum Prices: Equatable {
+        case loading
+        case loaded
+        /// The App Store returned no plans: offline, or the plans aren't on sale yet.
+        case unavailable
+    }
+
     private(set) var products: [String: Product] = [:]
+    private(set) var prices: Prices = .loading
     private(set) var status: Status
     var phase: Phase = .idle
 
@@ -63,10 +72,25 @@ final class ProStore {
     }
 
     private func loadProducts() async {
+        guard !loadingProducts else { return }
+        loadingProducts = true
+        defer { loadingProducts = false }
+        if products.isEmpty { prices = .loading }
         let ids = ProPlan.entries.map { $0.productId }
         if let list = try? await Product.products(for: ids), !list.isEmpty {
             products = Dictionary(uniqueKeysWithValues: list.map { ($0.id, $0) })
         }
+        prices = products.isEmpty ? .unavailable : .loaded
+    }
+
+    @ObservationIgnored private var loadingProducts = false
+
+    /// Asks the App Store for the plans again while none have loaded: when the paywall
+    /// opens, when the app comes back, and from Try again. Plans can appear hours after
+    /// release, so nobody has to restart the app to see prices.
+    func reloadProductsIfNeeded() async {
+        guard products.isEmpty, !alwaysPro else { return }
+        await loadProducts()
     }
 
     /// The app transaction's signature can fail to verify on TestFlight devices, so its
@@ -109,10 +133,8 @@ final class ProStore {
             phase = .idle
         }
         guard products.isEmpty else { return false }
-        guard isTestBuild else {
-            phase = .failed("Pro isn't available right now. Please try again later.")
-            return false
-        }
+        // The paywall shows "Couldn't reach the App Store" with Try again instead.
+        guard isTestBuild else { return false }
         UserDefaults.standard.set(true, forKey: Self.testerProKey)
         status = .pro
         phase = .idle
