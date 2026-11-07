@@ -31,7 +31,10 @@ struct TaskWallApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
-            case .active: model.becameActive()
+            case .active:
+                model.becameActive()
+                // Plans that weren't on sale at launch may be by now.
+                Task { await pro.reloadProductsIfNeeded() }
             case .background: model.appClosed()
             default: break
             }
