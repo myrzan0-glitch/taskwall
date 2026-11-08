@@ -188,6 +188,9 @@ struct TasksView: View {
                 }
             }
         }
+        // The task composer's keyboard belongs to its sheet. Without this, Today's
+        // safe area grows with it and the bottom bar rides up over the week strip.
+        .ignoresSafeArea(.keyboard)
         .background(Color.ground.ignoresSafeArea())
         .foregroundStyle(Color.ink)
         .fullScreenCover(item: $story) { ReadArticleView(read: $0.read) }

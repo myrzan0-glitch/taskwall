@@ -68,7 +68,8 @@ class WallpaperFontTest {
     fun proPlansAreFoundByProductId() {
         assertEquals(ProPlan.LIFETIME, ProPlan.forProductId("app.taskwall.pro.lifetime"))
         assertEquals(null, ProPlan.forProductId("app.taskwall.pro.yearly"))
-        assertEquals(ProPlan.MONTHLY, ProPlan.forProductId("app.taskwall.pro.monthly"))
+        assertEquals(ProPlan.MONTHLY, ProPlan.forProductId("app.taskwall.pro.sub.monthly"))
+        assertEquals(null, ProPlan.forProductId("app.taskwall.pro.monthly"), "the deleted ID stays unused")
         assertEquals(null, ProPlan.forProductId("app.taskwall.tip.espresso"))
     }
 }

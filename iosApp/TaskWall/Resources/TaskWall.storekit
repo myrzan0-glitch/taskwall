@@ -45,7 +45,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "app.taskwall.pro.monthly",
+          "productID" : "app.taskwall.pro.sub.monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Pro – Monthly",
           "subscriptionGroupID" : "21500001",

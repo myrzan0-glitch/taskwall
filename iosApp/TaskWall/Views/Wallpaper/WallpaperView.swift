@@ -29,7 +29,8 @@ struct WallpaperView: View {
                         photoSelected: style.source == BackgroundSource.photo,
                         onSelect: { model.setStyle(style.withTheme(theme: $0)) },
                         onPhoto: {
-                            if style.hasPhoto {
+                            // Tapping the photo that's already the wallpaper picks a new one.
+                            if style.hasPhoto && style.source != BackgroundSource.photo {
                                 model.setStyle(style.withSource(source: .photo))
                             } else {
                                 showPhotoPicker = true
@@ -289,9 +290,25 @@ struct ThemeSwatches: View {
                 .frame(width: 44, height: 44)
                 .clipShape(Circle())
                 .modifier(SwatchRing(on: photoSelected))
+                // On the chosen photo, a small badge says another tap swaps it.
+                .overlay(alignment: .bottomTrailing) {
+                    if photoSelected {
+                        Image("image-01")
+                            .renderingMode(.template)
+                            .resizable()
+                            .frame(width: 11, height: 11)
+                            .foregroundStyle(Color.ground)
+                            .frame(width: 20, height: 20)
+                            .background(Circle().fill(Color.ink))
+                            .overlay(Circle().strokeBorder(Color.sheet, lineWidth: 2))
+                            .offset(x: 2, y: 2)
+                            .accessibilityHidden(true)
+                    }
+                }
             }
             .hapticButtonStyle(.plain)
             .accessibilityLabel(model.photo == nil ? "Choose a photo" : "Your photo")
+            .accessibilityHint(photoSelected ? "Choose another photo." : "")
             .accessibilityAddTraits(photoSelected ? .isSelected : [])
         }
     }

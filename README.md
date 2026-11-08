@@ -129,7 +129,7 @@ The script picks the iPhone 17 Pro simulator, or the first iPhone installed (`SI
 |---|---|
 | Bundle ID `app.taskwall` and App Group `group.app.taskwall` | `iosApp/project.yml`, `TaskWall.entitlements`, `App/AppGroup.swift` |
 | App Store ID: the Rate row stays hidden until `reviewURL` is set | `Views/Settings/SettingsView.swift` |
-| Pro: one subscription group with `app.taskwall.pro.monthly` ($1.99, 1 month), the non-consumable `app.taskwall.pro.lifetime` ($9.99), their prices and the Terms link in the App Store description | App Store Connect, matching `shared/.../ProPlan.kt` |
+| Pro: one subscription group with `app.taskwall.pro.sub.monthly` ($1.99, 1 month; `app.taskwall.pro.monthly` was used by a deleted product and can't be reused), the non-consumable `app.taskwall.pro.lifetime` ($9.99), their prices and the Terms link in the App Store description | App Store Connect, matching `shared/.../ProPlan.kt` |
 
 ### TestFlight
 

@@ -7,7 +7,7 @@ package app.taskwall.shared
  * preview first.
  */
 enum class ProPlan(val productId: String, val displayName: String, val note: String, val isSubscription: Boolean) {
-    MONTHLY("app.taskwall.pro.monthly", "Monthly", "Billed every month", true),
+    MONTHLY("app.taskwall.pro.sub.monthly", "Monthly", "Billed every month", true),
     LIFETIME("app.taskwall.pro.lifetime", "Lifetime", "Pay once, keep it forever", false);
 
     companion object {

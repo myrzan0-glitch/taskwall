@@ -397,7 +397,8 @@ private struct PickLookStep: View {
                             photoSelected: style.source == BackgroundSource.photo,
                             onSelect: { model.setStyle(style.withTheme(theme: $0)) },
                             onPhoto: {
-                                if style.hasPhoto { model.setStyle(style.withSource(source: .photo)) } else { showPhotoPicker = true }
+                                // Tapping the photo that's already chosen picks a new one.
+                                if style.hasPhoto && style.source != BackgroundSource.photo { model.setStyle(style.withSource(source: .photo)) } else { showPhotoPicker = true }
                             }
                         )
                         FontPicker(selected: trying ?? style.font, isPro: pro.isPro, onSelect: pickFont)
